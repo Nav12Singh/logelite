@@ -53,7 +53,7 @@ $lgl_banner_id    = ( $lgl_queried_term instanceof WP_Term )
 	? absint( get_term_meta( $lgl_queried_term->term_id, 'thumbnail_id', true ) )
 	: 0;
 ?>
-<div class="lgl-shop-hero<?php echo $lgl_banner_id ? ' lgl-shop-hero--has-banner' : ''; ?>">
+<div class="lgl-shop-hero<?php echo esc_attr( $lgl_banner_id ? ' lgl-shop-hero--has-banner' : '' ); ?>">
 	<?php if ( $lgl_banner_id ) : ?>
 		<div class="lgl-shop-hero__banner">
 			<?php
@@ -117,7 +117,7 @@ $lgl_banner_id    = ( $lgl_queried_term instanceof WP_Term )
 						class="lgl-view-toggle__button"
 						href="<?php echo esc_url( add_query_arg( 'view', 'grid' ) ); ?>"
 						data-view-toggle="grid"
-						<?php echo ( 'grid' === $lgl_view ) ? 'aria-current="true"' : ''; ?>
+						<?php if ( 'grid' === $lgl_view ) : ?>aria-current="true"<?php endif; ?>
 					>
 						<?php esc_html_e( 'Grid', 'logelite' ); ?>
 					</a>
@@ -125,7 +125,7 @@ $lgl_banner_id    = ( $lgl_queried_term instanceof WP_Term )
 						class="lgl-view-toggle__button"
 						href="<?php echo esc_url( add_query_arg( 'view', 'list' ) ); ?>"
 						data-view-toggle="list"
-						<?php echo ( 'list' === $lgl_view ) ? 'aria-current="true"' : ''; ?>
+						<?php if ( 'list' === $lgl_view ) : ?>aria-current="true"<?php endif; ?>
 					>
 						<?php esc_html_e( 'List', 'logelite' ); ?>
 					</a>

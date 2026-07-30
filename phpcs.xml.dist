@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<ruleset name="Logelite">
+	<description>Coding standards for the Logelite theme (CLAUDE.md §4).</description>
+
+	<file>.</file>
+
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/design-reference/*</exclude-pattern>
+	<exclude-pattern>/assets/js/*</exclude-pattern>
+	<exclude-pattern>/assets/css/*</exclude-pattern>
+
+	<arg value="sp"/>
+	<arg name="basepath" value="."/>
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+	<arg name="parallel" value="20"/>
+
+	<rule ref="WordPress-Extra">
+		<!-- Tabs, not spaces, per CLAUDE.md §4 — but Yoda conditions are
+			 explicitly optional there, not required. -->
+		<exclude name="WordPress.PHP.YodaConditions"/>
+	</rule>
+
+	<rule ref="WordPress-Docs"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="logelite"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="lgl_"/>
+				<element value="LGL_"/>
+				<element value="lgl"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Requires PHP 8.1 (style.css, CLAUDE.md §1). -->
+	<config name="testVersion" value="8.1-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.Files.FileName">
+		<properties>
+			<property name="strict_class_file_names" value="false"/>
+		</properties>
+	</rule>
+</ruleset>

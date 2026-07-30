@@ -219,6 +219,18 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				lgl_asset_version( 'assets/css/components/faq.css' )
 			);
 
+			// T6 fix: features.css was previously bundled into the
+			// always-loaded components.css via @import — feature icons only
+			// ever render on single product pages (woocommerce_after_add_to_cart_form),
+			// so it has no reason to load anywhere else. Moved to its own
+			// conditional enqueue here, matching sticky-cart/faq/product.
+			wp_enqueue_style(
+				'lgl-features',
+				get_theme_file_uri( 'assets/css/components/features.css' ),
+				array( 'lgl-app' ),
+				lgl_asset_version( 'assets/css/components/features.css' )
+			);
+
 			lgl_enqueue_carousel_style();
 		}
 

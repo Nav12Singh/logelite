@@ -25,7 +25,16 @@ $args = wp_parse_args(
 );
 
 if ( lgl_wc_active() ) {
-	$lgl_crumbs = wc_get_breadcrumb();
+	// wc_get_breadcrumb() does not exist anywhere in WooCommerce core — this
+	// was a fatal "call to undefined function" on every page that renders
+	// breadcrumbs. WC only exposes breadcrumb data via the WC_Breadcrumb
+	// class; this mirrors exactly what woocommerce_breadcrumb() itself does
+	// internally (same class, same default "Home" label/home-URL filter),
+	// so the JSON-LD below always matches what that function renders on
+	// line 58, further down.
+	$lgl_wc_breadcrumb = new WC_Breadcrumb();
+	$lgl_wc_breadcrumb->add_crumb( _x( 'Home', 'breadcrumb', 'woocommerce' ), apply_filters( 'woocommerce_breadcrumb_home_url', home_url() ) );
+	$lgl_crumbs = $lgl_wc_breadcrumb->generate();
 } else {
 	$lgl_crumbs = array( array( esc_html__( 'Home', 'logelite' ), home_url( '/' ) ) );
 

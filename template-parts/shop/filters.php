@@ -98,7 +98,7 @@ if ( ! function_exists( 'lgl_render_category_filter_list' ) ) {
 					<a
 						class="lgl-filter-categories__link"
 						href="<?php echo esc_url( get_term_link( $lgl_term ) ); ?>"
-						<?php echo ( $lgl_term->term_id === $current_term_id ) ? 'aria-current="page"' : ''; ?>
+						<?php if ( $lgl_term->term_id === $current_term_id ) : ?>aria-current="page"<?php endif; ?>
 					>
 						<span><?php echo esc_html( $lgl_term->name ); ?></span>
 						<span class="lgl-filter-categories__count">
