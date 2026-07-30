@@ -1,0 +1,144 @@
+/**
+ * Sticky add-to-cart bar — template-parts/product/sticky-cart.php,
+ * assets/js/sticky-cart.js.
+ *
+ * z-index uses --lgl-z-sticky (20), the same tier as the sticky header —
+ * intentionally below --lgl-z-overlay (30) and --lgl-z-modal (40), which
+ * the mobile off-canvas nav and search overlay use (see
+ * components/nav-mobile.css, components/search-overlay.css), so either of
+ * those still layers on top of this bar rather than under it.
+ *
+ * @package logelite
+ */
+
+.lgl-sticky-cart {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: var(--lgl-z-sticky);
+	background: var(--lgl-surface-default);
+	border-top: 1px solid var(--lgl-border-default);
+	box-shadow: var(--lgl-shadow-lg);
+	padding: var(--lgl-space-3) var(--lgl-space-4);
+	padding-bottom: calc(var(--lgl-space-3) + env(safe-area-inset-bottom));
+
+	/* Hidden by default: visibility (not display) so the transform
+	 * transition can still run when JS toggles .is-visible. */
+	visibility: hidden;
+	transform: translateY(100%);
+	transition:
+		transform var(--lgl-dur-base) var(--lgl-ease-out),
+		visibility 0s linear var(--lgl-dur-base);
+}
+
+.lgl-sticky-cart.is-visible {
+	visibility: visible;
+	transform: translateY(0);
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lgl-sticky-cart {
+		transition: none;
+	}
+}
+
+/* Reserve space at the bottom of the page so the bar never covers the
+ * footer's last row once visible — toggled by JS alongside .is-visible. */
+body.lgl-has-sticky-cart {
+	padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+
+.lgl-sticky-cart__inner {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-4);
+	max-width: var(--lgl-container);
+	margin-inline: auto;
+}
+
+.lgl-sticky-cart__media {
+	flex-shrink: 0;
+}
+
+.lgl-sticky-cart__thumb {
+	display: block;
+	width: 48px;
+	height: 48px;
+	border-radius: var(--lgl-radius-md);
+	object-fit: cover;
+}
+
+.lgl-sticky-cart__info {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.lgl-sticky-cart__name {
+	font-weight: var(--lgl-weight-semibold);
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.lgl-sticky-cart__price {
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-text-muted);
+}
+
+.lgl-sticky-cart__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+	flex-shrink: 0;
+}
+
+.lgl-sticky-cart__qty {
+	display: flex;
+	align-items: center;
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-sticky-cart__qty-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2.25rem;
+	border: 0;
+	background: none;
+	color: var(--lgl-text-primary);
+}
+
+.lgl-sticky-cart__qty-input {
+	width: 2.25rem;
+	height: 2.25rem;
+	border: 0;
+	border-inline: 1px solid var(--lgl-border-default);
+	text-align: center;
+	font-size: var(--lgl-text-sm);
+	-moz-appearance: textfield;
+}
+
+.lgl-sticky-cart__qty-input::-webkit-outer-spin-button,
+.lgl-sticky-cart__qty-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.lgl-sticky-cart__add,
+.lgl-sticky-cart__view-options,
+.lgl-sticky-cart__external {
+	white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+	.lgl-sticky-cart__media,
+	.lgl-sticky-cart__info {
+		display: none;
+	}
+}

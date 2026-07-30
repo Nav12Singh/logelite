@@ -1,0 +1,177 @@
+/**
+ * Reusable carousel — template-parts/carousel.php, assets/js/carousel.js.
+ *
+ * CSS-first: the track is a native scroll container with scroll-snap;
+ * assets/js/carousel.js only adds arrow buttons, dots, and keyboard
+ * shortcuts on top of behavior that already works with JavaScript
+ * disabled (touch/trackpad/scrollbar drag, and Tab + native scroll via
+ * the focusable viewport).
+ *
+ * Per-view is set via data-per-view-{desktop,tablet,mobile} attribute
+ * selectors below rather than an inline `style="--lgl-per-view: N"` — see
+ * template-parts/carousel.php's docblock for why. Values 1-6 are covered,
+ * matching the range already used by the shop-columns Customizer control.
+ *
+ * @package logelite
+ */
+
+.lgl-carousel-section {
+	position: relative;
+}
+
+.lgl-carousel-section__heading {
+	font-size: var(--lgl-text-2xl);
+	font-weight: var(--lgl-weight-extrabold);
+	margin-block-end: var(--lgl-space-6);
+}
+
+.lgl-carousel {
+	--lgl-per-view: 1;
+
+	position: relative;
+}
+
+.lgl-carousel__viewport {
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+
+	/* Hide the scrollbar without disabling scroll. */
+	scrollbar-width: none;
+}
+
+.lgl-carousel__viewport::-webkit-scrollbar {
+	display: none;
+}
+
+.lgl-carousel__viewport:focus-visible {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 2px;
+}
+
+.lgl-carousel__track {
+	display: flex;
+	gap: var(--lgl-space-5);
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.lgl-carousel__track > * {
+	flex: 0 0 calc((100% - (var(--lgl-per-view) - 1) * var(--lgl-space-5)) / var(--lgl-per-view));
+	scroll-snap-align: start;
+}
+
+.lgl-carousel__arrow {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: var(--lgl-radius-full);
+	border: 1px solid var(--lgl-border-default);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	box-shadow: var(--lgl-shadow-sm);
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.lgl-carousel__arrow:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+.lgl-carousel__arrow--prev {
+	left: calc(var(--lgl-space-4) * -1);
+}
+
+.lgl-carousel__arrow--next {
+	right: calc(var(--lgl-space-4) * -1);
+}
+
+.lgl-carousel__arrow-icon {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.lgl-carousel__dots {
+	display: flex;
+	justify-content: center;
+	gap: var(--lgl-space-2);
+	margin-block-start: var(--lgl-space-5);
+}
+
+.lgl-carousel__dots[hidden] {
+	display: none;
+}
+
+.lgl-carousel__dot {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: var(--lgl-radius-full);
+	border: 0;
+	padding: 0;
+	background: var(--lgl-border-muted);
+}
+
+.lgl-carousel__dot[aria-selected="true"] {
+	background: var(--lgl-color-brand);
+}
+
+/* --- Per-view: mobile (default, < 640px) --- */
+.lgl-carousel[data-per-view-mobile="1"] {
+	--lgl-per-view: 1;
+}
+.lgl-carousel[data-per-view-mobile="2"] {
+	--lgl-per-view: 2;
+}
+.lgl-carousel[data-per-view-mobile="3"] {
+	--lgl-per-view: 3;
+}
+
+/* --- Per-view: tablet (>= 640px) --- */
+@media (min-width: 640px) {
+	.lgl-carousel[data-per-view-tablet="1"] {
+		--lgl-per-view: 1;
+	}
+	.lgl-carousel[data-per-view-tablet="2"] {
+		--lgl-per-view: 2;
+	}
+	.lgl-carousel[data-per-view-tablet="3"] {
+		--lgl-per-view: 3;
+	}
+	.lgl-carousel[data-per-view-tablet="4"] {
+		--lgl-per-view: 4;
+	}
+}
+
+/* --- Per-view: desktop (>= 992px) --- */
+@media (min-width: 992px) {
+	.lgl-carousel[data-per-view-desktop="1"] {
+		--lgl-per-view: 1;
+	}
+	.lgl-carousel[data-per-view-desktop="2"] {
+		--lgl-per-view: 2;
+	}
+	.lgl-carousel[data-per-view-desktop="3"] {
+		--lgl-per-view: 3;
+	}
+	.lgl-carousel[data-per-view-desktop="4"] {
+		--lgl-per-view: 4;
+	}
+	.lgl-carousel[data-per-view-desktop="5"] {
+		--lgl-per-view: 5;
+	}
+	.lgl-carousel[data-per-view-desktop="6"] {
+		--lgl-per-view: 6;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lgl-carousel__viewport {
+		scroll-behavior: auto;
+	}
+}

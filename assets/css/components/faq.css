@@ -1,0 +1,106 @@
+/**
+ * Product FAQ accordion — template-parts/product/faq.php.
+ *
+ * Animation technique: native <details> hides its non-summary content with
+ * a UA-stylesheet `display: none` while closed, and a `display: none`
+ * change is not something CSS can transition — so a max-height (or
+ * grid-template-rows) transition on the answer alone does nothing useful
+ * on browsers that only have that. Rather than fight this with a
+ * max-height hack (guessing a large fixed value, which either clips tall
+ * answers or produces a variable-speed "snap" animation because the
+ * transition duration is fixed but the real content height isn't), this
+ * uses the ::details-content pseudo-element (CSS Overflow/Display specs)
+ * that's built specifically to make a <details> panel's open/close
+ * transitionable, gated behind @supports. Browsers without it (anything
+ * before the ::details-content rollout) get NO animation at all — an
+ * instant native toggle — which is the explicitly preferred fallback over
+ * a broken/approximate hack.
+ *
+ * @package logelite
+ */
+
+.lgl-faq__heading {
+	font-size: var(--lgl-text-2xl);
+	font-weight: var(--lgl-weight-extrabold);
+	margin-block-end: var(--lgl-space-6);
+}
+
+.lgl-faq__list {
+	border-top: 1px solid var(--lgl-border-default);
+}
+
+.lgl-faq__item {
+	border-bottom: 1px solid var(--lgl-border-default);
+}
+
+.lgl-faq__item > summary {
+	list-style: none;
+}
+
+.lgl-faq__item > summary::-webkit-details-marker {
+	display: none;
+}
+
+.lgl-faq__q {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--lgl-space-4);
+	padding-block: var(--lgl-space-4);
+	cursor: pointer;
+	font-weight: var(--lgl-weight-semibold);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-faq__chevron {
+	flex-shrink: 0;
+	width: 1rem;
+	height: 1rem;
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+.lgl-faq__item[open] .lgl-faq__chevron {
+	transform: rotate(180deg);
+}
+
+.lgl-faq__a {
+	padding-bottom: var(--lgl-space-4);
+	color: var(--lgl-text-secondary);
+}
+
+.lgl-faq__a :is(ul, ol) {
+	padding-inline-start: var(--lgl-space-6);
+}
+
+/* Progressive-enhancement animation — see docblock above for why this is
+ * gated rather than a universal max-height transition. */
+@supports (transition-behavior: allow-discrete) {
+	.lgl-faq__item {
+		interpolate-size: allow-keywords;
+	}
+
+	.lgl-faq__item::details-content {
+		overflow: hidden;
+		opacity: 0;
+		block-size: 0;
+		transition:
+			content-visibility var(--lgl-dur-base) allow-discrete,
+			opacity var(--lgl-dur-base),
+			block-size var(--lgl-dur-base);
+	}
+
+	.lgl-faq__item[open]::details-content {
+		opacity: 1;
+		block-size: auto;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lgl-faq__chevron {
+		transition: none;
+	}
+
+	.lgl-faq__item::details-content {
+		transition: none;
+	}
+}

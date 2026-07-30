@@ -57,6 +57,20 @@ if ( ! function_exists( 'lgl_button' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_carousel' ) ) {
+	/**
+	 * Render the reusable carousel shell.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $args See template-parts/carousel.php.
+	 * @return void
+	 */
+	function lgl_carousel( $args = array() ) {
+		get_template_part( 'template-parts/carousel', null, $args );
+	}
+}
+
 if ( ! function_exists( 'lgl_breadcrumbs' ) ) {
 	/**
 	 * Render the breadcrumb trail.

@@ -114,6 +114,49 @@ if ( ! function_exists( 'lgl_enqueue_global_styles' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_enqueue_carousel_style' ) ) {
+	/**
+	 * Enqueue the reusable carousel's stylesheet.
+	 *
+	 * Called from every page context that can render a carousel
+	 * (is_front_page(), is_product(), is_cart()) — wp_enqueue_style() is
+	 * idempotent per handle, so calling this more than once per request is
+	 * harmless.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_enqueue_carousel_style() {
+		wp_enqueue_style(
+			'lgl-carousel',
+			get_theme_file_uri( 'assets/css/components/carousel.css' ),
+			array( 'lgl-app' ),
+			lgl_asset_version( 'assets/css/components/carousel.css' )
+		);
+	}
+}
+
+if ( ! function_exists( 'lgl_enqueue_carousel_script' ) ) {
+	/**
+	 * Enqueue the reusable carousel's script.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_enqueue_carousel_script() {
+		wp_enqueue_script(
+			'lgl-carousel',
+			get_theme_file_uri( 'assets/js/carousel.js' ),
+			array(),
+			lgl_asset_version( 'assets/js/carousel.js' ),
+			true
+		);
+		wp_script_add_data( 'lgl-carousel', 'strategy', 'defer' );
+	}
+}
+
 if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 	/**
 	 * Enqueue page-specific stylesheets only where they are needed.
@@ -133,6 +176,8 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				array( 'lgl-app' ),
 				lgl_asset_version( 'assets/css/pages/home.css' )
 			);
+
+			lgl_enqueue_carousel_style();
 		}
 
 		if ( ! lgl_wc_active() ) {
@@ -146,6 +191,22 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				array( 'lgl-app' ),
 				lgl_asset_version( 'assets/css/pages/product.css' )
 			);
+
+			wp_enqueue_style(
+				'lgl-sticky-cart',
+				get_theme_file_uri( 'assets/css/components/sticky-cart.css' ),
+				array( 'lgl-app' ),
+				lgl_asset_version( 'assets/css/components/sticky-cart.css' )
+			);
+
+			wp_enqueue_style(
+				'lgl-faq',
+				get_theme_file_uri( 'assets/css/components/faq.css' ),
+				array( 'lgl-app' ),
+				lgl_asset_version( 'assets/css/components/faq.css' )
+			);
+
+			lgl_enqueue_carousel_style();
 		}
 
 		if ( is_checkout() || is_cart() ) {
@@ -155,6 +216,10 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				array( 'lgl-app' ),
 				lgl_asset_version( 'assets/css/pages/checkout.css' )
 			);
+		}
+
+		if ( is_cart() ) {
+			lgl_enqueue_carousel_style();
 		}
 
 		if ( is_shop() || is_product_taxonomy() ) {
@@ -230,6 +295,47 @@ if ( ! function_exists( 'lgl_enqueue_quantity_script' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_enqueue_delivery_script' ) ) {
+	/**
+	 * Enqueue the delivery estimator script and localize the REST route
+	 * URL, nonce, product ID, and UI strings it needs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_enqueue_delivery_script() {
+		wp_enqueue_script(
+			'lgl-delivery',
+			get_theme_file_uri( 'assets/js/delivery.js' ),
+			array(),
+			lgl_asset_version( 'assets/js/delivery.js' ),
+			true
+		);
+		wp_script_add_data( 'lgl-delivery', 'strategy', 'defer' );
+
+		wp_localize_script(
+			'lgl-delivery',
+			'lglDelivery',
+			array(
+				'restUrl'   => esc_url_raw( rest_url( 'lgl/v1/delivery' ) ),
+				'nonce'     => wp_create_nonce( 'wp_rest' ),
+				'productId' => get_queried_object_id(),
+				'i18n'      => array(
+					'loading'        => esc_html__( 'Checking delivery options…', 'logelite' ),
+					'invalidPincode' => esc_html__( 'Enter a valid 6-digit pincode.', 'logelite' ),
+					'rateLimited'    => esc_html__( 'Too many requests. Please wait a minute and try again.', 'logelite' ),
+					'serverError'    => esc_html__( 'Something went wrong. Please try again later.', 'logelite' ),
+					'genericError'   => esc_html__( 'Unable to check delivery right now. Please try again.', 'logelite' ),
+					'unserviceable'  => esc_html__( 'Delivery is not available for this pincode.', 'logelite' ),
+					'codAvailable'   => esc_html__( 'Cash on delivery available.', 'logelite' ),
+					'codUnavailable' => esc_html__( 'Cash on delivery not available for this pincode.', 'logelite' ),
+				),
+			)
+		);
+	}
+}
+
 if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 	/**
 	 * Enqueue page-specific scripts only where they are needed.
@@ -239,6 +345,10 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 	 * @return void
 	 */
 	function lgl_enqueue_conditional_scripts() {
+		if ( is_front_page() ) {
+			lgl_enqueue_carousel_script();
+		}
+
 		if ( ! lgl_wc_active() ) {
 			return;
 		}
@@ -265,6 +375,28 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 				true
 			);
 			wp_script_add_data( 'lgl-product', 'strategy', 'defer' );
+
+			lgl_enqueue_delivery_script();
+
+			wp_enqueue_script(
+				'lgl-sticky-cart',
+				get_theme_file_uri( 'assets/js/sticky-cart.js' ),
+				array( 'jquery' ),
+				lgl_asset_version( 'assets/js/sticky-cart.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-sticky-cart', 'strategy', 'defer' );
+
+			wp_enqueue_script(
+				'lgl-faq',
+				get_theme_file_uri( 'assets/js/faq.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/faq.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-faq', 'strategy', 'defer' );
+
+			lgl_enqueue_carousel_script();
 		}
 
 		if ( is_cart() ) {
@@ -278,6 +410,8 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 				true
 			);
 			wp_script_add_data( 'lgl-cart', 'strategy', 'defer' );
+
+			lgl_enqueue_carousel_script();
 		}
 	}
 }
@@ -336,10 +470,11 @@ add_action( 'wp_enqueue_scripts', 'lgl_enqueue_assets' );
 
 if ( ! function_exists( 'lgl_admin_enqueue_assets' ) ) {
 	/**
-	 * Enqueue admin-only assets.
+	 * Enqueue admin-only assets: the generic repeater engine used by the
+	 * FAQ / feature-icon product meta boxes (see inc/meta-boxes.php).
 	 *
-	 * Reserved for the product FAQ / feature-icon meta box UI (see
-	 * inc/meta-boxes.php) added in a later task.
+	 * Loaded only on the product edit screen — nowhere else in wp-admin
+	 * needs it.
 	 *
 	 * @since 1.0.0
 	 *
@@ -347,6 +482,40 @@ if ( ! function_exists( 'lgl_admin_enqueue_assets' ) ) {
 	 * @return void
 	 */
 	function lgl_admin_enqueue_assets( $hook_suffix ) {
+		unset( $hook_suffix );
+
+		$lgl_screen = get_current_screen();
+
+		if ( ! $lgl_screen || 'product' !== $lgl_screen->post_type || ! in_array( $lgl_screen->base, array( 'post' ), true ) ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'lgl-admin',
+			get_theme_file_uri( 'assets/css/admin.css' ),
+			array(),
+			lgl_asset_version( 'assets/css/admin.css' )
+		);
+
+		wp_enqueue_script(
+			'lgl-admin-repeater',
+			get_theme_file_uri( 'assets/js/admin-repeater.js' ),
+			array(),
+			lgl_asset_version( 'assets/js/admin-repeater.js' ),
+			true
+		);
+
+		wp_localize_script(
+			'lgl-admin-repeater',
+			'lglRepeater',
+			array(
+				'addRow'        => esc_html__( 'Add row', 'logelite' ),
+				'removeRow'     => esc_html__( 'Remove', 'logelite' ),
+				'moveUp'        => esc_html__( 'Move up', 'logelite' ),
+				'moveDown'      => esc_html__( 'Move down', 'logelite' ),
+				'confirmDelete' => esc_html__( 'Remove this row?', 'logelite' ),
+			)
+		);
 	}
 }
 add_action( 'admin_enqueue_scripts', 'lgl_admin_enqueue_assets' );

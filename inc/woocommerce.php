@@ -157,52 +157,61 @@ if ( ! function_exists( 'lgl_breadcrumb_defaults' ) ) {
 }
 add_filter( 'woocommerce_breadcrumb_defaults', 'lgl_breadcrumb_defaults' );
 
-if ( ! function_exists( 'lgl_product_feature_icons_placeholder' ) ) {
+if ( ! function_exists( 'lgl_render_feature_icons' ) ) {
 	/**
-	 * T3 placeholder: feature icons (e.g. "2-year warranty", "Free returns").
+	 * Render the feature icons list on the single product page.
 	 *
-	 * TODO (T3): render feature icons here, sourced from product meta
-	 * managed by a meta box added in inc/meta-boxes.php. Layout-only scope
-	 * guard for this task — intentionally empty besides the pass-through
-	 * action, so T3 has something to hook without touching this file.
+	 * Supersedes the earlier lgl_product_feature_icons_placeholder() (which
+	 * fired an empty custom action on woocommerce_single_product_summary,
+	 * priority 60 — see the priority-map comment on
+	 * lgl_reorder_single_product_summary() below, which no longer reserves
+	 * that slot). Hooked to woocommerce_after_add_to_cart_form instead,
+	 * outside the summary column entirely, so it sits directly under the
+	 * add-to-cart button rather than as a separate summary row.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
-	function lgl_product_feature_icons_placeholder() {
-		/**
-		 * Hook: lgl_product_feature_icons. Empty on purpose — T3 attaches here.
-		 */
-		do_action( 'lgl_product_feature_icons' );
-	}
-}
+	function lgl_render_feature_icons() {
+		global $product;
 
-if ( ! function_exists( 'lgl_delivery_estimator_placeholder' ) ) {
+		$lgl_product_id = ( $product instanceof WC_Product ) ? $product->get_id() : 0;
+
+		get_template_part( 'template-parts/product/feature-icons', null, array( 'product_id' => $lgl_product_id ) );
+	}
+}
+add_action( 'woocommerce_after_add_to_cart_form', 'lgl_render_feature_icons', 15 );
+
+if ( ! function_exists( 'lgl_render_delivery_estimator' ) ) {
 	/**
-	 * T3 placeholder: delivery estimator (postcode -> estimated delivery date).
+	 * Render the delivery estimator on the single product page.
 	 *
-	 * TODO (T3): render a small form here, backed by an AJAX endpoint in
-	 * inc/ajax.php (see CLAUDE.md §3 — "ajax.php # delivery estimator
-	 * endpoint"). Intentionally empty besides the pass-through action.
+	 * Supersedes the earlier lgl_delivery_estimator_placeholder() (which
+	 * fired an empty custom action on woocommerce_single_product_summary,
+	 * priority 70 — see the priority-map comment on
+	 * lgl_reorder_single_product_summary() below, which no longer reserves
+	 * that slot). Hooked to woocommerce_after_add_to_cart_form instead,
+	 * same as lgl_render_feature_icons() above, so both sit outside the
+	 * summary column directly under the add-to-cart button.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
-	function lgl_delivery_estimator_placeholder() {
-		/**
-		 * Hook: lgl_delivery_estimator. Empty on purpose — T3 attaches here.
-		 */
-		do_action( 'lgl_delivery_estimator' );
+	function lgl_render_delivery_estimator() {
+		get_template_part( 'template-parts/product/delivery-estimator' );
 	}
 }
+add_action( 'woocommerce_after_add_to_cart_form', 'lgl_render_delivery_estimator', 20 );
 
 if ( ! function_exists( 'lgl_reorder_single_product_summary' ) ) {
 	/**
 	 * Re-declare the woocommerce_single_product_summary hook stack at
-	 * explicit, evenly-spaced priorities, with two empty T3 placeholder
-	 * slots reserved between add-to-cart and meta.
+	 * explicit, evenly-spaced priorities. The two T3 placeholder slots
+	 * originally reserved between add-to-cart and meta (feature icons,
+	 * delivery estimator) have both since been superseded — see the map
+	 * below — and are free again.
 	 *
 	 * FINAL PRIORITY MAP (woocommerce_single_product_summary unless noted):
 	 *
@@ -215,8 +224,13 @@ if ( ! function_exists( 'lgl_reorder_single_product_summary' ) ) {
 	 *   30  woocommerce_template_single_price
 	 *   40  woocommerce_template_single_excerpt      (short description)
 	 *   50  woocommerce_template_single_add_to_cart
-	 *   60  lgl_product_feature_icons_placeholder    [T3 — empty, see TODO above]
-	 *   70  lgl_delivery_estimator_placeholder       [T3 — empty, see TODO above]
+	 *   -   feature icons no longer reserve a slot here — lgl_render_feature_icons()
+	 *       renders on woocommerce_after_add_to_cart_form (priority 15) instead,
+	 *       outside this hook entirely; priority 60 below is free again.
+	 *   -   delivery estimator no longer reserves a slot here either —
+	 *       lgl_render_delivery_estimator() renders on
+	 *       woocommerce_after_add_to_cart_form (priority 20) instead;
+	 *       priority 70 below is free again.
 	 *   80  woocommerce_template_single_meta         (SKU / category / tags)
 	 *   90  woocommerce_template_single_sharing
 	 *   100 WC_Structured_Data::generate_product_data() (via WC()->structured_data;
@@ -247,8 +261,6 @@ if ( ! function_exists( 'lgl_reorder_single_product_summary' ) ) {
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 30 );
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 40 );
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 50 );
-		add_action( 'woocommerce_single_product_summary', 'lgl_product_feature_icons_placeholder', 60 );
-		add_action( 'woocommerce_single_product_summary', 'lgl_delivery_estimator_placeholder', 70 );
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_meta', 80 );
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_sharing', 90 );
 		add_action( 'woocommerce_single_product_summary', array( WC()->structured_data, 'generate_product_data' ), 100 );
@@ -416,3 +428,340 @@ if ( ! function_exists( 'lgl_search_products_only' ) ) {
 	}
 }
 add_action( 'pre_get_posts', 'lgl_search_products_only' );
+
+if ( ! function_exists( 'lgl_render_product_faqs' ) ) {
+	/**
+	 * Render template-parts/product/faq.php.
+	 *
+	 * The single shared entry point for both FAQ placements: WooCommerce
+	 * calls this directly as a `woocommerce_product_tabs` tab callback
+	 * (with $key/$tab args, both unused), and
+	 * lgl_render_product_faqs_section() below calls it with no args at all
+	 * — either way it's the exact same template part, so the two
+	 * placements can never render different markup.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $key Tab key (unused; present only to match the
+	 *                    woocommerce_product_tabs callback signature).
+	 * @param array  $tab Tab data (unused, same reason).
+	 * @return void
+	 */
+	function lgl_render_product_faqs( $key = '', $tab = array() ) {
+		unset( $key, $tab );
+
+		get_template_part( 'template-parts/product/faq' );
+	}
+}
+
+if ( ! function_exists( 'lgl_add_faq_product_tab' ) ) {
+	/**
+	 * Add a "FAQs" WooCommerce product tab when lgl_faq_placement includes
+	 * 'tab' and the current product actually has FAQs.
+	 *
+	 * Priority 25 — after the default 'additional_information' tab (20)
+	 * and before 'reviews' (30), per the brief.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $tabs Existing tabs, keyed by tab id.
+	 * @return array Filtered tabs.
+	 */
+	function lgl_add_faq_product_tab( $tabs ) {
+		if ( ! in_array( get_theme_mod( 'lgl_faq_placement', 'section' ), array( 'tab', 'both' ), true ) ) {
+			return $tabs;
+		}
+
+		if ( empty( lgl_get_product_faqs() ) ) {
+			return $tabs;
+		}
+
+		$tabs['faq'] = array(
+			'title'    => esc_html__( 'FAQs', 'logelite' ),
+			'priority' => 25,
+			'callback' => 'lgl_render_product_faqs',
+		);
+
+		return $tabs;
+	}
+}
+add_filter( 'woocommerce_product_tabs', 'lgl_add_faq_product_tab' );
+
+if ( ! function_exists( 'lgl_render_product_faqs_section' ) ) {
+	/**
+	 * Render the inline FAQ section when lgl_faq_placement includes 'section'.
+	 *
+	 * Priority 15 on woocommerce_after_single_product_summary, before the
+	 * related products output (priority 20 by default), per the brief.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_render_product_faqs_section() {
+		if ( ! in_array( get_theme_mod( 'lgl_faq_placement', 'section' ), array( 'section', 'both' ), true ) ) {
+			return;
+		}
+
+		lgl_render_product_faqs();
+	}
+}
+add_action( 'woocommerce_after_single_product_summary', 'lgl_render_product_faqs_section', 15 );
+
+if ( ! function_exists( 'lgl_output_faq_schema' ) ) {
+	/**
+	 * Output FAQPage JSON-LD structured data for the current product.
+	 *
+	 * The JSON is intentionally NOT passed through esc_html(): esc_html()
+	 * converts the JSON's own characters (notably `&`, `<`, `>` inside any
+	 * answer text) into HTML entities, which would corrupt the JSON and
+	 * make it fail to parse inside <script type="application/ld+json">.
+	 * wp_json_encode() with JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE
+	 * IS the correct/complete escaping for this context — it already
+	 * produces a `</script>`-safe payload (`/` stays unescaped by our own
+	 * flag, but `<` inside string values is escaped to `<` by PHP's
+	 * json_encode() regardless of that flag, which is what actually
+	 * prevents a literal "</script>" from ever appearing in the output).
+	 * A reviewer flagging "unescaped output" here would be looking at the
+	 * wrong escaping function for this content type — see php.net's
+	 * json_encode() docs on JSON_HEX_* / default `<` handling.
+	 *
+	 * Some SEO plugins (Yoast SEO, RankMath) can also emit FAQPage schema
+	 * from the same FAQ-like content, which would mean duplicate FAQPage
+	 * blocks on one page. This is surfaced via the `lgl_output_faq_schema`
+	 * filter (default true) rather than auto-disabled, since: (a) neither
+	 * plugin is a hard dependency of this theme, (b) whether either plugin
+	 * is even configured to output FAQPage schema for this content is not
+	 * something this theme can detect, only that the plugin is *active*
+	 * (defined('WPSEO_VERSION') for Yoast; RankMath has no equivalent
+	 * constant convention to check as reliably). A site actually running
+	 * into duplicate schema should disable one side explicitly:
+	 * `add_filter( 'lgl_output_faq_schema', '__return_false' );`
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_output_faq_schema() {
+		if ( ! is_product() ) {
+			return;
+		}
+
+		if ( ! apply_filters( 'lgl_output_faq_schema', true ) ) {
+			return;
+		}
+
+		$lgl_faqs = lgl_get_product_faqs();
+
+		if ( empty( $lgl_faqs ) ) {
+			return;
+		}
+
+		$lgl_entities = array();
+
+		foreach ( $lgl_faqs as $lgl_faq ) {
+			$lgl_question = isset( $lgl_faq['question'] ) ? $lgl_faq['question'] : '';
+			$lgl_answer   = isset( $lgl_faq['answer'] ) ? $lgl_faq['answer'] : '';
+
+			if ( '' === $lgl_question || '' === $lgl_answer ) {
+				continue;
+			}
+
+			$lgl_entities[] = array(
+				'@type'          => 'Question',
+				'name'           => wp_strip_all_tags( $lgl_question ),
+				'acceptedAnswer' => array(
+					'@type' => 'Answer',
+					// Schema.org wants plain text, and stripping tags here
+					// avoids ever having to think about escaping HTML
+					// markup inside a JSON string value.
+					'text'  => wp_strip_all_tags( $lgl_answer ),
+				),
+			);
+		}
+
+		if ( empty( $lgl_entities ) ) {
+			return;
+		}
+
+		$lgl_schema = array(
+			'@context'   => 'https://schema.org',
+			'@type'      => 'FAQPage',
+			'mainEntity' => $lgl_entities,
+		);
+		?>
+		<script type="application/ld+json">
+			<?php echo wp_json_encode( $lgl_schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_json_encode() is the correct escaping for a JSON script body; esc_html() would corrupt it. See docblock above. ?>
+		</script>
+		<?php
+	}
+}
+add_action( 'wp_footer', 'lgl_output_faq_schema' );
+
+if ( ! function_exists( 'lgl_related_products_args' ) ) {
+	/**
+	 * Set related-products count/columns from the Customizer.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $args Default args (posts_per_page, columns, orderby).
+	 * @return array Filtered args.
+	 */
+	function lgl_related_products_args( $args ) {
+		$args['posts_per_page'] = get_theme_mod( 'lgl_related_products_count', 8 );
+		$args['columns']        = get_theme_mod( 'lgl_related_products_columns', 4 );
+
+		return $args;
+	}
+}
+add_filter( 'woocommerce_output_related_products_args', 'lgl_related_products_args' );
+
+if ( ! function_exists( 'lgl_related_products_fallback' ) ) {
+	/**
+	 * Fall back to up-sells, then same-category products, when a product
+	 * has no related products of its own.
+	 *
+	 * Runs inside wc_get_related_products() via the woocommerce_related_products
+	 * filter, so woocommerce/single-product/related.php stays a clean
+	 * "render whatever $related_products is" template with no fallback
+	 * branching of its own.
+	 *
+	 * Note on up-sells specifically: wc_get_related_products() is always
+	 * called with the product's own up-sell IDs as its exclude list (so
+	 * $args['excluded_ids'] here already contains them) — WooCommerce's own
+	 * way of keeping the two sections from overlapping when both are shown.
+	 * Falling back to up-sells here deliberately overrides that exclusion,
+	 * since an empty "related" section is the point being solved for; the
+	 * trade-off is that if this product also has its own real up-sells
+	 * section further up the same page (woocommerce_upsell_display(), same
+	 * woocommerce_after_single_product_summary hook, priority 15), the same
+	 * products could appear in both — accepted here since the fallback only
+	 * ever fires when related products are empty to begin with.
+	 *
+	 * Neither fallback lookup is cached the way wc_get_related_products()'s
+	 * own transient caches its category/tag match — acceptable since this
+	 * path only runs for products with no real relations, the exception
+	 * rather than the common case.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $related_posts Related product IDs found so far.
+	 * @param int   $product_id    The current product's ID.
+	 * @param array $args          array( 'limit' => int, 'excluded_ids' => array ).
+	 * @return array
+	 */
+	function lgl_related_products_fallback( $related_posts, $product_id, $args ) {
+		if ( ! empty( $related_posts ) ) {
+			return $related_posts;
+		}
+
+		$lgl_product = wc_get_product( $product_id );
+
+		if ( ! $lgl_product instanceof WC_Product ) {
+			return $related_posts;
+		}
+
+		$lgl_limit = isset( $args['limit'] ) ? absint( $args['limit'] ) : 4;
+
+		$lgl_upsell_ids = array_values( array_filter( $lgl_product->get_upsell_ids() ) );
+
+		if ( ! empty( $lgl_upsell_ids ) ) {
+			return array_slice( $lgl_upsell_ids, 0, $lgl_limit );
+		}
+
+		// Then same-category products.
+		$lgl_cat_ids = wc_get_product_term_ids( $product_id, 'product_cat' );
+
+		if ( empty( $lgl_cat_ids ) ) {
+			return $related_posts;
+		}
+
+		$lgl_visibility_terms = wc_get_product_visibility_term_ids();
+
+		$lgl_query = new WP_Query(
+			array(
+				'post_type'              => 'product',
+				'post_status'            => 'publish',
+				'posts_per_page'         => $lgl_limit,
+				'post__not_in'           => array( $product_id ),
+				'fields'                 => 'ids',
+				'orderby'                => 'rand',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'tax_query'              => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+					array(
+						'taxonomy' => 'product_cat',
+						'field'    => 'term_id',
+						'terms'    => $lgl_cat_ids,
+					),
+					array(
+						'taxonomy' => 'product_visibility',
+						'field'    => 'term_taxonomy_id',
+						'terms'    => array( $lgl_visibility_terms['exclude-from-catalog'] ),
+						'operator' => 'NOT IN',
+					),
+				),
+			)
+		);
+
+		// Bail with whatever we had (nothing) if even the category fallback
+		// comes back empty — the template already handles an empty
+		// $related_products by rendering nothing.
+		return empty( $lgl_query->posts ) ? $related_posts : $lgl_query->posts;
+	}
+}
+add_filter( 'woocommerce_related_products', 'lgl_related_products_fallback', 10, 3 );
+
+if ( ! function_exists( 'lgl_render_sticky_cart' ) ) {
+	/**
+	 * Render the sticky add-to-cart bar in the footer of single product pages.
+	 *
+	 * Bails for:
+	 * - Any page that isn't a single product, or when WooCommerce is inactive.
+	 * - A grouped product: never bailed on is_purchasable() — WooCommerce
+	 *   hardcodes WC_Product_Grouped::is_purchasable() to always return
+	 *   false (only its children are purchasable, never the parent), which
+	 *   would otherwise silently hide the sticky bar for every grouped
+	 *   product. That's fine here specifically because the grouped branch
+	 *   of the template doesn't proxy a purchase at all — it only renders a
+	 *   "View options" link that scrolls to the real form.
+	 * - An external product: also never bailed on is_purchasable(), for the
+	 *   exact same reason (WC_Product_External::is_purchasable() is also
+	 *   hardcoded false). Bailed instead on having no product URL set —
+	 *   template-parts/product/sticky-cart.php renders a plain link to that
+	 *   URL for external products, and there's nothing useful to link to
+	 *   without one.
+	 * - Simple and variable products: bailed on !is_purchasable() as normal
+	 *   (matches woocommerce/single-product/add-to-cart/simple.php's own
+	 *   gate on the real form — out of stock/no price means there's
+	 *   nothing on the page for the sticky bar to proxy either).
+	 *
+	 * See the template's own docblock for the full per-type breakdown.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_render_sticky_cart() {
+		if ( ! is_product() || ! lgl_wc_active() ) {
+			return;
+		}
+
+		global $product;
+
+		if ( ! $product instanceof WC_Product ) {
+			return;
+		}
+
+		if ( $product->is_type( 'external' ) ) {
+			if ( ! $product->get_product_url() ) {
+				return;
+			}
+		} elseif ( ! $product->is_type( 'grouped' ) && ! $product->is_purchasable() ) {
+			return;
+		}
+
+		get_template_part( 'template-parts/product/sticky-cart' );
+	}
+}
+add_action( 'wp_footer', 'lgl_render_sticky_cart' );

@@ -1,0 +1,100 @@
+/**
+ * Admin repeater UI (product meta boxes). Deliberately minimal — relies
+ * on WordPress admin's own .button classes and the CSS custom properties
+ * modern admin color schemes expose, not a custom design system.
+ *
+ * @package logelite
+ */
+
+.lgl-repeater__rows {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.lgl-repeater__row {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+.lgl-repeater__row:focus-within {
+	border-color: var(--wp-admin-theme-color, #2271b1);
+}
+
+.lgl-repeater__row-fields {
+	flex: 1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.lgl-repeater__row-fields label {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-weight: 600;
+}
+
+.lgl-repeater__row-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 0 0 auto;
+}
+
+.lgl-repeater__row-actions .button {
+	min-width: 32px;
+	padding: 0 4px;
+	line-height: 28px;
+}
+
+.lgl-repeater__row-actions .button:disabled {
+	opacity: 0.4;
+}
+
+.lgl-repeater__add {
+	margin-top: 4px;
+}
+
+.lgl-repeater__empty {
+	font-style: italic;
+	color: #646970;
+}
+
+/* FAQ meta box: a collapsible <details> per row, with its own row-level
+ * toolbar as a SIBLING of the <details> — not inside its <summary> — so a
+ * toolbar button click never also triggers the summary's native toggle. */
+.lgl-faq-row {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 4px;
+}
+
+.lgl-faq-row__toolbar {
+	display: flex;
+	justify-content: flex-end;
+	gap: 4px;
+}
+
+.lgl-faq-row__summary {
+	cursor: pointer;
+	font-weight: 600;
+	padding: 4px 0;
+}
+
+.lgl-faq-row__fields {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-top: 8px;
+}
+
+.lgl-faq-row__fields .widefat {
+	max-width: 100%;
+}

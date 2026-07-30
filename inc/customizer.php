@@ -23,6 +23,22 @@ if ( ! function_exists( 'lgl_sanitize_checkbox' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_sanitize_faq_placement' ) ) {
+	/**
+	 * Sanitize the lgl_faq_placement select control to a whitelisted value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $value Raw value submitted by the control.
+	 * @return string 'tab', 'section', or 'both'.
+	 */
+	function lgl_sanitize_faq_placement( $value ) {
+		$lgl_allowed = array( 'tab', 'section', 'both' );
+
+		return in_array( $value, $lgl_allowed, true ) ? $value : 'section';
+	}
+}
+
 if ( ! function_exists( 'lgl_customize_register_header' ) ) {
 	/**
 	 * Register the header announcement-bar setting and control.
@@ -220,6 +236,95 @@ if ( ! function_exists( 'lgl_customize_register_shop' ) ) {
 				'input_attrs' => array(
 					'min' => 4,
 					'max' => 48,
+				),
+			)
+		);
+	}
+}
+
+if ( ! function_exists( 'lgl_customize_register_product' ) ) {
+	/**
+	 * Register the single product page section: FAQ placement and the
+	 * related-products carousel size.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Customize_Manager $wp_customize Customizer manager instance.
+	 * @return void
+	 */
+	function lgl_customize_register_product( $wp_customize ) {
+		$wp_customize->add_section(
+			'lgl_product',
+			array(
+				'title'    => esc_html__( 'Product Page', 'logelite' ),
+				'priority' => 168,
+			)
+		);
+
+		$wp_customize->add_setting(
+			'lgl_faq_placement',
+			array(
+				'default'           => 'section',
+				'sanitize_callback' => 'lgl_sanitize_faq_placement',
+				'transport'         => 'refresh',
+			)
+		);
+
+		$wp_customize->add_control(
+			'lgl_faq_placement',
+			array(
+				'type'        => 'select',
+				'section'     => 'lgl_product',
+				'label'       => esc_html__( 'FAQ placement', 'logelite' ),
+				'description' => esc_html__( 'Where product FAQs appear. Only shown when a product has at least one FAQ.', 'logelite' ),
+				'choices'     => array(
+					'tab'     => esc_html__( 'WooCommerce tab only', 'logelite' ),
+					'section' => esc_html__( 'Inline section only (below the summary)', 'logelite' ),
+					'both'    => esc_html__( 'Both', 'logelite' ),
+				),
+			)
+		);
+
+		$wp_customize->add_setting(
+			'lgl_related_products_count',
+			array(
+				'default'           => 8,
+				'sanitize_callback' => 'absint',
+				'transport'         => 'refresh',
+			)
+		);
+
+		$wp_customize->add_control(
+			'lgl_related_products_count',
+			array(
+				'type'        => 'number',
+				'section'     => 'lgl_product',
+				'label'       => esc_html__( 'Related products to show', 'logelite' ),
+				'input_attrs' => array(
+					'min' => 2,
+					'max' => 20,
+				),
+			)
+		);
+
+		$wp_customize->add_setting(
+			'lgl_related_products_columns',
+			array(
+				'default'           => 4,
+				'sanitize_callback' => 'absint',
+				'transport'         => 'refresh',
+			)
+		);
+
+		$wp_customize->add_control(
+			'lgl_related_products_columns',
+			array(
+				'type'        => 'number',
+				'section'     => 'lgl_product',
+				'label'       => esc_html__( 'Related products carousel columns (desktop)', 'logelite' ),
+				'input_attrs' => array(
+					'min' => 2,
+					'max' => 6,
 				),
 			)
 		);
@@ -606,6 +711,7 @@ if ( ! function_exists( 'lgl_customize_register' ) ) {
 		lgl_customize_register_search( $wp_customize );
 		lgl_customize_register_footer( $wp_customize );
 		lgl_customize_register_shop( $wp_customize );
+		lgl_customize_register_product( $wp_customize );
 		lgl_customize_register_homepage( $wp_customize );
 	}
 }
