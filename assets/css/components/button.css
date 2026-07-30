@@ -1,0 +1,88 @@
+/**
+ * Button/link component (template-parts/components/btn.php).
+ *
+ * @package logelite
+ */
+
+.lgl-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--lgl-space-2);
+	border: 1.5px solid transparent;
+	border-radius: var(--lgl-radius-md);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-align: center;
+	cursor: pointer;
+	transition: background var(--lgl-dur-fast) var(--lgl-ease-out),
+		color var(--lgl-dur-fast) var(--lgl-ease-out),
+		border-color var(--lgl-dur-fast) var(--lgl-ease-out);
+}
+
+.lgl-btn--sm {
+	padding: var(--lgl-space-2) var(--lgl-space-4);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-btn--md {
+	padding: var(--lgl-space-3) var(--lgl-space-6);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-btn--lg {
+	padding: var(--lgl-space-4) var(--lgl-space-8);
+	font-size: var(--lgl-text-md);
+}
+
+.lgl-btn--primary {
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-btn--primary:hover,
+.lgl-btn--primary:focus-visible {
+	background: var(--lgl-color-brand);
+}
+
+.lgl-btn--secondary {
+	background: transparent;
+	border-color: color-mix(in srgb, var(--lgl-text-inverse) 45%, transparent);
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-btn--secondary:hover,
+.lgl-btn--secondary:focus-visible {
+	background: var(--lgl-text-inverse);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-btn--ghost {
+	background: transparent;
+	border-color: var(--lgl-border-default);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-btn--ghost:hover,
+.lgl-btn--ghost:focus-visible {
+	background: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-btn--link {
+	border-color: transparent;
+	background: transparent;
+	padding-inline: 0;
+	color: var(--lgl-color-brand-strong);
+}
+
+.lgl-btn--link:hover,
+.lgl-btn--link:focus-visible {
+	color: var(--lgl-color-accent);
+}
+
+.lgl-btn__icon {
+	flex: 0 0 auto;
+}

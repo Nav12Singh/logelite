@@ -1,0 +1,92 @@
+/**
+ * Mega-menu nav styles (LGL_Mega_Walker output).
+ *
+ * The panel is hidden via opacity/visibility, never display:none, so its
+ * open/close state can transition (base.css already disables the
+ * transition under prefers-reduced-motion). See assets/js/navigation.js
+ * for the keyboard layer: Enter/Space toggle, Escape close, focusout
+ * close, outside-pointerdown close.
+ *
+ * @package logelite
+ */
+
+.lgl-nav__item--has-mega {
+	position: relative;
+}
+
+.lgl-mega {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-8px);
+	transition: opacity var(--lgl-dur-base) var(--lgl-ease-out),
+		visibility var(--lgl-dur-base) var(--lgl-ease-out),
+		transform var(--lgl-dur-base) var(--lgl-ease-out);
+	background: var(--lgl-surface-default);
+	border-top: 1px solid var(--lgl-border-default);
+	box-shadow: var(--lgl-shadow-lg);
+	z-index: var(--lgl-z-dropdown);
+}
+
+.lgl-nav__item--has-mega:hover > .lgl-mega,
+.lgl-nav__item--has-mega:focus-within > .lgl-mega,
+.lgl-nav__item--has-mega.is-open > .lgl-mega {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+
+.lgl-mega .lgl-container {
+	padding-block: var(--lgl-space-8);
+}
+
+.lgl-mega__grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--lgl-space-8);
+	list-style: none;
+}
+
+.lgl-mega__col {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-mega__thumb {
+	width: 100%;
+	height: auto;
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-mega__heading {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-mega__desc {
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-mega__links {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+	list-style: none;
+}
+
+.lgl-mega__link {
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-mega__link:hover,
+.lgl-mega__link:focus-visible {
+	color: var(--lgl-color-brand);
+}

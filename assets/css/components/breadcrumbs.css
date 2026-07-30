@@ -1,0 +1,38 @@
+/**
+ * Breadcrumb trail component (template-parts/components/breadcrumbs.php).
+ *
+ * @package logelite
+ */
+
+.lgl-breadcrumbs {
+	color: var(--lgl-text-subtle);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-breadcrumbs__list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	list-style: none;
+}
+
+.lgl-breadcrumbs__item:not(:last-child)::after {
+	content: '/';
+	margin-inline-start: var(--lgl-space-2);
+	color: var(--lgl-text-faint);
+}
+
+.lgl-breadcrumbs__link {
+	color: var(--lgl-text-subtle);
+}
+
+.lgl-breadcrumbs__link:hover,
+.lgl-breadcrumbs__link:focus-visible {
+	color: var(--lgl-color-brand);
+}
+
+.lgl-breadcrumbs__current {
+	color: var(--lgl-text-primary);
+	font-weight: var(--lgl-weight-semibold);
+}

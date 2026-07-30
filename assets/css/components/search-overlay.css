@@ -1,0 +1,74 @@
+/**
+ * Full-screen search overlay chrome (search form styling itself lives in
+ * search-form.css). `hidden` is removed before `.is-open` is added — see
+ * assets/js/search-overlay.js — never display:none for the transition.
+ *
+ * @package logelite
+ */
+
+.lgl-search-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--lgl-z-modal);
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: var(--lgl-space-16) var(--lgl-space-6);
+	background: rgba(20, 24, 28, 0.92);
+	opacity: 0;
+	transition: opacity var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+.lgl-search-overlay.is-open {
+	opacity: 1;
+}
+
+.lgl-search-overlay__panel {
+	position: relative;
+	width: 100%;
+	max-width: 640px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-6);
+}
+
+.lgl-search-overlay__close {
+	align-self: flex-end;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border: 0;
+	background: none;
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-search-overlay .lgl-search-form {
+	border-color: transparent;
+}
+
+.lgl-search-overlay__popular {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-3);
+	color: var(--lgl-neutral-400);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-search-overlay__popular-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-3);
+	list-style: none;
+}
+
+.lgl-search-overlay__popular-list a {
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-search-overlay__popular-list a:hover,
+.lgl-search-overlay__popular-list a:focus-visible {
+	color: var(--lgl-color-brand);
+}

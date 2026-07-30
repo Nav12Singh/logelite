@@ -1,0 +1,230 @@
+/**
+ * Design tokens — CSS custom properties.
+ *
+ * Values are derived from design-reference/Logelite Theme.dc.html unless
+ * flagged "inferred" below. Where the reference used many near-duplicate
+ * greys (decorative placeholder-image gradients), values were consolidated
+ * onto a single ramp step; see ASSUMPTIONS.md, "Design tokens" table, for
+ * the full token → value → source-selector mapping.
+ *
+ * Breakpoints (documented only — custom properties cannot be read inside
+ * @media conditions):
+ *   480   mobile landscape / large phone
+ *   640   small tablet
+ *   768   tablet portrait
+ *   992   tablet landscape / small desktop
+ *   1200  desktop
+ *   1440  large desktop / max container overflow
+ *
+ * @package logelite
+ */
+
+/**
+ * Self-hosted font faces.
+ *
+ * WOFF2 files are not included in this repo — see ASSUMPTIONS.md for the
+ * families/weights to download and the exact paths expected below. No CDN
+ * (Google Fonts) requests are made at runtime.
+ */
+@font-face {
+	font-family: 'Archivo';
+	src: url('../fonts/archivo/archivo-500.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Archivo';
+	src: url('../fonts/archivo/archivo-600.woff2') format('woff2');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Archivo';
+	src: url('../fonts/archivo/archivo-700.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Archivo';
+	src: url('../fonts/archivo/archivo-800.woff2') format('woff2');
+	font-weight: 800;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Public Sans';
+	src: url('../fonts/public-sans/public-sans-400.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Public Sans';
+	src: url('../fonts/public-sans/public-sans-500.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Public Sans';
+	src: url('../fonts/public-sans/public-sans-600.woff2') format('woff2');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Public Sans';
+	src: url('../fonts/public-sans/public-sans-700.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+:root {
+	/* Color — brand */
+	--lgl-color-brand: #0ea292;
+	--lgl-color-brand-strong: #0b7f73;
+	--lgl-color-brand-subtle: #e6f5f3;
+	--lgl-color-accent: #22b24c;
+
+	/* Color — neutral scale (raw ramp, mostly imagery/backgrounds) */
+	--lgl-neutral-0: #ffffff;
+	--lgl-neutral-50: #f7f9fa;
+	--lgl-neutral-100: #f4f6f7;
+	--lgl-neutral-150: #f0f3f4;
+	--lgl-neutral-200: #eef2f3;
+	--lgl-neutral-250: #e7eaec;
+	--lgl-neutral-300: #d6dcde;
+	--lgl-neutral-400: #9aa5a9;
+	--lgl-neutral-500: #7c8a8d;
+	--lgl-neutral-600: #5f6b70;
+	--lgl-neutral-700: #3d474b;
+	--lgl-neutral-800: #232a2f;
+	--lgl-neutral-900: #14181c;
+
+	/* Color — semantic states */
+	--lgl-color-success: #1b8f42;
+	--lgl-color-success-bg: #e8f7ee;
+	--lgl-color-error: #c9453a;
+	--lgl-color-error-bg: #fdeceb;
+	--lgl-color-warning: #f7b731;
+	--lgl-color-warning-text: #b06b00;
+	--lgl-color-warning-bg: #fff4e5;
+	--lgl-color-info: #1a73e8; /* inferred — see ASSUMPTIONS.md */
+
+	/* Color — surface */
+	--lgl-surface-page: var(--lgl-neutral-100);
+	--lgl-surface-default: var(--lgl-neutral-0);
+	--lgl-surface-sunken: var(--lgl-neutral-50);
+	--lgl-surface-inverse: var(--lgl-neutral-900);
+	--lgl-surface-inverse-elevated: #1f262b;
+
+	/* Color — border */
+	--lgl-border-default: var(--lgl-neutral-250);
+	--lgl-border-subtle: var(--lgl-neutral-200);
+	--lgl-border-muted: var(--lgl-neutral-300);
+	--lgl-border-inverse: var(--lgl-neutral-800);
+
+	/* Color — text */
+	--lgl-text-primary: var(--lgl-neutral-900);
+	--lgl-text-secondary: var(--lgl-neutral-700);
+	--lgl-text-muted: var(--lgl-neutral-600);
+	--lgl-text-subtle: var(--lgl-neutral-500);
+	--lgl-text-faint: var(--lgl-neutral-400);
+	--lgl-text-inverse: var(--lgl-neutral-0);
+	--lgl-text-inverse-muted: var(--lgl-neutral-400);
+
+	/* Typography — families */
+	--lgl-font-heading: 'Archivo', Helvetica, Arial, sans-serif;
+	--lgl-font-body: 'Public Sans', Helvetica, Arial, sans-serif;
+
+	/* Typography — fluid type scale, 375px -> 1440px viewport */
+	--lgl-text-xs: clamp(0.6875rem, 0.6635rem + 0.096vw, 0.75rem);
+	--lgl-text-sm: clamp(0.8125rem, 0.7885rem + 0.096vw, 0.875rem);
+	--lgl-text-base: clamp(0.875rem, 0.8269rem + 0.192vw, 1rem);
+	--lgl-text-md: clamp(1rem, 0.9519rem + 0.192vw, 1.125rem);
+	--lgl-text-lg: clamp(1.0625rem, 1.0144rem + 0.192vw, 1.1875rem);
+	--lgl-text-xl: clamp(1.25rem, 1.2019rem + 0.192vw, 1.375rem);
+	--lgl-text-2xl: clamp(1.5rem, 1.4519rem + 0.192vw, 1.625rem);
+	--lgl-text-3xl: clamp(1.75rem, 1.7019rem + 0.192vw, 1.875rem);
+	--lgl-text-4xl: clamp(2rem, 1.7596rem + 0.962vw, 2.625rem);
+	--lgl-text-5xl: clamp(2.25rem, 2.0577rem + 0.769vw, 2.75rem);
+
+	/* Typography — line heights */
+	--lgl-leading-tight: 1.1;
+	--lgl-leading-snug: 1.3;
+	--lgl-leading-normal: 1.5;
+	--lgl-leading-relaxed: 1.85;
+	--lgl-leading-loose: 2.1;
+
+	/* Typography — weights */
+	--lgl-weight-regular: 400;
+	--lgl-weight-medium: 500;
+	--lgl-weight-semibold: 600;
+	--lgl-weight-bold: 700;
+	--lgl-weight-extrabold: 800;
+
+	/* Typography — letter spacing */
+	--lgl-tracking-tight: 0em;
+	--lgl-tracking-normal: 0.02em;
+	--lgl-tracking-wide: 0.06em;
+	--lgl-tracking-wider: 0.1em;
+	--lgl-tracking-widest: 0.2em;
+
+	/* Spacing — 4px step, consistent ratio */
+	--lgl-space-0: 0;
+	--lgl-space-1: 0.25rem;
+	--lgl-space-2: 0.5rem;
+	--lgl-space-3: 0.75rem;
+	--lgl-space-4: 1rem;
+	--lgl-space-5: 1.25rem;
+	--lgl-space-6: 1.5rem;
+	--lgl-space-7: 1.75rem;
+	--lgl-space-8: 2rem;
+	--lgl-space-9: 2.25rem;
+	--lgl-space-10: 2.5rem;
+	--lgl-space-12: 3rem;
+	--lgl-space-14: 3.5rem;
+	--lgl-space-16: 4rem;
+	--lgl-space-20: 5rem;
+	--lgl-space-24: 6rem;
+
+	/* Radius */
+	--lgl-radius-sm: 4px;
+	--lgl-radius-md: 6px;
+	--lgl-radius-lg: 10px;
+	--lgl-radius-full: 999px;
+
+	/* Shadow */
+	--lgl-shadow-sm: 0 1px 2px rgba(20, 24, 28, 0.06);
+	--lgl-shadow-md: 0 4px 12px rgba(20, 24, 28, 0.08);
+	--lgl-shadow-lg: 0 16px 40px rgba(20, 24, 28, 0.1);
+	--lgl-shadow-card-hover: 0 8px 24px rgba(20, 24, 28, 0.07);
+
+	/* Layout */
+	--lgl-container: 1320px;
+	--lgl-container-narrow: 900px;
+	--lgl-header-h: 78px;
+	--lgl-z-dropdown: 10;
+	--lgl-z-sticky: 20;
+	--lgl-z-overlay: 30;
+	--lgl-z-modal: 40;
+	--lgl-z-toast: 50;
+
+	/* Motion */
+	--lgl-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--lgl-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--lgl-dur-fast: 150ms;
+	--lgl-dur-base: 250ms;
+	--lgl-dur-slow: 400ms;
+}

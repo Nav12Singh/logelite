@@ -1,0 +1,195 @@
+/**
+ * Component styles.
+ *
+ * Header-shell rules below are inline in this file; card/hero/button/
+ * breadcrumbs/footer components each live in their own file under
+ * components/ and are pulled in via @import (per-file @wp_enqueue_style
+ * handles are used instead for the nav/nav-mobile/search files — see
+ * inc/enqueue.php — so this project currently mixes both strategies;
+ * logged in ASSUMPTIONS.md). Loaded after base.css — see inc/enqueue.php
+ * for the dependency chain.
+ *
+ * @package logelite
+ */
+
+@import url('components/card.css');
+@import url('components/hero.css');
+@import url('components/button.css');
+@import url('components/breadcrumbs.css');
+@import url('components/footer.css');
+
+/* Header shell */
+
+.lgl-header {
+	position: sticky;
+	top: 0;
+	z-index: var(--lgl-z-sticky);
+	background: var(--lgl-surface-default);
+	transition: box-shadow var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+.lgl-header.is-scrolled {
+	box-shadow: var(--lgl-shadow-md);
+}
+
+.lgl-header.is-scrolled .lgl-header__row--main {
+	padding-block: var(--lgl-space-2);
+}
+
+/* Announcement bar */
+
+.lgl-header__announcement {
+	background: var(--lgl-surface-default);
+	border-bottom: 1px solid var(--lgl-border-default);
+	font-size: var(--lgl-text-xs);
+	color: var(--lgl-text-muted);
+}
+
+.lgl-header__announcement-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--lgl-space-4);
+	padding-block: var(--lgl-space-2);
+}
+
+.lgl-header__hotline {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-header__hotline-badge {
+	background: var(--lgl-neutral-150);
+	color: var(--lgl-text-primary);
+	border-radius: var(--lgl-radius-full);
+	padding: var(--lgl-space-1) var(--lgl-space-3);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-header__announcement-nav {
+	display: flex;
+	gap: var(--lgl-space-5);
+}
+
+.lgl-header__announcement-nav a {
+	color: var(--lgl-text-muted);
+}
+
+/* Main row */
+
+.lgl-header__row--main {
+	padding-block: var(--lgl-space-4);
+	transition: padding var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+.lgl-header__inner {
+	display: grid;
+	grid-template-columns: auto auto 1fr auto;
+	align-items: center;
+	gap: var(--lgl-space-6);
+}
+
+.lgl-header__toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: none;
+	color: var(--lgl-text-primary);
+	padding: var(--lgl-space-2);
+}
+
+.lgl-header__logo {
+	line-height: var(--lgl-leading-tight);
+}
+
+.lgl-header__site-title a {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-header__nav {
+	display: none;
+	justify-self: center;
+}
+
+.lgl-nav__list {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-7);
+	list-style: none;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-semibold);
+	font-size: var(--lgl-text-sm);
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+.lgl-nav__list a {
+	color: var(--lgl-text-primary);
+	padding-block: var(--lgl-space-2);
+	border-bottom: 2px solid transparent;
+}
+
+.lgl-nav__list a:hover,
+.lgl-nav__list a:focus-visible {
+	color: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+}
+
+.lgl-header__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-5);
+	justify-self: end;
+}
+
+.lgl-header__search-toggle,
+.lgl-header__account,
+.lgl-header__cart {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-header__search-toggle {
+	border: 0;
+	background: none;
+	padding: var(--lgl-space-2);
+}
+
+.lgl-header__cart-count {
+	display: inline-grid;
+	place-items: center;
+	min-width: 1.25rem;
+	height: 1.25rem;
+	padding-inline: var(--lgl-space-1);
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+}
+
+/*
+ * Mobile off-canvas nav panel styling lives in components/nav-mobile.css;
+ * the search overlay's own chrome lives in components/search-overlay.css.
+ * This file only decides which trigger (toggle button vs. inline nav) is
+ * visible at each breakpoint.
+ */
+
+@media (min-width: 992px) {
+	.lgl-header__toggle {
+		display: none;
+	}
+
+	.lgl-header__nav {
+		display: block;
+	}
+
+	#lgl-mobile-nav {
+		display: none;
+	}
+}

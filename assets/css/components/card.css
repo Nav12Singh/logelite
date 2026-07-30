@@ -1,0 +1,101 @@
+/**
+ * Product card component (template-parts/components/card-product.php).
+ *
+ * @package logelite
+ */
+
+.lgl-card {
+	display: block;
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	overflow: hidden;
+	transition: box-shadow var(--lgl-dur-base) var(--lgl-ease-out),
+		border-color var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+.lgl-card:hover,
+.lgl-card:focus-within {
+	border-color: var(--lgl-color-brand);
+	box-shadow: var(--lgl-shadow-card-hover);
+}
+
+.lgl-card__link {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+	padding: var(--lgl-space-4);
+	color: inherit;
+}
+
+.lgl-card__media {
+	position: relative;
+	display: block;
+	border-radius: var(--lgl-radius-md);
+	overflow: hidden;
+	aspect-ratio: 1 / 1;
+}
+
+.lgl-card__image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.lgl-card__badge {
+	position: absolute;
+	top: var(--lgl-space-2);
+	left: var(--lgl-space-2);
+	padding: var(--lgl-space-1) var(--lgl-space-2);
+	border-radius: var(--lgl-radius-sm);
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+}
+
+.lgl-card__category {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-card__title {
+	color: var(--lgl-text-primary);
+	font-size: var(--lgl-text-sm);
+	line-height: var(--lgl-leading-snug);
+}
+
+.lgl-card__rating {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-card__price {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-lg);
+	color: var(--lgl-text-primary);
+}
+
+/* WC_Product::get_price_html() wraps the struck-through price in <del>
+ * and the active price in <ins> when a product is on sale. */
+.lgl-card__price del {
+	margin-inline-end: var(--lgl-space-2);
+	color: var(--lgl-text-faint);
+	font-weight: var(--lgl-weight-regular);
+	text-decoration: line-through;
+}
+
+.lgl-card__price ins {
+	color: var(--lgl-color-error);
+	text-decoration: none;
+}
+
+.lgl-card__excerpt {
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-card__actions {
+	padding: 0 var(--lgl-space-4) var(--lgl-space-4);
+}

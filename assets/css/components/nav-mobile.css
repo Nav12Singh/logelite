@@ -1,0 +1,142 @@
+/**
+ * Mobile off-canvas nav: panel, backdrop, and accordion sub-menus.
+ *
+ * `hidden` is removed before `.is-open` is added (and vice versa on close,
+ * after the transition settles) — see assets/js/nav-mobile.js. Never rely
+ * on display:none for the open/closed transition itself; the transform
+ * and opacity below carry that.
+ *
+ * @package logelite
+ */
+
+#lgl-mobile-nav {
+	position: fixed;
+	inset: 0;
+	z-index: var(--lgl-z-modal);
+	pointer-events: none;
+}
+
+.lgl-mobile-nav__panel {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: min(85vw, 360px);
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-6);
+	padding: var(--lgl-space-6);
+	background: var(--lgl-surface-default);
+	box-shadow: var(--lgl-shadow-lg);
+	transform: translateX(-100%);
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-out);
+	pointer-events: auto;
+}
+
+#lgl-mobile-nav.is-open .lgl-mobile-nav__panel {
+	transform: translateX(0);
+}
+
+.lgl-mobile-nav__backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: var(--lgl-z-overlay);
+	background: rgba(20, 24, 28, 0.55);
+	opacity: 0;
+	transition: opacity var(--lgl-dur-base) var(--lgl-ease-out);
+	pointer-events: none;
+}
+
+@supports ( backdrop-filter: blur( 1px ) ) or ( -webkit-backdrop-filter: blur( 1px ) ) {
+	.lgl-mobile-nav__backdrop {
+		background: color-mix(in srgb, var(--lgl-surface-inverse) 55%, transparent);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
+	}
+}
+
+.lgl-mobile-nav__backdrop.is-open {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Panel contents */
+
+.lgl-mobile-nav__close {
+	align-self: flex-end;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border: 0;
+	background: none;
+	color: var(--lgl-text-primary);
+}
+
+.lgl-mobile-nav__list {
+	list-style: none;
+}
+
+.lgl-mobile-nav__list > li {
+	position: relative;
+	border-bottom: 1px solid var(--lgl-border-subtle);
+}
+
+.lgl-mobile-nav__list > li > a {
+	display: block;
+	padding: var(--lgl-space-4) var(--lgl-space-8) var(--lgl-space-4) var(--lgl-space-2);
+	color: var(--lgl-text-primary);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-mobile-nav__expand {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 2.75rem;
+	height: 2.75rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: none;
+	color: var(--lgl-text-muted);
+}
+
+.lgl-mobile-nav__expand-icon {
+	transition: transform var(--lgl-dur-fast) var(--lgl-ease-out);
+}
+
+.lgl-mobile-nav__expand[aria-expanded="true"] .lgl-mobile-nav__expand-icon {
+	transform: rotate(180deg);
+}
+
+.lgl-mobile-nav__submenu {
+	list-style: none;
+	padding-left: var(--lgl-space-4);
+}
+
+.lgl-mobile-nav__submenu a {
+	display: block;
+	padding: var(--lgl-space-3) var(--lgl-space-2);
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-mobile-nav__utility {
+	display: flex;
+	gap: var(--lgl-space-5);
+	padding-top: var(--lgl-space-4);
+	border-top: 1px solid var(--lgl-border-subtle);
+}
+
+.lgl-mobile-nav__utility a {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	color: var(--lgl-text-primary);
+	font-weight: var(--lgl-weight-semibold);
+}

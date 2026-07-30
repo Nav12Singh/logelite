@@ -1,0 +1,156 @@
+/**
+ * Modern reset, base typography, and structural utility classes.
+ *
+ * Depends on custom properties defined in _tokens.css — load that file
+ * first via wp_enqueue_style() dependency.
+ *
+ * @package logelite
+ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+* {
+	margin: 0;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+body {
+	min-height: 100vh;
+	background: var(--lgl-surface-page);
+	color: var(--lgl-text-primary);
+	font-family: var(--lgl-font-body);
+	font-size: var(--lgl-text-base);
+	font-weight: var(--lgl-weight-regular);
+	line-height: var(--lgl-leading-normal);
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeSpeed;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	line-height: var(--lgl-leading-tight);
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+input,
+select,
+button,
+textarea {
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+a {
+	color: var(--lgl-color-brand-strong);
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--lgl-color-accent);
+}
+
+ul[role='list'],
+ol[role='list'] {
+	list-style: none;
+}
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+/* Structural utilities */
+
+.lgl-container {
+	max-width: var(--lgl-container);
+	margin-inline: auto;
+	padding-inline: var(--lgl-space-6);
+}
+
+/* Applied to <body> by JS while a modal/off-canvas panel is open. */
+.lgl-scroll-locked {
+	overflow: hidden;
+}
+
+.lgl-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.lgl-skip-link {
+	position: absolute;
+	top: -100%;
+	left: var(--lgl-space-4);
+	z-index: var(--lgl-z-toast);
+	padding: var(--lgl-space-3) var(--lgl-space-5);
+	background: var(--lgl-surface-inverse);
+	color: var(--lgl-text-inverse);
+	border-radius: var(--lgl-radius-md);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-semibold);
+	transition: top var(--lgl-dur-fast) var(--lgl-ease-out);
+}
+
+.lgl-skip-link:focus {
+	top: var(--lgl-space-4);
+}
+
+/* Focus visibility */
+
+:focus {
+	outline: none;
+}
+
+:focus-visible {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 2px;
+	border-radius: var(--lgl-radius-sm);
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+}
