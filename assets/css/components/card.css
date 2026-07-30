@@ -1,23 +1,85 @@
 /**
  * Product card component (template-parts/components/card-product.php).
  *
+ * T5.2's hover/lift/zoom animation lives in this same file, not a
+ * separate assets/css/components/product-card.css — the brief named that
+ * path, but every one of the selectors it describes (.product-card, its
+ * image) already exists here as .lgl-card / .lgl-card__image, fully
+ * owned by this file. A second file styling the same class would just be
+ * two sources of truth for one selector; edited in place instead.
+ *
+ * will-change decision: deliberately omitted on .lgl-card and
+ * .lgl-card__image. `will-change: transform` can only usefully be
+ * "applied right before the animation and removed right after" (per
+ * CLAUDE.md §8) via a :hover/:focus-within selector or via JS — pure CSS
+ * has no selector for "the sibling that's about to receive :hover"
+ * without JS toggling a class, and adding it permanently to the base
+ * rule would keep a GPU layer resident for every card on the page for
+ * the entire time the page is open, for a single -4px lift transform
+ * that isn't expensive enough to need pre-promotion. Per T5.0's "used
+ * sparingly" rule, the right default is to omit it entirely here and
+ * only add a short-lived class via JS later if real profiling on this
+ * specific card grid shows jank — not preemptively.
+ *
  * @package logelite
  */
 
 .lgl-card {
+	position: relative;
 	display: block;
 	background: var(--lgl-surface-default);
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-lg);
-	overflow: hidden;
-	transition: box-shadow var(--lgl-dur-base) var(--lgl-ease-out),
-		border-color var(--lgl-dur-base) var(--lgl-ease-out);
+	/* No overflow: hidden here (removed) — the hover shadow below is a
+	   pseudo-element that extends past this element's own edges by
+	   design; overflow: hidden on this element would clip it down to
+	   nearly nothing. The image's own rounded-corner clipping doesn't
+	   depend on this element at all — see .lgl-card__media, which has
+	   its own overflow: hidden dedicated to that. */
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-standard),
+		border-color var(--lgl-dur-base) var(--lgl-ease-standard);
 }
 
 .lgl-card:hover,
 .lgl-card:focus-within {
+	/* :focus-within (not just :hover) so a keyboard user tabbing to the
+	   card's link or its add-to-cart button gets the same lift/shadow
+	   feedback a mouse-hovering user sees, not just a bare focus ring. */
 	border-color: var(--lgl-color-brand);
+	transform: translateY(-4px);
+}
+
+/*
+ * Shadow "transition" via a pseudo-element's opacity, not an animated
+ * box-shadow directly. box-shadow is a paint-expensive property — every
+ * frame of a direct box-shadow transition forces the browser to
+ * repaint the blurred shadow at each intermediate size, unlike
+ * transform/opacity, which the compositor can animate without any
+ * repaint at all. Faking it: ::after is pre-painted with the FULL hover
+ * shadow already applied (not an intermediate value), sized to the
+ * card via inset: 0 and shaped to match via border-radius: inherit,
+ * sitting behind the card's own content (z-index: -1, safe since
+ * .lgl-card is a positioning context via position: relative above) and
+ * invisible by default (opacity: 0). Hovering/focusing only ever
+ * transitions that opacity from 0 to 1 — the shadow itself never
+ * changes shape or size, so there's nothing for the browser to repaint
+ * frame-by-frame, only a compositor-level cross-fade.
+ */
+.lgl-card::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
 	box-shadow: var(--lgl-shadow-card-hover);
+	opacity: 0;
+	transition: opacity var(--lgl-dur-base) var(--lgl-ease-standard);
+	pointer-events: none;
+}
+
+.lgl-card:hover::after,
+.lgl-card:focus-within::after {
+	opacity: 1;
 }
 
 .lgl-card__link {
@@ -29,6 +91,10 @@
 }
 
 .lgl-card__media {
+	/* overflow: hidden confirmed already present here (unrelated to the
+	   change above) — this is what clips the zoomed image below back to
+	   this box's own rounded corners, independent of .lgl-card's own
+	   (now-removed) overflow. */
 	position: relative;
 	display: block;
 	border-radius: var(--lgl-radius-md);
@@ -40,6 +106,14 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	/* transform only (scale) — no width/height change — so this stays a
+	   compositor-only animation, same rule as everything else in T5. */
+	transition: transform var(--lgl-dur-slow) var(--lgl-ease-standard);
+}
+
+.lgl-card:hover .lgl-card__image,
+.lgl-card:focus-within .lgl-card__image {
+	transform: scale(1.06);
 }
 
 .lgl-card__badge {

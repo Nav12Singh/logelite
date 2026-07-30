@@ -89,10 +89,23 @@ if ( ! function_exists( 'lgl_enqueue_global_styles' ) ) {
 			lgl_asset_version( 'assets/css/_tokens.css' )
 		);
 
+		// Load order enforced via the dependency array (not @import): every
+		// style registered below this line depends, directly or
+		// transitively, on 'lgl-motion', so nothing can load before it and
+		// every later component file can safely rely on its custom
+		// properties (--lgl-ease-standard, --lgl-ease-emphasized) and its
+		// global prefers-reduced-motion rule.
+		wp_enqueue_style(
+			'lgl-motion',
+			get_theme_file_uri( 'assets/css/motion.css' ),
+			array( 'lgl-tokens' ),
+			lgl_asset_version( 'assets/css/motion.css' )
+		);
+
 		wp_enqueue_style(
 			'lgl-base',
 			get_theme_file_uri( 'assets/css/base.css' ),
-			array( 'lgl-tokens' ),
+			array( 'lgl-motion' ),
 			lgl_asset_version( 'assets/css/base.css' )
 		);
 
@@ -419,6 +432,15 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 			);
 			wp_script_add_data( 'lgl-faq', 'strategy', 'defer' );
 
+			wp_enqueue_script(
+				'lgl-faq-toggle',
+				get_theme_file_uri( 'assets/js/faq-toggle.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/faq-toggle.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-faq-toggle', 'strategy', 'defer' );
+
 			lgl_enqueue_carousel_script();
 		}
 
@@ -471,6 +493,15 @@ if ( ! function_exists( 'lgl_enqueue_scripts_bundle' ) ) {
 		);
 
 		lgl_enqueue_dialog_scripts();
+
+		wp_enqueue_script(
+			'lgl-button-ripple',
+			get_theme_file_uri( 'assets/js/button-ripple.js' ),
+			array(),
+			lgl_asset_version( 'assets/js/button-ripple.js' ),
+			true
+		);
+		wp_script_add_data( 'lgl-button-ripple', 'strategy', 'defer' );
 	}
 }
 

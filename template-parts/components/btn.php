@@ -32,7 +32,12 @@ if ( ! function_exists( 'lgl_get_button_icon_svg' ) ) {
 	 */
 	function lgl_get_button_icon_svg( $slug ) {
 		$icons = array(
-			'arrow-right' => '<svg class="lgl-btn__icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h12M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+			// lgl-btn__arrow (alongside the shared lgl-btn__icon) is a
+			// dedicated hook for the T5.3 hover slide effect
+			// (assets/css/components/button.css) — only the arrow icon
+			// gets it; cart/search icons keep lgl-btn__icon alone so they
+			// aren't affected by that translateX rule.
+			'arrow-right' => '<svg class="lgl-btn__icon lgl-btn__arrow" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h12M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
 			'cart'        => '<svg class="lgl-btn__icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6h15l-1.5 9h-12z" fill="none" stroke="currentColor" stroke-width="1.6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor"></circle><circle cx="18" cy="20" r="1.4" fill="currentColor"></circle></svg>',
 			'search'      => '<svg class="lgl-btn__icon" width="16" height="16" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="12.5" y1="12.5" x2="17" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg>',
 		);

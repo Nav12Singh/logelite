@@ -11,6 +11,35 @@
  * @package logelite
  */
 
+/*
+ * Slide animation (T5.5, confirmed/aligned against T3.3's existing
+ * implementation — this ticket added no new visibility logic).
+ *
+ * transform: translateY(100%), not display: none, for two independent
+ * reasons:
+ * - display changes can't be transitioned at all (there's no
+ *   intermediate state between "none" and "block" for the browser to
+ *   animate through), so a slide would be impossible with display alone.
+ * - The bar must stay present in the accessibility tree structurally —
+ *   T3.3's sticky-cart.js toggles aria-hidden (not this file) on the same
+ *   element as .is-visible, and that attribute is what actually governs
+ *   whether assistive tech exposes the bar, independent of whatever CSS
+ *   is doing visually. A display: none element can't have that
+ *   distinction; it's just gone either way.
+ *
+ * visibility: hidden is ALSO kept here (this predates T5.0/T5.5, kept
+ * deliberately, not an oversight) for a DIFFERENT reason than aria-hidden
+ * above: transform alone moves an element visually but does not remove
+ * it from the native keyboard tab order. Without visibility: hidden, a
+ * keyboard user tabbing through the page would still be able to Tab
+ * into the qty/add-to-cart controls of a bar that's sitting, invisible,
+ * translated below the viewport — aria-hidden signals "hidden" to
+ * screen-reader/AT users specifically, visibility: hidden is what
+ * actually keeps it out of the tab order for sighted keyboard users.
+ * Delayed via `transition: visibility 0s linear var(--lgl-dur-base)` so
+ * it only actually becomes visibility: hidden once the slide-out
+ * transform has finished, not the instant .is-visible is removed.
+ */
 .lgl-sticky-cart {
 	position: fixed;
 	left: 0;
@@ -22,24 +51,40 @@
 	box-shadow: var(--lgl-shadow-lg);
 	padding: var(--lgl-space-3) var(--lgl-space-4);
 	padding-bottom: calc(var(--lgl-space-3) + env(safe-area-inset-bottom));
-
-	/* Hidden by default: visibility (not display) so the transform
-	 * transition can still run when JS toggles .is-visible. */
 	visibility: hidden;
 	transform: translateY(100%);
 	transition:
-		transform var(--lgl-dur-base) var(--lgl-ease-out),
+		transform var(--lgl-dur-base) var(--lgl-ease-standard),
 		visibility 0s linear var(--lgl-dur-base);
 }
 
 .lgl-sticky-cart.is-visible {
 	visibility: visible;
 	transform: translateY(0);
-	transition: transform var(--lgl-dur-base) var(--lgl-ease-out);
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-standard);
 }
+
+/*
+ * will-change decision: omitted, deliberately (per T5.0's "used
+ * sparingly" rule — see card.css/button.css for the same note on other
+ * T5 tickets). There is exactly one of these bars on any given page, its
+ * only animation is a single translateY slide, and it isn't nested
+ * inside any other animating context — not expensive enough to warrant
+ * pre-promoting a GPU layer for, whether left on permanently (which
+ * T5.0 explicitly rules out) or toggled via a short-lived class (which
+ * sticky-cart.js — T3.3, no new JS added by this ticket — doesn't do
+ * and wasn't asked to).
+ */
 
 @media (prefers-reduced-motion: reduce) {
 	.lgl-sticky-cart {
+		/* Safe to fully disable (not just speed up via motion.css's
+		 * global 0.01ms rule): confirmed sticky-cart.js never listens
+		 * for transitionend on this element — visibility/aria-hidden are
+		 * both set synchronously by JS, not deferred to a transition
+		 * completing — so there's no JS state machine here that a
+		 * skipped transitionend event could leave stuck, unlike T5.4's
+		 * FAQ accordion. */
 		transition: none;
 	}
 }

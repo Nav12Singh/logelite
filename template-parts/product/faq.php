@@ -17,6 +17,12 @@
  * without it, older browsers would simply allow multiple panels open at
  * once, which still works, just without the "exclusive" behavior.
  *
+ * The answer is double-wrapped (.lgl-faq__body-wrapper > .lgl-faq__body)
+ * for T5.4's smooth expand/collapse animation (assets/css/components/faq.css,
+ * assets/js/faq-toggle.js) — <details>/<summary> is still what owns
+ * open/closed state; the wrapper is purely an animation hook, not a
+ * structural or semantic change.
+ *
  * Bails silently when the product has no FAQs.
  *
  * @package logelite
@@ -54,7 +60,9 @@ if ( empty( $lgl_faqs ) ) {
 					<span class="lgl-faq__q-text"><?php echo esc_html( $lgl_question ); ?></span>
 					<?php echo lgl_get_svg_icon( 'chevron-down', array( 'class' => 'lgl-faq__chevron' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- lgl_get_svg_icon() returns pre-sanitized, whitelisted SVG markup. ?>
 				</summary>
-				<div class="lgl-faq__a"><?php echo wp_kses_post( $lgl_answer ); ?></div>
+				<div class="lgl-faq__body-wrapper">
+					<div class="lgl-faq__body"><?php echo wp_kses_post( $lgl_answer ); ?></div>
+				</div>
 			</details>
 		<?php endforeach; ?>
 	</div>

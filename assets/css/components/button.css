@@ -5,6 +5,9 @@
  */
 
 .lgl-btn {
+	position: relative;
+	/* Clips the ripple span (below) to the button's own rounded rect. */
+	overflow: hidden;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -36,14 +39,34 @@
 	font-size: var(--lgl-text-md);
 }
 
+/*
+ * Gradient shift (T5.3): the same two colors this button always used for
+ * its resting/hover states (--lgl-color-accent / --lgl-color-brand) are
+ * now a single 200%-wide gradient that slides into view on hover/focus,
+ * rather than one solid color instantly replacing another.
+ *
+ * background-position is NOT compositor-only the way transform/opacity
+ * are (per motion.css's rule) — animating it still costs a repaint each
+ * frame, since the browser has to redraw which slice of the gradient is
+ * visible. This is a deliberate, scoped exception: it's a single small
+ * element (one button), not a full-page or list-wide animation, and
+ * there's no way to fake a gradient sweep with transform/opacity alone —
+ * transform would move the whole button, not reveal a different part of
+ * a background image within a fixed-size box.
+ */
 .lgl-btn--primary {
-	background: var(--lgl-color-accent);
+	background-image: linear-gradient(90deg, var(--lgl-color-accent) 0%, var(--lgl-color-brand) 100%);
+	background-size: 200% 100%;
+	background-position: 0% 0%;
 	color: var(--lgl-text-inverse);
+	transition: background-position var(--lgl-dur-base) var(--lgl-ease-standard),
+		color var(--lgl-dur-fast) var(--lgl-ease-out),
+		border-color var(--lgl-dur-fast) var(--lgl-ease-out);
 }
 
 .lgl-btn--primary:hover,
 .lgl-btn--primary:focus-visible {
-	background: var(--lgl-color-brand);
+	background-position: 100% 0%;
 }
 
 .lgl-btn--secondary {
@@ -85,4 +108,56 @@
 
 .lgl-btn__icon {
 	flex: 0 0 auto;
+}
+
+/* Arrow slide (T5.3) — only the arrow-right icon gets lgl-btn__arrow
+ * (see lgl_get_button_icon_svg() in btn.php); cart/search icons keep
+ * lgl-btn__icon alone and are unaffected by this rule. */
+.lgl-btn__arrow {
+	transition: transform var(--lgl-dur-fast) var(--lgl-ease-standard);
+}
+
+.lgl-btn:hover .lgl-btn__arrow,
+.lgl-btn:focus-visible .lgl-btn__arrow {
+	transform: translateX(4px);
+}
+
+/*
+ * Ripple (T5.3) — assets/js/button-ripple.js creates one .lgl-ripple span
+ * per pointerdown, positions it at the pointer's coordinates via inline
+ * left/top, then adds .is-active a frame later to trigger the animation
+ * below. Centering (translate(-50%, -50%)) is baked into both keyframe
+ * stops rather than set as a separate inline `transform` from JS —
+ * `animation` overrides any other `transform` source on the same element
+ * while it runs, so a JS-set inline translate would simply be replaced
+ * by the keyframe's own transform value the instant the animation
+ * started, snapping the ripple off-center. Combining translate + scale
+ * into one transform per keyframe stop (same technique as T5.1's hero
+ * entrance) avoids that entirely.
+ */
+.lgl-ripple {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: currentColor;
+	pointer-events: none;
+	opacity: 0.4;
+	transform: translate(-50%, -50%) scale(0);
+}
+
+.lgl-ripple.is-active {
+	animation: lgl-ripple var(--lgl-dur-slow) var(--lgl-ease-standard);
+}
+
+@keyframes lgl-ripple {
+	from {
+		opacity: 0.4;
+		transform: translate(-50%, -50%) scale(0);
+	}
+
+	to {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(2.5);
+	}
 }

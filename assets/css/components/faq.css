@@ -1,20 +1,29 @@
 /**
  * Product FAQ accordion — template-parts/product/faq.php.
  *
- * Animation technique: native <details> hides its non-summary content with
- * a UA-stylesheet `display: none` while closed, and a `display: none`
- * change is not something CSS can transition — so a max-height (or
- * grid-template-rows) transition on the answer alone does nothing useful
- * on browsers that only have that. Rather than fight this with a
- * max-height hack (guessing a large fixed value, which either clips tall
- * answers or produces a variable-speed "snap" animation because the
- * transition duration is fixed but the real content height isn't), this
- * uses the ::details-content pseudo-element (CSS Overflow/Display specs)
- * that's built specifically to make a <details> panel's open/close
- * transitionable, gated behind @supports. Browsers without it (anything
- * before the ::details-content rollout) get NO animation at all — an
- * instant native toggle — which is the explicitly preferred fallback over
- * a broken/approximate hack.
+ * Animation technique (T5.4): grid-template-rows: 0fr -> 1fr on
+ * .lgl-faq__body-wrapper, NOT height/max-height and NOT the earlier
+ * ::details-content approach this replaces. A max-height transition needs
+ * a guessed large-enough fixed value — either clipping a genuinely tall
+ * answer or producing a variable-speed "snap" because the transition's
+ * fixed duration covers very different real distances depending on
+ * content length. grid-template-rows with fr units instead animates the
+ * *actual* auto content height smoothly, for any content length, with no
+ * guessed value anywhere.
+ *
+ * The catch this creates: <details> adds/removes its [open] attribute the
+ * instant it's toggled, with no transition hook of its own, and natively
+ * hides non-summary content (UA-stylesheet `display: none`) in that same
+ * instant. Opening still animates for free — [open] is added immediately,
+ * the answer becomes part of layout, and grid-template-rows can measure
+ * and transition its real height right away. Closing does NOT animate for
+ * free: if [open] were removed immediately (the native default), the
+ * content would already be display:none in the same instant, leaving
+ * nothing for grid-template-rows to visibly transition FROM. That's the
+ * one thing assets/js/faq-toggle.js exists to fix — see that file's own
+ * docblock for the full open/close asymmetry and its one documented,
+ * unavoidable limitation (T3.4's native exclusive-accordion closing a
+ * sibling panel can't be intercepted the same way).
  *
  * @package logelite
  */
@@ -63,36 +72,31 @@
 	transform: rotate(180deg);
 }
 
-.lgl-faq__a {
+.lgl-faq__body-wrapper {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows var(--lgl-dur-base) var(--lgl-ease-standard);
+}
+
+.lgl-faq__item[open] .lgl-faq__body-wrapper {
+	grid-template-rows: 1fr;
+}
+
+.lgl-faq__body {
+	/* overflow: hidden clips the content while its row track is smaller
+	   than its own intrinsic height (i.e. at every point except fully
+	   open). min-height: 0 overrides grid's default min-height: auto on
+	   grid items, which would otherwise stop the row from ever shrinking
+	   below the content's own height — the one property that actually
+	   makes the 0fr collapsed state possible at all. */
+	overflow: hidden;
+	min-height: 0;
 	padding-bottom: var(--lgl-space-4);
 	color: var(--lgl-text-secondary);
 }
 
-.lgl-faq__a :is(ul, ol) {
+.lgl-faq__body :is(ul, ol) {
 	padding-inline-start: var(--lgl-space-6);
-}
-
-/* Progressive-enhancement animation — see docblock above for why this is
- * gated rather than a universal max-height transition. */
-@supports (transition-behavior: allow-discrete) {
-	.lgl-faq__item {
-		interpolate-size: allow-keywords;
-	}
-
-	.lgl-faq__item::details-content {
-		overflow: hidden;
-		opacity: 0;
-		block-size: 0;
-		transition:
-			content-visibility var(--lgl-dur-base) allow-discrete,
-			opacity var(--lgl-dur-base),
-			block-size var(--lgl-dur-base);
-	}
-
-	.lgl-faq__item[open]::details-content {
-		opacity: 1;
-		block-size: auto;
-	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -100,7 +104,17 @@
 		transition: none;
 	}
 
-	.lgl-faq__item::details-content {
-		transition: none;
-	}
+	/*
+	 * .lgl-faq__body-wrapper is deliberately NOT given `transition: none`
+	 * here, unlike the chevron above — motion.css's (T5.0) global rule
+	 * already forces its transition-duration to 0.01ms under reduced
+	 * motion, which is the whole point of using 0.01ms instead of a real
+	 * `0s`/`none`: a genuinely-disabled transition never fires
+	 * `transitionend` at all. assets/js/faq-toggle.js's close handler
+	 * depends on that event firing to know when to remove [open] — with
+	 * `transition: none` here, that event would never come and a closed
+	 * click under reduced motion would leave the panel stuck open
+	 * forever. Leaving this transition active (just very fast, via the
+	 * global rule) is what keeps it working.
+	 */
 }

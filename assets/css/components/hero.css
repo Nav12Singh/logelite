@@ -51,9 +51,16 @@
 }
 
 .lgl-hero__text {
+	/* 90% translucency baked into the color, not the `opacity` property —
+	   `opacity` is exclusively the entrance animation's to animate below;
+	   a static `opacity: 0.9` here would get permanently overwritten to 1
+	   once that animation's `to` keyframe takes hold (fill-mode: both).
+	   color-mix() is the enhancement; the plain color above is the
+	   fallback for browsers that don't support it (an invalid second
+	   `color` declaration is simply ignored, keeping the first). */
 	color: var(--lgl-text-inverse);
+	color: color-mix(in srgb, var(--lgl-text-inverse) 90%, transparent);
 	font-size: var(--lgl-text-md);
-	opacity: 0.9;
 }
 
 .lgl-hero__actions {
@@ -71,4 +78,61 @@
 	display: block;
 	width: 100%;
 	height: auto;
+}
+
+/*
+ * Entrance animation (T5.1) — pure CSS, no JS.
+ *
+ * One keyframe, one animated `transform` (translateY + scale combined
+ * into a single value, not two separate transform animations) plus
+ * `opacity` — both compositor-only properties, per motion.css's (T5.0)
+ * transform/opacity-only rule. Applied to the three elements the brief
+ * named (heading, subtext, CTA row) via their existing BEM classes —
+ * section-hero.php already has data-animate="hero"/"hero-content"/
+ * "hero-media" placeholders at a coarser wrapper level, but those don't
+ * match what this ticket needs (per-element stagger on the heading,
+ * subtext, and CTA row specifically), so this targets .lgl-hero__title/
+ * __text/__actions directly instead — no markup was restructured to add
+ * new hooks for this.
+ *
+ * `both` fill-mode: the element sits in the `from` state before the
+ * animation starts (preventing a flash of the final, fully-visible state
+ * before the entrance plays) and holds the `to` state afterward.
+ *
+ * prefers-reduced-motion: handled globally by motion.css's `*` rule,
+ * which forces animation-duration to 0.01ms — no second media query
+ * needed in this file. That rule does not zero out animation-delay,
+ * though, so each staggered element still waits out its own delay (at
+ * most 160ms, below) before its now-near-instant animation runs; it
+ * resolves to the fully-visible `to` state well within that window, not
+ * stuck — see this ticket's report for the full reasoning.
+ */
+@keyframes lgl-hero-in {
+	from {
+		opacity: 0;
+		transform: translateY(24px) scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.lgl-hero__title,
+.lgl-hero__text,
+.lgl-hero__actions {
+	animation: lgl-hero-in var(--lgl-dur-slow) var(--lgl-ease-emphasized) both;
+}
+
+.lgl-hero__title {
+	animation-delay: 0ms;
+}
+
+.lgl-hero__text {
+	animation-delay: 80ms;
+}
+
+.lgl-hero__actions {
+	animation-delay: 160ms;
 }

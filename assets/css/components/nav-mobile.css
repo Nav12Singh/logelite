@@ -6,6 +6,28 @@
  * on display:none for the open/closed transition itself; the transform
  * and opacity below carry that.
  *
+ * T5.6 note: this panel/backdrop pair, its .is-open toggling (on both
+ * elements together), Escape-to-close, and click-outside-to-close all
+ * already existed (built well before T5.0's motion tokens) — confirmed
+ * against assets/js/nav-mobile.js rather than rebuilt; no new toggle JS
+ * was added, per that ticket's explicit instruction not to duplicate one
+ * that already exists. The two changes actually made: the easing tokens
+ * below now use T5.0's --lgl-ease-emphasized/--lgl-ease-standard (T5.6
+ * names both specifically for this component) in place of the older
+ * --lgl-ease-out both used before T5.0 introduced those, and this
+ * comment block plus the one on the @supports rule below, which T5.6
+ * asked to have spelled out explicitly.
+ *
+ * Reduced motion: no local `transition: none` override is added here —
+ * confirmed unnecessary. assets/js/nav-mobile.js's close() already
+ * branches on a JS-side prefers-reduced-motion check and skips waiting
+ * for `transitionend` entirely when it's set (calling finishClose()
+ * synchronously instead), and motion.css's (T5.0) global `*` rule
+ * already forces every transition's duration to 0.01ms site-wide with no
+ * override anywhere in this file to block that — so both open and close
+ * already resolve effectively instantly under forced reduced motion
+ * without this file needing its own copy of that rule.
+ *
  * @package logelite
  */
 
@@ -30,7 +52,7 @@
 	background: var(--lgl-surface-default);
 	box-shadow: var(--lgl-shadow-lg);
 	transform: translateX(-100%);
-	transition: transform var(--lgl-dur-base) var(--lgl-ease-out);
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-emphasized);
 	pointer-events: auto;
 }
 
@@ -44,10 +66,22 @@
 	z-index: var(--lgl-z-overlay);
 	background: rgba(20, 24, 28, 0.55);
 	opacity: 0;
-	transition: opacity var(--lgl-dur-base) var(--lgl-ease-out);
+	transition: opacity var(--lgl-dur-base) var(--lgl-ease-standard);
 	pointer-events: none;
 }
 
+/*
+ * Only `opacity` (above and in the .is-open rule below) is ever
+ * transitioned on the backdrop. The blur amount itself
+ * (backdrop-filter: blur(8px)) is applied statically the moment this
+ * @supports block's background/backdrop-filter declarations take effect
+ * — it never interpolates from e.g. blur(0px) to blur(8px). Animating
+ * blur radius directly is expensive (the browser has to recompute the
+ * blur sampling every frame) and doesn't render smoothly/consistently
+ * across browsers even where it's technically possible; fading a
+ * constant, pre-applied blur in via opacity gets a visually similar
+ * "focus pulls in" effect for a fraction of the cost.
+ */
 @supports ( backdrop-filter: blur( 1px ) ) or ( -webkit-backdrop-filter: blur( 1px ) ) {
 	.lgl-mobile-nav__backdrop {
 		background: color-mix(in srgb, var(--lgl-surface-inverse) 55%, transparent);
