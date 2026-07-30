@@ -18,12 +18,13 @@
  */
 
 // Overridden by logelite — reason: adds lgl-* classes to the existing
-// order overview, a T4 hook placeholder for delivery details (empty, see
-// the TODO comment), and a "next steps" card (track order / continue
-// shopping via lgl_button()). Every action (including the
-// woocommerce_thankyou_{payment_method} and woocommerce_thankyou hooks
-// plugins rely on for e.g. analytics/tracking pixels) fires exactly as
-// upstream.
+// order overview, a custom lgl_thankyou_delivery_details hook (now wired
+// to lgl_render_thankyou_checkout_meta(), inc/checkout-fields.php, for the
+// T4.1 gift message / delivery date / delivery slot fields), and a "next
+// steps" card (track order / continue shopping via lgl_button()). Every
+// action (including the woocommerce_thankyou_{payment_method} and
+// woocommerce_thankyou hooks plugins rely on for e.g. analytics/tracking
+// pixels) fires exactly as upstream.
 
 defined( 'ABSPATH' ) || exit;
 ?>
@@ -86,12 +87,12 @@ defined( 'ABSPATH' ) || exit;
 
 			<?php
 			/**
-			 * T4 hook target: delivery details (from the gift message /
-			 * delivery date / time slot checkout fields).
+			 * Hook: lgl_thankyou_delivery_details.
 			 *
-			 * TODO (T4): render the order's chosen delivery date/time slot
-			 * and gift message (if any) here, read from the order meta the
-			 * T4 checkout fields will save. Empty on purpose — layout only.
+			 * @hooked lgl_render_thankyou_checkout_meta - 10 (inc/checkout-fields.php;
+			 *         renders the gift message / delivery date / delivery
+			 *         slot fields via template-parts/checkout/order-custom-fields.php,
+			 *         reading from the order meta T4.1's checkout fields save)
 			 */
 			do_action( 'lgl_thankyou_delivery_details', $order );
 

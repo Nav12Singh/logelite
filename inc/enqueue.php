@@ -216,6 +216,29 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				array( 'lgl-app' ),
 				lgl_asset_version( 'assets/css/pages/checkout.css' )
 			);
+
+			wp_enqueue_style(
+				'lgl-shipping-methods',
+				get_theme_file_uri( 'assets/css/components/shipping-methods.css' ),
+				array( 'lgl-checkout' ),
+				lgl_asset_version( 'assets/css/components/shipping-methods.css' )
+			);
+		}
+
+		if ( is_checkout() ) {
+			wp_enqueue_style(
+				'lgl-checkout-layout',
+				get_theme_file_uri( 'assets/css/components/checkout.css' ),
+				array( 'lgl-checkout' ),
+				lgl_asset_version( 'assets/css/components/checkout.css' )
+			);
+
+			wp_enqueue_style(
+				'lgl-checkout-coupon',
+				get_theme_file_uri( 'assets/css/components/checkout-coupon.css' ),
+				array( 'lgl-checkout' ),
+				lgl_asset_version( 'assets/css/components/checkout-coupon.css' )
+			);
 		}
 
 		if ( is_cart() ) {

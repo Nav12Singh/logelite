@@ -215,6 +215,12 @@
 	--lgl-container: 1320px;
 	--lgl-container-narrow: 900px;
 	--lgl-header-h: 78px;
+	/* Alias, not a duplicate value: for anything that needs to stick just
+	   below the fixed header (e.g. the checkout aside — see
+	   components/checkout.css) rather than the header's own height per se.
+	   Kept as its own name so the two can diverge later without hunting
+	   down every consumer of --lgl-header-h. */
+	--lgl-header-offset: var(--lgl-header-h);
 	--lgl-z-dropdown: 10;
 	--lgl-z-sticky: 20;
 	--lgl-z-overlay: 30;

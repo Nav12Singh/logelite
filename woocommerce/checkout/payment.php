@@ -15,13 +15,12 @@
  * @version 9.8.0
  */
 
-// Overridden by logelite — reason: no logic changes. #payment gets
-// `display: contents` in assets/css/pages/checkout.css so its two real
-// children — ul.wc_payment_methods and .form-row.place-order — become
-// direct items of the .lgl-checkout-layout grid (see
-// woocommerce/checkout/form-checkout.php's comment for the full
-// grid-area map): payment methods in the left column, the place-order
-// button/terms/nonce in the sticky right column. Every action, filter,
+// Overridden by logelite — reason: no logic changes, only the lgl-payment-methods
+// / lgl-place-order classes for restyling. As of T4.0's two-column layout
+// (see woocommerce/checkout/form-checkout.php), this whole #payment div
+// renders nested normally inside #order_review, inside .lgl-checkout__aside
+// — payment methods and the place-order button stack together in the
+// right column, same as the totals table above them. Every action, filter,
 // and the woocommerce-process-checkout-nonce field are unchanged.
 
 defined( 'ABSPATH' ) || exit;

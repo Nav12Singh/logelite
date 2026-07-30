@@ -132,30 +132,12 @@
 	font-weight: var(--lgl-weight-bold);
 }
 
-/* Shipping method radio cards — shared by cart totals and checkout review */
-
-.lgl-shipping-methods {
-	display: flex;
-	flex-direction: column;
-	gap: var(--lgl-space-2);
-	list-style: none;
-}
-
-.lgl-shipping-methods__item {
-	padding: var(--lgl-space-3);
-	border: 1.5px solid var(--lgl-border-default);
-	border-radius: var(--lgl-radius-md);
-}
-
-.lgl-shipping-methods__item:has(input:checked) {
-	border-color: var(--lgl-color-brand);
-	background: var(--lgl-color-brand-subtle);
-}
-
-.lgl-shipping-methods__item input {
-	accent-color: var(--lgl-color-brand);
-	margin-inline-end: var(--lgl-space-2);
-}
+/*
+ * Shipping method radio cards — shared by cart totals and checkout
+ * review, both of which render woocommerce/cart/cart-shipping.php via
+ * wc_cart_totals_shipping_html(). Full restyle (T4.4) lives in its own
+ * file, assets/css/components/shipping-methods.css, not here.
+ */
 
 /* Empty cart */
 
@@ -187,32 +169,23 @@
 
 /* ============================ Checkout ============================ */
 
-.lgl-checkout-layout {
-	display: grid;
-	grid-template-columns: 1fr 400px;
-	grid-template-areas:
-		"billing coupon"
-		"billing heading"
-		"billing review"
-		"payment placeorder";
-	gap: var(--lgl-space-6);
-	align-items: start;
+/*
+ * The two-column grid itself (.lgl-checkout / __main / __aside) lives in
+ * assets/css/components/checkout.css, not here — this file only styles
+ * what goes INSIDE each column. See that file for the grid/sticky rules
+ * and woocommerce/checkout/form-checkout.php for the markup they target.
+ */
+
+.woocommerce-form-coupon-toggle {
+	margin-bottom: var(--lgl-space-4);
 }
 
-/*
- * form.checkout, #order_review, and #payment are all flattened with
- * display: contents so their real children participate directly in the
- * grid above (see the comment in woocommerce/checkout/form-checkout.php
- * for the full reasoning). No PHP/hook changes — layout only.
- */
-.lgl-checkout-layout form.checkout,
-.lgl-checkout-layout #order_review,
-.lgl-checkout-layout #payment {
-	display: contents;
+.lgl-checkout-coupon-form {
+	margin-top: var(--lgl-space-2);
+	margin-bottom: var(--lgl-space-6);
 }
 
 #customer_details {
-	grid-area: billing;
 	display: flex;
 	flex-direction: column;
 	gap: var(--lgl-space-6);
@@ -224,25 +197,16 @@
 	gap: var(--lgl-space-6);
 }
 
-.woocommerce-form-coupon-toggle {
-	grid-area: coupon;
-}
-
-.lgl-checkout-coupon-form {
-	grid-area: coupon;
-	margin-top: var(--lgl-space-2);
-}
-
 #order_review_heading {
-	grid-area: heading;
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-extrabold);
 	font-size: var(--lgl-text-lg);
+	margin-bottom: var(--lgl-space-4);
 }
 
 .lgl-order-review {
-	grid-area: review;
 	padding: var(--lgl-space-5);
+	margin-bottom: var(--lgl-space-4);
 	background: var(--lgl-surface-default);
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-lg);
@@ -307,7 +271,6 @@
 }
 
 .lgl-payment-methods {
-	grid-area: payment;
 	list-style: none;
 	display: flex;
 	flex-direction: column;
@@ -331,9 +294,6 @@
 }
 
 .lgl-place-order {
-	grid-area: placeorder;
-	position: sticky;
-	bottom: var(--lgl-space-6);
 	padding: var(--lgl-space-5);
 	background: var(--lgl-surface-default);
 	border: 1px solid var(--lgl-border-default);
@@ -394,16 +354,8 @@
 /* ===================== < 992px: single column ===================== */
 
 @media (max-width: 991px) {
-	.lgl-cart-layout,
-	.lgl-checkout-layout {
+	.lgl-cart-layout {
 		grid-template-columns: 1fr;
-		grid-template-areas:
-			"billing"
-			"coupon"
-			"heading"
-			"review"
-			"payment"
-			"placeorder";
 	}
 
 	.lgl-cart-layout__totals {
@@ -412,10 +364,6 @@
 
 	#customer_details .col2-set {
 		grid-template-columns: 1fr;
-	}
-
-	.lgl-place-order {
-		position: static;
 	}
 }
 

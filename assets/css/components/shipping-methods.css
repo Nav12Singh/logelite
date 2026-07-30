@@ -1,0 +1,93 @@
+/**
+ * Shipping method ("delivery option") radio cards.
+ *
+ * Restyles the <input type="radio" class="shipping_method"> + <label>
+ * pairs WooCommerce renders in woocommerce/cart/cart-shipping.php (shared,
+ * unmodified, by both the cart totals card and the checkout order
+ * review). No theme markup changes were needed for this file at all —
+ * the wrapper classes it targets (.lgl-shipping-methods on the <ul>,
+ * .lgl-shipping-methods__item on each <li>) were already added to that
+ * template by the earlier checkout-layout work, and every selector below
+ * only ever targets WooCommerce's own existing name/id/class output.
+ *
+ * Selected state uses the adjacent-sibling combinator on purpose —
+ * `input:checked + label` — rather than re-deciding "which option is
+ * selected" in CSS via :has() on a shared ancestor or in JS by reading
+ * the DOM: the browser's own native radio-group state IS the selection
+ * state, full stop. WooCommerce's own wc-cart.js / wc-checkout.js already
+ * listens for `change` on these exact inputs to trigger the AJAX totals
+ * recalculation — nothing here duplicates, intercepts, or needs to know
+ * about that.
+ *
+ * @package logelite
+ */
+
+.lgl-shipping-methods {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.lgl-shipping-methods__item {
+	position: relative;
+}
+
+/*
+ * The native radio circle is visually hidden — NOT display: none (which
+ * would drop it from the tab order and break screen-reader access to a
+ * genuinely interactive control) — using the same clip-based technique as
+ * the theme's .lgl-visually-hidden utility (base.css). The input stays in
+ * the layout, in the tab order, and fully operable by keyboard (Tab to
+ * focus, Space/arrow keys to select, exactly as a native radio group
+ * always works); only its visual circle is removed, replaced by the
+ * adjacent label's own border/background per the :checked + label rule
+ * below.
+ */
+.lgl-shipping-methods__item input[type="radio"].shipping_method {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.lgl-shipping-methods__item label {
+	display: block;
+	padding: var(--lgl-space-3) var(--lgl-space-4);
+	border: 1.5px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	cursor: pointer;
+	transition: border-color var(--lgl-dur-fast) var(--lgl-ease-out),
+		background var(--lgl-dur-fast) var(--lgl-ease-out);
+}
+
+.lgl-shipping-methods__item input[type="radio"].shipping_method:checked + label {
+	border-color: var(--lgl-color-brand);
+	background: var(--lgl-color-brand-subtle);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+/*
+ * Focus-visible on the (visually hidden but still focusable) input,
+ * styled onto its adjacent label — so a keyboard user tabbing through
+ * the options sees a clear focus ring on the card itself, not on an
+ * invisible 1px element.
+ */
+.lgl-shipping-methods__item input[type="radio"].shipping_method:focus-visible + label {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lgl-shipping-methods__item label {
+		transition: none;
+	}
+}

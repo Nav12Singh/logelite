@@ -15,50 +15,48 @@
  * @version 9.4.0
  */
 
-// Overridden by logelite — reason: every action and the
-// $checkout->get_checkout_fields() iteration (in form-billing.php/
-// form-shipping.php) are untouched — no field list is hardcoded anywhere.
-// ONLY the wrapper markup changes, and the two-column layout (billing +
-// shipping + payment methods left, sticky order summary + coupon +
-// place-order right) is achieved with CSS alone: .lgl-checkout-layout is
-// one CSS grid, and `form.checkout`, `#order_review`, and `#payment` all
-// get `display: contents` (assets/css/pages/checkout.css) so their real
-// children — #customer_details, the review-order table, the payment
-// method list, and the place-order button block — become direct grid
-// items positioned by grid-area, without moving anything in PHP or
-// touching a single hook. See that CSS file's comment for the full
-// grid-template-areas map.
-//
-// One deviation, documented rather than hidden: "delivery option" (the
-// shipping method radio list) lives inside the review-order table's
-// <tfoot> (wc_cart_totals_shipping_html(), called from review-order.php),
-// not as a standalone left-column section — extracting a <tr> from a
-// <table> via display:contents is unreliable across browsers, so it was
-// left in place and only restyled as radio cards (see
-// woocommerce/cart/cart-shipping.php), ending up in the right-hand order
-// summary column instead of the left column.
+// Overridden by logelite — reason: two-column layout (T4.0). Every hook in
+// this file fires in exactly the same order as core: before_checkout_form
+// -> [registration bail] -> before/after_customer_details (wrapping billing
+// + shipping, which fire woocommerce_after_order_notes internally via
+// form-shipping.php, untouched) -> before_order_review_heading -> the
+// order_review_heading itself -> before/after_order_review (wrapping
+// woocommerce_checkout_order_review, which fires review-order.php then
+// payment.php, both untouched) -> after_checkout_form. No action was
+// removed, added, or re-hooked to a different tag/priority — only two real
+// wrapper elements were inserted around EXISTING content:
+//   - <form class="lgl-checkout"> — the grid container. The form element
+//     itself carries the grid class rather than an extra wrapping <div>,
+//     since a div with the form as its only child would be pure clutter.
+//   - .lgl-checkout__main / .lgl-checkout__aside — its two direct
+//     children. #customer_details (billing + shipping) goes in main;
+//     everything from the "Your order" heading through #order_review
+//     (review-order.php's totals table AND payment.php's payment methods
+//     + place-order button, since both already render together inside
+//     that one div via the woocommerce_checkout_order_review action) goes
+//     in the aside, moved as a single container — see assets/css/
+//     components/checkout.css for the grid/sticky rules.
+// The coupon form (woocommerce_before_checkout_form, form-coupon.php) is
+// NOT moved — it already renders before this <form> opens, i.e. above
+// both columns, exactly where core puts it; nothing here touches it.
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+do_action( 'woocommerce_before_checkout_form', $checkout );
+
+// If checkout registration is disabled and not logged in, the user cannot checkout.
+if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_required() && ! is_user_logged_in() ) {
+	echo esc_html( apply_filters( 'woocommerce_checkout_must_be_logged_in_message', __( 'You must be logged in to checkout.', 'woocommerce' ) ) );
+	return;
+}
+
 ?>
-<div class="lgl-checkout-layout">
-	<?php
-	/**
-	 * Hook: woocommerce_before_checkout_form.
-	 *
-	 * @hooked woocommerce_checkout_coupon_form - 10 (renders checkout/form-coupon.php; restyled for the right column, see assets/css/pages/checkout.css)
-	 */
-	do_action( 'woocommerce_before_checkout_form', $checkout );
 
-	// If checkout registration is disabled and not logged in, the user cannot checkout.
-	if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_required() && ! is_user_logged_in() ) {
-		echo esc_html( apply_filters( 'woocommerce_checkout_must_be_logged_in_message', __( 'You must be logged in to checkout.', 'woocommerce' ) ) );
-		return;
-	}
-	?>
+<form name="checkout" method="post" class="checkout woocommerce-checkout lgl-checkout" action="<?php echo esc_url( wc_get_checkout_url() ); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__( 'Checkout', 'woocommerce' ); ?>">
 
-	<form name="checkout" method="post" class="checkout woocommerce-checkout" action="<?php echo esc_url( wc_get_checkout_url() ); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__( 'Checkout', 'woocommerce' ); ?>">
+	<div class="lgl-checkout__main">
 
 		<?php if ( $checkout->get_checkout_fields() ) : ?>
 
@@ -77,6 +75,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php do_action( 'woocommerce_checkout_after_customer_details' ); ?>
 
 		<?php endif; ?>
+
+	</div>
+
+	<div class="lgl-checkout__aside">
 
 		<?php do_action( 'woocommerce_checkout_before_order_review_heading' ); ?>
 
@@ -98,7 +100,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<?php do_action( 'woocommerce_checkout_after_order_review' ); ?>
 
-	</form>
-</div>
+	</div>
+
+</form>
 
 <?php do_action( 'woocommerce_after_checkout_form', $checkout ); ?>
