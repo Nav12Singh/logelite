@@ -1,0 +1,279 @@
+/**
+ * Single product page (woocommerce/{content-single-product,single-product/*}.php).
+ *
+ * @package logelite
+ */
+
+.lgl-product {
+	padding-block: var(--lgl-space-6) var(--lgl-space-12);
+}
+
+/* Two-column layout: gallery (sticky) + summary, single column below 992px */
+
+.lgl-product-layout {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--lgl-space-8);
+	align-items: start;
+	margin-top: var(--lgl-space-6);
+}
+
+.lgl-product-gallery-col {
+	position: sticky;
+	top: var(--lgl-space-6);
+}
+
+/*
+ * Verified against the installed WooCommerce's own JS
+ * (assets/js/frontend/single-product.js + flexslider) rather than guessed:
+ * flexslider is initialized directly on .woocommerce-product-gallery__wrapper
+ * with controlNav: 'thumbnails' (includes/class-wc-frontend-scripts.php),
+ * which generates <ol class="flex-control-nav flex-control-thumbs"> as a
+ * sibling of .flex-viewport inside that same wrapper — those are the real
+ * classes targeted below, not guessed ones. Neither flexslider nor
+ * PhotoSwipe is reconfigured or replaced; this only repositions/resizes
+ * their existing output.
+ */
+.lgl-product-gallery .woocommerce-product-gallery__wrapper {
+	display: flex;
+	flex-direction: row-reverse;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-product-gallery .flex-viewport {
+	flex: 1;
+	min-width: 0;
+	border-radius: var(--lgl-radius-lg);
+	overflow: hidden;
+}
+
+.lgl-product-gallery .woocommerce-product-gallery__image img {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+
+.lgl-product-gallery .flex-control-nav.flex-control-thumbs {
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 72px;
+	gap: var(--lgl-space-2);
+	list-style: none;
+	max-height: 100%;
+	overflow-y: auto;
+}
+
+.lgl-product-gallery .flex-control-thumbs li {
+	width: 100%;
+}
+
+.lgl-product-gallery .flex-control-thumbs img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	border-radius: var(--lgl-radius-sm);
+	border: 1.5px solid var(--lgl-border-default);
+	cursor: pointer;
+}
+
+.lgl-product-gallery .flex-control-thumbs img.flex-active {
+	border-color: var(--lgl-color-brand);
+}
+
+/* Summary column */
+
+.lgl-product-summary-col {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-4);
+}
+
+.lgl-product__title {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-2xl);
+	line-height: var(--lgl-leading-snug);
+}
+
+.lgl-product__rating {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-product__price {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-3xl);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-product__price del {
+	margin-inline-end: var(--lgl-space-2);
+	color: var(--lgl-text-faint);
+	font-weight: var(--lgl-weight-regular);
+	font-size: var(--lgl-text-lg);
+}
+
+.lgl-product__price ins {
+	color: var(--lgl-color-error);
+	text-decoration: none;
+}
+
+.lgl-product__short-description {
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+	line-height: var(--lgl-leading-relaxed);
+}
+
+/* Quantity stepper */
+
+.lgl-quantity {
+	display: inline-flex;
+	align-items: stretch;
+	height: 2.75rem;
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	overflow: hidden;
+}
+
+.lgl-quantity__button {
+	width: 2.75rem;
+	border: 0;
+	background: var(--lgl-neutral-150);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-lg);
+	cursor: pointer;
+}
+
+.lgl-quantity .qty {
+	width: 3.5rem;
+	border: 0;
+	border-left: 1px solid var(--lgl-border-default);
+	border-right: 1px solid var(--lgl-border-default);
+	text-align: center;
+	-moz-appearance: textfield;
+}
+
+.lgl-quantity .qty::-webkit-outer-spin-button,
+.lgl-quantity .qty::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Add to cart */
+
+.lgl-add-to-cart {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+	flex-wrap: wrap;
+}
+
+.lgl-add-to-cart .single_add_to_cart_button {
+	height: 2.75rem;
+	padding-inline: var(--lgl-space-6);
+	border: 0;
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+	letter-spacing: var(--lgl-tracking-wide);
+	cursor: pointer;
+}
+
+.lgl-add-to-cart .single_add_to_cart_button:hover,
+.lgl-add-to-cart .single_add_to_cart_button:focus-visible {
+	background: var(--lgl-color-brand);
+}
+
+/* Tabs (desktop) / accordion (< 768px) */
+
+.lgl-product-tabs {
+	margin-top: var(--lgl-space-12);
+}
+
+.lgl-product-tabs ul.tabs {
+	display: flex;
+	gap: var(--lgl-space-6);
+	list-style: none;
+	border-bottom: 1px solid var(--lgl-border-default);
+}
+
+.lgl-product-tabs ul.tabs li a {
+	display: inline-block;
+	padding-block: var(--lgl-space-3);
+	color: var(--lgl-text-faint);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+	border-bottom: 2px solid transparent;
+}
+
+.lgl-product-tabs ul.tabs li.active a,
+.lgl-product-tabs ul.tabs li a:hover,
+.lgl-product-tabs ul.tabs li a:focus-visible {
+	color: var(--lgl-text-primary);
+	border-color: var(--lgl-color-brand);
+}
+
+.lgl-product-tabs .wc-tab {
+	padding-block: var(--lgl-space-6);
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+	line-height: var(--lgl-leading-relaxed);
+}
+
+@media (max-width: 991px) {
+	.lgl-product-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.lgl-product-gallery-col {
+		position: static;
+	}
+}
+
+@media (max-width: 767px) {
+	.lgl-product-gallery .woocommerce-product-gallery__wrapper {
+		flex-direction: column;
+	}
+
+	.lgl-product-gallery .flex-control-nav.flex-control-thumbs {
+		flex-direction: row;
+		flex-basis: auto;
+		max-height: none;
+		overflow-x: auto;
+	}
+
+	.lgl-product-gallery .flex-control-thumbs li {
+		flex: 0 0 64px;
+	}
+
+	/* Accordion mode (assets/js/product.js moves each panel inside its <li>) */
+	.lgl-product-tabs ul.tabs {
+		flex-direction: column;
+		gap: 0;
+		border-bottom: 0;
+	}
+
+	.lgl-product-tabs ul.tabs li {
+		border-bottom: 1px solid var(--lgl-border-default);
+	}
+
+	.lgl-product-tabs ul.tabs li a {
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+		border-bottom: 0;
+	}
+
+	.lgl-product-tabs .wc-tab {
+		padding-block: var(--lgl-space-4);
+	}
+}

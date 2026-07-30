@@ -118,9 +118,8 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 	/**
 	 * Enqueue page-specific stylesheets only where they are needed.
 	 *
-	 * WooCommerce conditional tags are only available once WooCommerce
-	 * has loaded, so every Woo-specific check is gated behind a single
-	 * `function_exists( 'is_product' )` guard.
+	 * WooCommerce conditional tags are only available once WooCommerce has
+	 * loaded, so every Woo-specific check is gated behind lgl_wc_active().
 	 *
 	 * @since 1.0.0
 	 *
@@ -136,7 +135,7 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 			);
 		}
 
-		if ( ! function_exists( 'is_product' ) ) {
+		if ( ! lgl_wc_active() ) {
 			return;
 		}
 
@@ -208,6 +207,81 @@ if ( ! function_exists( 'lgl_enqueue_dialog_scripts' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_enqueue_quantity_script' ) ) {
+	/**
+	 * Enqueue the shared quantity-stepper script.
+	 *
+	 * Used by both the product page and the cart page, since both render
+	 * WooCommerce's same shared woocommerce/global/quantity-input.php.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_enqueue_quantity_script() {
+		wp_enqueue_script(
+			'lgl-quantity',
+			get_theme_file_uri( 'assets/js/quantity.js' ),
+			array(),
+			lgl_asset_version( 'assets/js/quantity.js' ),
+			true
+		);
+		wp_script_add_data( 'lgl-quantity', 'strategy', 'defer' );
+	}
+}
+
+if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
+	/**
+	 * Enqueue page-specific scripts only where they are needed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_enqueue_conditional_scripts() {
+		if ( ! lgl_wc_active() ) {
+			return;
+		}
+
+		if ( is_shop() || is_product_taxonomy() ) {
+			wp_enqueue_script(
+				'lgl-shop',
+				get_theme_file_uri( 'assets/js/shop.js' ),
+				array( 'lgl-a11y' ),
+				lgl_asset_version( 'assets/js/shop.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-shop', 'strategy', 'defer' );
+		}
+
+		if ( is_product() ) {
+			lgl_enqueue_quantity_script();
+
+			wp_enqueue_script(
+				'lgl-product',
+				get_theme_file_uri( 'assets/js/product.js' ),
+				array( 'lgl-quantity' ),
+				lgl_asset_version( 'assets/js/product.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-product', 'strategy', 'defer' );
+		}
+
+		if ( is_cart() ) {
+			lgl_enqueue_quantity_script();
+
+			wp_enqueue_script(
+				'lgl-cart',
+				get_theme_file_uri( 'assets/js/cart.js' ),
+				array( 'lgl-quantity' ),
+				lgl_asset_version( 'assets/js/cart.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-cart', 'strategy', 'defer' );
+		}
+	}
+}
+
 if ( ! function_exists( 'lgl_enqueue_scripts_bundle' ) ) {
 	/**
 	 * Enqueue theme scripts and localize navigation data.
@@ -255,6 +329,7 @@ if ( ! function_exists( 'lgl_enqueue_assets' ) ) {
 		lgl_enqueue_global_styles();
 		lgl_enqueue_conditional_styles();
 		lgl_enqueue_scripts_bundle();
+		lgl_enqueue_conditional_scripts();
 	}
 }
 add_action( 'wp_enqueue_scripts', 'lgl_enqueue_assets' );

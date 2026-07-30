@@ -1,0 +1,437 @@
+/**
+ * Shop archive (woocommerce/archive-product.php + template-parts/shop/*).
+ *
+ * @package logelite
+ */
+
+/* Shop hero */
+
+.lgl-shop-hero {
+	position: relative;
+	margin-bottom: var(--lgl-space-8);
+	background: var(--lgl-surface-default);
+	border-bottom: 1px solid var(--lgl-border-default);
+}
+
+.lgl-shop-hero--has-banner {
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-shop-hero__banner {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+}
+
+.lgl-shop-hero__banner-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.lgl-shop-hero--has-banner::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: color-mix(in srgb, var(--lgl-surface-inverse) 55%, transparent);
+}
+
+.lgl-shop-hero__inner {
+	position: relative;
+	z-index: 1;
+	padding-block: var(--lgl-space-8);
+}
+
+.lgl-shop-hero__title {
+	margin-top: var(--lgl-space-3);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-3xl);
+}
+
+.lgl-shop-hero__description {
+	margin-top: var(--lgl-space-2);
+	max-width: 60ch;
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-shop-hero--has-banner .lgl-shop-hero__description {
+	color: var(--lgl-text-inverse);
+	opacity: 0.9;
+}
+
+/* Layout */
+
+.lgl-shop-layout {
+	display: grid;
+	grid-template-columns: 280px 1fr;
+	gap: var(--lgl-space-6);
+	align-items: start;
+	padding-bottom: var(--lgl-space-12);
+}
+
+/* Sidebar + off-canvas drawer */
+
+.lgl-shop-sidebar {
+	position: sticky;
+	top: var(--lgl-space-6);
+}
+
+.lgl-shop-sidebar__close {
+	display: none;
+}
+
+.lgl-shop-filters__backdrop {
+	background: rgba(20, 24, 28, 0.55);
+}
+
+.lgl-filter-group {
+	padding: var(--lgl-space-5);
+	margin-bottom: var(--lgl-space-4);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-filter-group__title {
+	margin-bottom: var(--lgl-space-3);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-filter-categories,
+.lgl-filter-categories ul {
+	list-style: none;
+}
+
+.lgl-filter-categories ul {
+	padding-left: var(--lgl-space-4);
+}
+
+.lgl-filter-categories__link {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--lgl-space-2);
+	padding-block: var(--lgl-space-2);
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-filter-categories__link[aria-current="page"] {
+	color: var(--lgl-color-brand-strong);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-filter-categories__count {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-filter-price {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+}
+
+.lgl-filter-price__input {
+	width: 0;
+	flex: 1;
+	height: 2.5rem;
+	padding-inline: var(--lgl-space-3);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-filter-checkboxes {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+}
+
+.lgl-filter-checkboxes__item {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-text-secondary);
+}
+
+.lgl-filter-checkboxes__item input {
+	accent-color: var(--lgl-color-brand);
+}
+
+.lgl-filter-checkboxes__count {
+	margin-left: auto;
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+}
+
+.lgl-filter-form__submit {
+	width: 100%;
+	padding-block: var(--lgl-space-3);
+	border: 0;
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+/* Toolbar */
+
+.lgl-shop-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--lgl-space-4);
+	padding: var(--lgl-space-4);
+	margin-bottom: var(--lgl-space-4);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-shop-toolbar__filters-toggle {
+	display: none;
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	padding: var(--lgl-space-2) var(--lgl-space-4);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-shop-result-count {
+	margin: 0;
+	color: var(--lgl-text-subtle);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-shop-toolbar__controls {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-4);
+	margin-left: auto;
+}
+
+.lgl-shop-orderby {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+}
+
+.lgl-shop-orderby__select {
+	height: 2.25rem;
+	padding-inline: var(--lgl-space-3);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-view-toggle {
+	display: flex;
+	gap: var(--lgl-space-1);
+}
+
+.lgl-view-toggle__button {
+	padding: var(--lgl-space-2) var(--lgl-space-3);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-sm);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-view-toggle__button[aria-current="true"] {
+	background: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+}
+
+/* Active filter chips */
+
+.lgl-active-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--lgl-space-2);
+}
+
+.lgl-active-filters__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--lgl-space-1);
+	padding: var(--lgl-space-1) var(--lgl-space-3);
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-color-brand-subtle);
+	color: var(--lgl-color-brand-strong);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-active-filters__clear {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+	text-decoration: underline;
+}
+
+/* Product grid / list view */
+
+/*
+ * loop/loop-start.php is NOT overridden by this theme — it's still
+ * WooCommerce's own template, which already outputs
+ * <ul class="products columns-{n}"> from the same loop_shop_columns
+ * value lgl_loop_columns() (inc/woocommerce.php) filters, so the column
+ * count is targeted directly via that class rather than a CSS variable.
+ */
+.lgl-shop-products :where(ul.products) {
+	display: grid;
+	gap: var(--lgl-space-5);
+	list-style: none;
+}
+
+.lgl-shop-products :where(ul.products.columns-2) {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+.lgl-shop-products :where(ul.products.columns-3) {
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.lgl-shop-products :where(ul.products.columns-4) {
+	grid-template-columns: repeat(4, 1fr);
+}
+
+.lgl-shop-products :where(ul.products.columns-5) {
+	grid-template-columns: repeat(5, 1fr);
+}
+
+.lgl-shop-products--list :where(ul.products) {
+	grid-template-columns: 1fr;
+}
+
+.lgl-shop-products--list .lgl-card__link {
+	flex-direction: row;
+	align-items: center;
+}
+
+.lgl-shop-products--list .lgl-card__media {
+	width: 140px;
+	flex: 0 0 140px;
+}
+
+.lgl-shop-empty {
+	padding: var(--lgl-space-12) 0;
+	text-align: center;
+	color: var(--lgl-text-muted);
+}
+
+/* Pagination */
+
+.lgl-shop-pagination {
+	margin-top: var(--lgl-space-8);
+}
+
+.lgl-shop-pagination ul.page-numbers {
+	display: flex;
+	justify-content: center;
+	gap: var(--lgl-space-2);
+	list-style: none;
+}
+
+.lgl-shop-pagination .page-numbers {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.375rem;
+	height: 2.375rem;
+	padding-inline: var(--lgl-space-2);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-shop-pagination .page-numbers.current {
+	background: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-shop-pagination a.page-numbers:hover,
+.lgl-shop-pagination a.page-numbers:focus-visible {
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-color-brand);
+}
+
+/* < 992px: sidebar becomes an off-canvas drawer */
+
+@media (max-width: 991px) {
+	.lgl-shop-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.lgl-shop-toolbar__filters-toggle {
+		display: inline-flex;
+	}
+
+	.lgl-shop-filters__backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: var(--lgl-z-overlay);
+		opacity: 0;
+		transition: opacity var(--lgl-dur-base) var(--lgl-ease-out);
+		pointer-events: none;
+	}
+
+	.lgl-shop-filters__backdrop.is-open {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.lgl-shop-sidebar {
+		position: fixed;
+		inset: 0;
+		z-index: var(--lgl-z-modal);
+		pointer-events: none;
+	}
+
+	.lgl-shop-sidebar__panel {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: min(85vw, 360px);
+		overflow-y: auto;
+		padding: var(--lgl-space-6);
+		background: var(--lgl-surface-page);
+		box-shadow: var(--lgl-shadow-lg);
+		transform: translateX(-100%);
+		transition: transform var(--lgl-dur-base) var(--lgl-ease-out);
+		pointer-events: auto;
+	}
+
+	.lgl-shop-sidebar.is-open .lgl-shop-sidebar__panel {
+		transform: translateX(0);
+	}
+
+	.lgl-shop-sidebar__close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		margin-bottom: var(--lgl-space-4);
+		border: 0;
+		background: none;
+		color: var(--lgl-text-primary);
+	}
+}

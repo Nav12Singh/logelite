@@ -17,11 +17,11 @@ $lgl_mobile_menu_location = has_nav_menu( 'mobile' ) ? 'mobile' : 'primary';
 
 $lgl_account_url = home_url( '/' );
 
-if ( function_exists( 'wc_get_page_permalink' ) ) {
+if ( lgl_wc_active() ) {
 	$lgl_account_url = wc_get_page_permalink( 'myaccount' );
 }
 
-$lgl_cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/' );
+$lgl_cart_url = lgl_wc_active() ? wc_get_cart_url() : home_url( '/' );
 ?>
 <div id="lgl-mobile-nav" class="lgl-mobile-nav" hidden>
 	<div

@@ -38,7 +38,7 @@ $lgl_active_sidebars = array_filter( $lgl_footer_sidebars, 'is_active_sidebar' )
 
 $lgl_payment_icons = '';
 
-if ( function_exists( 'WC' ) && WC()->payment_gateways() ) {
+if ( lgl_wc_active() && WC()->payment_gateways() ) {
 	foreach ( WC()->payment_gateways()->get_available_payment_gateways() as $lgl_gateway ) {
 		$lgl_payment_icons .= $lgl_gateway->get_icon();
 	}

@@ -1,0 +1,481 @@
+/**
+ * Cart (woocommerce/cart/*.php) and checkout (woocommerce/checkout/*.php,
+ * woocommerce/global/form-login.php) pages. Tokens only.
+ *
+ * @package logelite
+ */
+
+/* ============================= Cart ============================= */
+
+.lgl-cart-layout {
+	display: grid;
+	grid-template-columns: 1fr 360px;
+	gap: var(--lgl-space-6);
+	align-items: start;
+}
+
+.lgl-cart-layout__items {
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	overflow: hidden;
+}
+
+.lgl-cart-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.lgl-cart-table th,
+.lgl-cart-table td {
+	padding: var(--lgl-space-4);
+	text-align: left;
+	border-bottom: 1px solid var(--lgl-border-subtle);
+}
+
+.lgl-cart-table thead th {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+	text-transform: uppercase;
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+.lgl-cart-table .product-thumbnail img {
+	width: 64px;
+	height: 64px;
+	object-fit: cover;
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-cart-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	color: var(--lgl-text-faint);
+	border-radius: var(--lgl-radius-full);
+}
+
+.lgl-cart-remove:hover,
+.lgl-cart-remove:focus-visible {
+	color: var(--lgl-color-error);
+	background: var(--lgl-color-error-bg);
+}
+
+.lgl-cart-table .actions {
+	background: var(--lgl-surface-sunken);
+}
+
+.lgl-cart-table .coupon {
+	display: flex;
+	gap: var(--lgl-space-2);
+	align-items: center;
+}
+
+.lgl-cart-table .coupon #coupon_code {
+	height: 2.5rem;
+	padding-inline: var(--lgl-space-3);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-cart-layout__totals {
+	position: sticky;
+	top: var(--lgl-space-6);
+}
+
+.lgl-cart-totals {
+	padding: var(--lgl-space-6);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-cart-totals h2 {
+	margin-bottom: var(--lgl-space-4);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+}
+
+.lgl-cart-totals table {
+	width: 100%;
+}
+
+.lgl-cart-totals th,
+.lgl-cart-totals td {
+	padding-block: var(--lgl-space-3);
+	text-align: left;
+	border-bottom: 1px solid var(--lgl-border-subtle);
+}
+
+.lgl-cart-totals .order-total th,
+.lgl-cart-totals .order-total td {
+	border-bottom: 0;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-xl);
+	color: var(--lgl-color-brand);
+}
+
+.wc-proceed-to-checkout .checkout-button {
+	display: block;
+	width: 100%;
+	padding-block: var(--lgl-space-4);
+	margin-top: var(--lgl-space-4);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	text-align: center;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+}
+
+/* Shipping method radio cards — shared by cart totals and checkout review */
+
+.lgl-shipping-methods {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+	list-style: none;
+}
+
+.lgl-shipping-methods__item {
+	padding: var(--lgl-space-3);
+	border: 1.5px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-shipping-methods__item:has(input:checked) {
+	border-color: var(--lgl-color-brand);
+	background: var(--lgl-color-brand-subtle);
+}
+
+.lgl-shipping-methods__item input {
+	accent-color: var(--lgl-color-brand);
+	margin-inline-end: var(--lgl-space-2);
+}
+
+/* Empty cart */
+
+.lgl-cart-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--lgl-space-4);
+	padding: var(--lgl-space-16) var(--lgl-space-6);
+	text-align: center;
+}
+
+.lgl-cart-empty__icon {
+	color: var(--lgl-text-faint);
+}
+
+/* Cross-sells */
+
+.lgl-cross-sells {
+	margin-top: var(--lgl-space-8);
+}
+
+.lgl-cross-sells ul.products {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: var(--lgl-space-5);
+	list-style: none;
+}
+
+/* ============================ Checkout ============================ */
+
+.lgl-checkout-layout {
+	display: grid;
+	grid-template-columns: 1fr 400px;
+	grid-template-areas:
+		"billing coupon"
+		"billing heading"
+		"billing review"
+		"payment placeorder";
+	gap: var(--lgl-space-6);
+	align-items: start;
+}
+
+/*
+ * form.checkout, #order_review, and #payment are all flattened with
+ * display: contents so their real children participate directly in the
+ * grid above (see the comment in woocommerce/checkout/form-checkout.php
+ * for the full reasoning). No PHP/hook changes — layout only.
+ */
+.lgl-checkout-layout form.checkout,
+.lgl-checkout-layout #order_review,
+.lgl-checkout-layout #payment {
+	display: contents;
+}
+
+#customer_details {
+	grid-area: billing;
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-6);
+}
+
+#customer_details .col2-set {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--lgl-space-6);
+}
+
+.woocommerce-form-coupon-toggle {
+	grid-area: coupon;
+}
+
+.lgl-checkout-coupon-form {
+	grid-area: coupon;
+	margin-top: var(--lgl-space-2);
+}
+
+#order_review_heading {
+	grid-area: heading;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+}
+
+.lgl-order-review {
+	grid-area: review;
+	padding: var(--lgl-space-5);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-order-review__summary {
+	display: none;
+	align-items: center;
+	justify-content: space-between;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	cursor: pointer;
+}
+
+.lgl-order-review table {
+	width: 100%;
+}
+
+.lgl-order-review__product {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-order-review__thumb {
+	width: 48px;
+	height: 48px;
+	object-fit: cover;
+	border-radius: var(--lgl-radius-sm);
+	flex: 0 0 48px;
+}
+
+.lgl-order-review th,
+.lgl-order-review td {
+	padding-block: var(--lgl-space-3);
+	border-bottom: 1px solid var(--lgl-border-subtle);
+	text-align: left;
+}
+
+.lgl-order-review .order-total th,
+.lgl-order-review .order-total td {
+	border-bottom: 0;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+	color: var(--lgl-color-brand);
+}
+
+.lgl-checkout-card {
+	padding: var(--lgl-space-6);
+	margin-bottom: var(--lgl-space-4);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-checkout-card h3 {
+	margin-bottom: var(--lgl-space-4);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-md);
+}
+
+.lgl-payment-methods {
+	grid-area: payment;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+	padding: var(--lgl-space-5);
+	margin-top: var(--lgl-space-4);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-payment-methods li {
+	padding: var(--lgl-space-3);
+	border: 1.5px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-payment-methods li:has(input:checked) {
+	border-color: var(--lgl-color-brand);
+	background: var(--lgl-color-brand-subtle);
+}
+
+.lgl-place-order {
+	grid-area: placeorder;
+	position: sticky;
+	bottom: var(--lgl-space-6);
+	padding: var(--lgl-space-5);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	box-shadow: var(--lgl-shadow-md);
+}
+
+.lgl-place-order #place_order {
+	width: 100%;
+	padding-block: var(--lgl-space-4);
+	border: 0;
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+/* Thank-you page */
+
+.lgl-order-received {
+	max-width: 720px;
+	margin-inline: auto;
+}
+
+.lgl-order-overview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-6);
+	padding: var(--lgl-space-5);
+	margin-top: var(--lgl-space-4);
+	list-style: none;
+	background: var(--lgl-surface-sunken);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-next-steps {
+	padding: var(--lgl-space-6);
+	margin-top: var(--lgl-space-6);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.lgl-next-steps__title {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-lg);
+}
+
+.lgl-next-steps__actions {
+	display: flex;
+	gap: var(--lgl-space-3);
+	margin-top: var(--lgl-space-4);
+}
+
+/* ===================== < 992px: single column ===================== */
+
+@media (max-width: 991px) {
+	.lgl-cart-layout,
+	.lgl-checkout-layout {
+		grid-template-columns: 1fr;
+		grid-template-areas:
+			"billing"
+			"coupon"
+			"heading"
+			"review"
+			"payment"
+			"placeorder";
+	}
+
+	.lgl-cart-layout__totals {
+		position: static;
+	}
+
+	#customer_details .col2-set {
+		grid-template-columns: 1fr;
+	}
+
+	.lgl-place-order {
+		position: static;
+	}
+}
+
+/*
+ * < 768px: the review-order <details> becomes genuinely collapsible.
+ * `open` is set unconditionally in the markup, so >=768px (above) just
+ * never shows/enables the toggle — no JS needed either way.
+ */
+@media (max-width: 767px) {
+	.lgl-order-review__summary {
+		display: flex;
+	}
+
+	/* Mobile card layout for the cart table — CSS only, same markup tree,
+	 * using the data-title attribute WooCommerce's own cart.php already
+	 * outputs on every <td> (verified against the actual template rather
+	 * than assuming a different attribute name). */
+	.lgl-cart-table thead {
+		display: none;
+	}
+
+	.lgl-cart-table,
+	.lgl-cart-table tbody,
+	.lgl-cart-table tr,
+	.lgl-cart-table td {
+		display: block;
+		width: 100%;
+	}
+
+	.lgl-cart-table tr {
+		padding: var(--lgl-space-4);
+		border-bottom: 1px solid var(--lgl-border-default);
+	}
+
+	.lgl-cart-table td {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--lgl-space-3);
+		border-bottom: 0;
+		padding: var(--lgl-space-2) 0;
+	}
+
+	.lgl-cart-table td[data-title]::before {
+		content: attr(data-title);
+		flex: 0 0 auto;
+		margin-right: var(--lgl-space-3);
+		color: var(--lgl-text-faint);
+		font-size: var(--lgl-text-xs);
+		text-transform: uppercase;
+		letter-spacing: var(--lgl-tracking-wide);
+	}
+
+	.lgl-cart-table td.product-remove,
+	.lgl-cart-table td.product-thumbnail {
+		justify-content: flex-end;
+	}
+
+	.lgl-cart-table td.product-remove::before,
+	.lgl-cart-table td.product-thumbnail::before {
+		content: none;
+	}
+}

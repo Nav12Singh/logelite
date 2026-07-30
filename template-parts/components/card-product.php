@@ -18,6 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! lgl_wc_active() ) {
+	return;
+}
+
 $args = wp_parse_args(
 	$args,
 	array(

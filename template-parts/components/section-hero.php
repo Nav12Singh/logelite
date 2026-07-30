@@ -13,6 +13,8 @@
  *   align          string  'left'|'center'. Default 'left'.
  *   variant        string  Free-form modifier, e.g. 'default'|'dark'.
  *   class          string  Extra class(es) on the section wrapper.
+ *   heading_id     string  Optional id on the <h2>, e.g. so a caller's own
+ *                          outer <section aria-labelledby="..."> can point at it.
  *
  * data-animate attributes are placeholders for a later animation pass
  * (T5) — no animation CSS/JS is wired up yet.
@@ -37,6 +39,7 @@ $args = wp_parse_args(
 		'align'         => 'left',
 		'variant'       => 'default',
 		'class'         => '',
+		'heading_id'    => '',
 	)
 );
 
@@ -61,7 +64,12 @@ $lgl_secondary_cta = wp_parse_args( $args['secondary_cta'], array( 'label' => ''
 				<p class="lgl-hero__eyebrow"><?php echo wp_kses_post( $args['eyebrow'] ); ?></p>
 			<?php endif; ?>
 
-			<h2 class="lgl-hero__title"><?php echo wp_kses_post( $args['title'] ); ?></h2>
+			<h2
+				<?php if ( '' !== $args['heading_id'] ) : ?>
+					id="<?php echo esc_attr( $args['heading_id'] ); ?>"
+				<?php endif; ?>
+				class="lgl-hero__title"
+			><?php echo wp_kses_post( $args['title'] ); ?></h2>
 
 			<?php if ( '' !== $args['text'] ) : ?>
 				<div class="lgl-hero__text"><?php echo wp_kses_post( $args['text'] ); ?></div>

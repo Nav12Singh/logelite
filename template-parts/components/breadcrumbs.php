@@ -24,7 +24,7 @@ $args = wp_parse_args(
 	)
 );
 
-if ( function_exists( 'wc_get_breadcrumb' ) ) {
+if ( lgl_wc_active() ) {
 	$lgl_crumbs = wc_get_breadcrumb();
 } else {
 	$lgl_crumbs = array( array( esc_html__( 'Home', 'logelite' ), home_url( '/' ) ) );
@@ -54,7 +54,7 @@ if ( empty( $lgl_crumbs ) ) {
 $lgl_classes = trim( 'lgl-breadcrumbs ' . $args['class'] );
 ?>
 <nav class="<?php echo esc_attr( $lgl_classes ); ?>" aria-label="<?php esc_attr_e( 'Breadcrumb', 'logelite' ); ?>">
-	<?php if ( function_exists( 'woocommerce_breadcrumb' ) ) : ?>
+	<?php if ( lgl_wc_active() ) : ?>
 		<?php woocommerce_breadcrumb(); ?>
 	<?php else : ?>
 		<ol class="lgl-breadcrumbs__list">

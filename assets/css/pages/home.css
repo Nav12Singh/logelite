@@ -1,0 +1,220 @@
+/**
+ * Front page (front-page.php + template-parts/home/*).
+ *
+ * data-animate="fade-up" attributes are placeholders for a later
+ * animation pass (T5) — no transition/animation rules are added here.
+ *
+ * @package logelite
+ */
+
+.lgl-section {
+	padding-block: var(--lgl-space-12);
+}
+
+.lgl-section__heading {
+	margin-bottom: var(--lgl-space-6);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-2xl);
+	color: var(--lgl-text-primary);
+}
+
+/* Trust strip */
+
+.lgl-section--usp {
+	padding-block: var(--lgl-space-4);
+	background: var(--lgl-color-brand);
+}
+
+.lgl-usp-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--lgl-space-6);
+	list-style: none;
+}
+
+.lgl-usp-list__item {
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+/* Category grid */
+
+.lgl-category-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: var(--lgl-space-5);
+}
+
+.lgl-category-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--lgl-space-3);
+	padding: var(--lgl-space-5);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	text-align: center;
+	transition: border-color var(--lgl-dur-base) var(--lgl-ease-out),
+		box-shadow var(--lgl-dur-base) var(--lgl-ease-out);
+}
+
+.lgl-category-card:hover,
+.lgl-category-card:focus-visible {
+	border-color: var(--lgl-color-brand);
+	box-shadow: var(--lgl-shadow-card-hover);
+}
+
+.lgl-category-card__media {
+	display: block;
+	width: 64px;
+	height: 64px;
+	border-radius: var(--lgl-radius-md);
+	overflow: hidden;
+}
+
+.lgl-category-card__image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.lgl-category-card__placeholder {
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: var(--lgl-neutral-150);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-category-card__name {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-category-card__count {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+}
+
+/* Featured products */
+
+.lgl-product-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--lgl-space-5);
+}
+
+/* Testimonials */
+
+.lgl-testimonial-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: var(--lgl-space-6);
+}
+
+.lgl-testimonial-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-3);
+	padding: var(--lgl-space-6);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-surface-default);
+}
+
+.lgl-testimonial-card__rating {
+	color: var(--lgl-color-warning);
+	font-size: var(--lgl-text-md);
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+.lgl-testimonial-card__quote {
+	margin: 0;
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-base);
+	line-height: var(--lgl-leading-relaxed);
+}
+
+.lgl-testimonial-card__meta {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-testimonial-card__avatar {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: var(--lgl-radius-full);
+	object-fit: cover;
+}
+
+.lgl-testimonial-card__author {
+	display: flex;
+	flex-direction: column;
+	font-weight: var(--lgl-weight-semibold);
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-testimonial-card__role {
+	color: var(--lgl-text-faint);
+	font-weight: var(--lgl-weight-regular);
+	font-size: var(--lgl-text-xs);
+}
+
+/* Newsletter banner */
+
+.lgl-newsletter-banner {
+	padding: var(--lgl-space-8);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+	text-align: center;
+}
+
+.lgl-newsletter-banner__title {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-2xl);
+}
+
+.lgl-newsletter-banner__text {
+	margin-top: var(--lgl-space-2);
+	opacity: 0.9;
+}
+
+.lgl-newsletter-banner__form {
+	display: flex;
+	max-width: 420px;
+	margin: var(--lgl-space-5) auto 0;
+	border-radius: var(--lgl-radius-md);
+	overflow: hidden;
+	background: var(--lgl-surface-default);
+}
+
+.lgl-newsletter-banner__input {
+	flex: 1;
+	height: 2.75rem;
+	padding-inline: var(--lgl-space-4);
+	border: 0;
+	background: transparent;
+	color: var(--lgl-text-primary);
+}
+
+.lgl-newsletter-banner__submit {
+	padding-inline: var(--lgl-space-5);
+	border: 0;
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+}

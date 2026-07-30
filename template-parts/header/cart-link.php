@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $lgl_cart_count = 0;
 
-if ( function_exists( 'WC' ) && null !== WC()->cart ) {
+if ( lgl_wc_active() && null !== WC()->cart ) {
 	$lgl_cart_count = WC()->cart->get_cart_contents_count();
 }
 ?>
