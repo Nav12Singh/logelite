@@ -163,14 +163,12 @@ if ( ! function_exists( 'lgl_primary_nav_fallback' ) ) {
 	 * Fallback primary nav shown until an admin assigns a real menu to the
 	 * "Primary Menu" location (Appearance > Menus).
 	 *
-	 * Home / Shop / Cart / Checkout / Contact — "Product" and "Thank You"
+	 * Home / Shop / Cart / Checkout / My Account — "Product" and "Thank You"
 	 * (from the design reference's own literal page-switcher nav) were
-	 * dropped per explicit follow-up request, and "Contact" added, pointing
-	 * at a page with the slug "contact" if one exists (page-contact.php is
-	 * WordPress's own template-hierarchy match for that slug — no manual
-	 * template assignment needed once that page is created) — falls back to
-	 * the site's front page rather than a dead link if no such page exists
-	 * yet. See ASSUMPTIONS.md.
+	 * dropped per explicit follow-up request. "Contact" (added in an
+	 * earlier revision) was later removed from this fallback nav in favor
+	 * of "My Account"; the Contact page itself (page-contact.php) is
+	 * unaffected and still reachable by direct URL. See ASSUMPTIONS.md.
 	 *
 	 * @since 1.0.0
 	 *
@@ -203,15 +201,13 @@ if ( ! function_exists( 'lgl_primary_nav_fallback' ) ) {
 				'url'    => wc_get_checkout_url(),
 				'active' => is_checkout(),
 			);
+
+			$lgl_items[] = array(
+				'label'  => esc_html__( 'My Account', 'logelite' ),
+				'url'    => wc_get_page_permalink( 'myaccount' ),
+				'active' => is_account_page(),
+			);
 		}
-
-		$lgl_contact_page = get_page_by_path( 'contact' );
-
-		$lgl_items[] = array(
-			'label'  => esc_html__( 'Contact', 'logelite' ),
-			'url'    => $lgl_contact_page instanceof WP_Post ? get_permalink( $lgl_contact_page ) : home_url( '/' ),
-			'active' => $lgl_contact_page instanceof WP_Post && is_page( $lgl_contact_page->ID ),
-		);
 		?>
 		<ul class="lgl-nav__list">
 			<?php foreach ( $lgl_items as $lgl_item ) : ?>
