@@ -66,35 +66,3 @@
 	font-style: italic;
 	color: #646970;
 }
-
-/* FAQ meta box: a collapsible <details> per row, with its own row-level
- * toolbar as a SIBLING of the <details> — not inside its <summary> — so a
- * toolbar button click never also triggers the summary's native toggle. */
-.lgl-faq-row {
-	flex-direction: column;
-	align-items: stretch;
-	gap: 4px;
-}
-
-.lgl-faq-row__toolbar {
-	display: flex;
-	justify-content: flex-end;
-	gap: 4px;
-}
-
-.lgl-faq-row__summary {
-	cursor: pointer;
-	font-weight: 600;
-	padding: 4px 0;
-}
-
-.lgl-faq-row__fields {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding-top: 8px;
-}
-
-.lgl-faq-row__fields .widefat {
-	max-width: 100%;
-}

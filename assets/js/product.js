@@ -160,3 +160,75 @@
 		mediaQuery.addListener( syncMode );
 	}
 } )();
+
+/**
+ * "Buy It Now" flag (woocommerce/single-product/add-to-cart/{simple,variable}.php).
+ *
+ * Both the "Add to Cart" and "Buy It Now" buttons submit the same
+ * name="add-to-cart" value, so WooCommerce's own add-to-cart handler
+ * processes either identically; this only flips a hidden field to "1"
+ * when Buy It Now specifically was the button clicked, which
+ * lgl_buy_now_redirect() (inc/woocommerce.php) reads to decide where to
+ * redirect afterward. Without this script the hidden field just stays
+ * "0" and Buy It Now behaves exactly like Add to Cart — never broken,
+ * only loses the "skip straight to checkout" enhancement.
+ */
+( function () {
+	'use strict';
+
+	document.querySelectorAll( '[data-buy-now-trigger]' ).forEach( function ( button ) {
+		button.addEventListener( 'click', function () {
+			var form = button.closest( 'form' );
+			var flag = form ? form.querySelector( '[data-buy-now-flag]' ) : null;
+
+			if ( flag ) {
+				flag.value = '1';
+			}
+		} );
+	} );
+} )();
+
+/**
+ * Color/memory swatch tiles (woocommerce/single-product/add-to-cart/variable.php).
+ *
+ * Each visible swatch button is paired with the real, visually-hidden
+ * <select> WooCommerce's own variation-form JS (wc-add-to-cart-variation)
+ * already reads price/stock/gallery updates from — clicking a swatch just
+ * sets that select's value and dispatches a native `change`, so core's
+ * variation logic runs completely untouched. No combination-aware
+ * disabling of invalid swatch pairs is implemented — see ASSUMPTIONS.md.
+ */
+( function () {
+	'use strict';
+
+	document.querySelectorAll( '[data-swatch-group]' ).forEach( function ( group ) {
+		var select = document.getElementById( group.getAttribute( 'data-swatch-group' ) );
+
+		if ( ! select ) {
+			return;
+		}
+
+		var buttons = Array.prototype.slice.call( group.querySelectorAll( '[data-swatch-value]' ) );
+
+		function syncActive() {
+			buttons.forEach( function ( button ) {
+				var isActive = button.getAttribute( 'data-swatch-value' ) === select.value;
+
+				button.classList.toggle( 'is-active', isActive );
+				button.setAttribute( 'aria-pressed', isActive ? 'true' : 'false' );
+			} );
+		}
+
+		buttons.forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				select.value = button.getAttribute( 'data-swatch-value' );
+				select.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+				syncActive();
+			} );
+		} );
+
+		select.addEventListener( 'change', syncActive );
+
+		syncActive();
+	} );
+} )();

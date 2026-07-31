@@ -15,16 +15,16 @@
  * @version 9.4.0
  */
 
-// Overridden by logelite — reason: two-column layout (T4.0). Every hook in
-// this file fires in exactly the same order as core: before_checkout_form
-// -> [registration bail] -> before/after_customer_details (wrapping billing
-// + shipping, which fire woocommerce_after_order_notes internally via
+// Overridden by logelite — reason: two-column layout. Every hook in this
+// file fires in exactly the same order as core: before_checkout_form ->
+// [registration bail] -> before/after_customer_details (wrapping billing +
+// shipping, which fire woocommerce_after_order_notes internally via
 // form-shipping.php, untouched) -> before_order_review_heading -> the
 // order_review_heading itself -> before/after_order_review (wrapping
 // woocommerce_checkout_order_review, which fires review-order.php then
 // payment.php, both untouched) -> after_checkout_form. No action was
-// removed, added, or re-hooked to a different tag/priority — only two real
-// wrapper elements were inserted around EXISTING content:
+// removed, added, or re-hooked to a different tag/priority — only wrapper
+// elements were inserted around EXISTING content:
 //   - <form class="lgl-checkout"> — the grid container. The form element
 //     itself carries the grid class rather than an extra wrapping <div>,
 //     since a div with the form as its only child would be pure clutter.
@@ -36,6 +36,25 @@
 //     that one div via the woocommerce_checkout_order_review action) goes
 //     in the aside, moved as a single container — see assets/css/
 //     components/checkout.css for the grid/sticky rules.
+// - #customer_details is now ONE card (id kept, .col2-set/.col-1/.col-2
+//   removed — confirmed via grep that no WooCommerce core JS targets
+//   those classes) matching the design reference's single "Contact &
+//   billing details" card, instead of billing/shipping as two side-by-side
+//   boxes. The reference also shows delivery-method and payment as two
+//   further LEFT-column cards, with the order summary as a plain
+//   right-column total — NOT replicated: this project's own prior,
+//   documented decision (see ASSUMPTIONS.md, cart/checkout section) found
+//   that extracting the shipping-method radio list from
+//   wc_cart_totals_shipping_html() (rendered inside review-order.php's
+//   totals table) into a separate left-column card isn't reliably
+//   achievable without either a duplicate-DOM-id risk (calling that
+//   function twice) or the same display:contents-on-a-table-part
+//   cross-browser risk already ruled out there. Payment methods + the
+//   place-order button (payment.php) are left bundled with them in the
+//   aside for the same reason — splitting the two apart would still leave
+//   shipping stranded in the aside as an orphaned card, so keeping payment
+//   there too was judged the more honest layout than a partial split. See
+//   ASSUMPTIONS.md, "Phase 7" for the full reasoning.
 // The coupon form (woocommerce_before_checkout_form, form-coupon.php) is
 // NOT moved — it already renders before this <form> opens, i.e. above
 // both columns, exactly where core puts it; nothing here touches it.
@@ -62,14 +81,10 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 
 			<?php do_action( 'woocommerce_checkout_before_customer_details' ); ?>
 
-			<div class="col2-set" id="customer_details">
-				<div class="col-1">
-					<?php do_action( 'woocommerce_checkout_billing' ); ?>
-				</div>
-
-				<div class="col-2">
-					<?php do_action( 'woocommerce_checkout_shipping' ); ?>
-				</div>
+			<div class="lgl-checkout-card lgl-checkout-contact-card" id="customer_details">
+				<h3><span class="lgl-checkout-card__step">1</span> <?php esc_html_e( 'Contact & billing details', 'logelite' ); ?></h3>
+				<?php do_action( 'woocommerce_checkout_billing' ); ?>
+				<?php do_action( 'woocommerce_checkout_shipping' ); ?>
 			</div>
 
 			<?php do_action( 'woocommerce_checkout_after_customer_details' ); ?>

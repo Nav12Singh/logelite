@@ -16,10 +16,12 @@
  */
 
 // Overridden by logelite — reason: adds an lgl-cart-totals class (sticky
-// card styling lives in assets/css/pages/checkout.css). Every action,
-// filter, and conditional is unchanged — including
-// wc_cart_totals_shipping_html(), which renders cart-shipping.php's
-// radio-card-styled shipping method list right where it always has.
+// card styling lives in assets/css/pages/checkout.css) and a static trust
+// badges block after the proceed-to-checkout button, matching the design
+// reference. Every action, filter, and conditional is otherwise unchanged
+// — including wc_cart_totals_shipping_html(), which renders
+// cart-shipping.php's radio-card-styled shipping method list right where
+// it always has.
 
 defined( 'ABSPATH' ) || exit;
 
@@ -116,3 +118,9 @@ defined( 'ABSPATH' ) || exit;
 	<?php do_action( 'woocommerce_after_cart_totals' ); ?>
 
 </div>
+
+<ul class="lgl-cart-trust">
+	<li><?php esc_html_e( 'Free shipping on orders over $199', 'logelite' ); ?></li>
+	<li><?php esc_html_e( '30-day money-back guarantee', 'logelite' ); ?></li>
+	<li><?php esc_html_e( '24-month Logelite warranty', 'logelite' ); ?></li>
+</ul>

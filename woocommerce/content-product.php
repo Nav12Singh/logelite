@@ -47,7 +47,15 @@ if ( ! is_a( $product, WC_Product::class ) || ! $product->is_visible() ) {
 	 */
 	do_action( 'woocommerce_before_shop_loop_item' );
 
-	lgl_product_card( array( 'product' => $product ) );
+	// show_tag: false — the design reference's shop/related grid card has no
+	// Free Shipping/Free Gift/In Stock pill slot at all (only the home
+	// page's Deals of the Day and Best Sellers card variants do).
+	lgl_product_card(
+		array(
+			'product'  => $product,
+			'show_tag' => false,
+		)
+	);
 
 	/**
 	 * Hook: woocommerce_after_shop_loop_item_title.

@@ -21,12 +21,10 @@
 // it here — rather than inside woocommerce_single_product_summary — is
 // what lets it span full width instead of being confined to the summary
 // column; see the priority-map comment on
-// lgl_reorder_single_product_summary() in inc/woocommerce.php), wraps the
-// gallery and summary in a two-column grid (gallery left/sticky, summary
-// right, single column below 992px), and adds two empty T3 hook targets
-// (sticky add-to-cart bar; related-products carousel is noted inline
-// where woocommerce_output_related_products already hooks in) with TODO
-// comments. LAYOUT ONLY — no T3 logic is implemented here.
+// lgl_reorder_single_product_summary() in inc/woocommerce.php), and wraps
+// the gallery, summary, and buy-box in a three-column grid (gallery
+// left/sticky, summary middle, buy-box right, collapsing to a single
+// column below 992px), matching the design reference.
 
 defined( 'ABSPATH' ) || exit;
 
@@ -48,17 +46,6 @@ if ( post_password_required() ) {
 
 	<?php lgl_breadcrumbs(); ?>
 
-	<?php
-	/**
-	 * T3 hook target: sticky add-to-cart bar.
-	 *
-	 * TODO (T3): render a condensed bar (thumbnail, title, price, quantity,
-	 * add-to-cart) that appears once the main add-to-cart button scrolls
-	 * out of view. Empty on purpose — layout only, per scope guard.
-	 */
-	do_action( 'lgl_sticky_add_to_cart' );
-	?>
-
 	<div class="lgl-product-layout">
 		<div class="lgl-product-gallery-col">
 			<?php
@@ -79,11 +66,16 @@ if ( post_password_required() ) {
 			 *
 			 * Reordered by lgl_reorder_single_product_summary()
 			 * (inc/woocommerce.php) — see that function's docblock for the
-			 * full final priority map, including the two empty T3 slots
-			 * (feature icons, delivery estimator).
+			 * full final priority map. Price and add-to-cart are
+			 * deliberately NOT in this stack; they render in the buy-box
+			 * column instead (template-parts/product/buy-box.php).
 			 */
 			do_action( 'woocommerce_single_product_summary' );
 			?>
+		</div>
+
+		<div class="lgl-product-buybox-col">
+			<?php get_template_part( 'template-parts/product/buy-box' ); ?>
 		</div>
 	</div>
 
@@ -94,13 +86,6 @@ if ( post_password_required() ) {
 	 * @hooked woocommerce_output_product_data_tabs - 10
 	 * @hooked woocommerce_upsell_display - 15
 	 * @hooked woocommerce_output_related_products - 20
-	 *
-	 * TODO (T3): the FAQ feature attaches its own tab via the
-	 * woocommerce_product_tabs filter (see
-	 * woocommerce/single-product/tabs/tabs.php) rather than this action.
-	 * TODO (T3): the related-products carousel restyles the output of
-	 * woocommerce_output_related_products() (priority 20 above) — no new
-	 * hook needed, just JS/CSS on its existing markup once built.
 	 */
 	do_action( 'woocommerce_after_single_product_summary' );
 	?>

@@ -8,11 +8,12 @@
 	padding-block: var(--lgl-space-6) var(--lgl-space-12);
 }
 
-/* Two-column layout: gallery (sticky) + summary, single column below 992px */
+/* Three-column layout: gallery (sticky) / summary / buy-box (sticky, fixed
+   300px), single column below 992px */
 
 .lgl-product-layout {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr 1.1fr 300px;
 	gap: var(--lgl-space-8);
 	align-items: start;
 	margin-top: var(--lgl-space-6);
@@ -21,6 +22,17 @@
 .lgl-product-gallery-col {
 	position: sticky;
 	top: var(--lgl-space-6);
+	/*
+	 * Without this, the grid item's "automatic minimum size" (the default,
+	 * since no min-width is otherwise set) resolves to the gallery image's
+	 * natural/intrinsic width whenever that's larger than this column's
+	 * fair 1fr share — which it usually is for a real product photo. The
+	 * grid then grows this track past its fair share to satisfy that
+	 * minimum, crushing the sibling `1.1fr` summary column down to its own
+	 * min-content floor (the single longest word), which is exactly the
+	 * "one word per line, column is a sliver" blowout this fixes.
+	 */
+	min-width: 0;
 }
 
 /*
@@ -45,11 +57,38 @@
 	min-width: 0;
 	border-radius: var(--lgl-radius-lg);
 	overflow: hidden;
+	background: var(--lgl-surface-default);
+	/*
+	 * A fixed aspect-ratio box, not a JS-measured height: flexslider's fade
+	 * mode takes each slide out of flow (position: absolute) and relies on
+	 * its own doMath() to set an explicit inline height on this element —
+	 * if that measurement ever runs before the image has finished loading
+	 * (no width/height attributes to reserve space with in the meantime),
+	 * it locks in a near-zero height and never recalculates, leaving the
+	 * active slide readable in the DOM but visually blank. Reserving the
+	 * box with CSS alone removes that race entirely. `!important` is
+	 * deliberate here — it's the one property flexslider is likely to set
+	 * inline, and this box must win over that.
+	 */
+	aspect-ratio: 1 / 1;
+	height: auto !important;
+}
+
+.lgl-product-gallery .flex-viewport .slides,
+.lgl-product-gallery .flex-viewport .slides > li,
+.lgl-product-gallery .woocommerce-product-gallery__image {
+	height: 100%;
+}
+
+.lgl-product-gallery .woocommerce-product-gallery__image a {
+	display: block;
+	height: 100%;
 }
 
 .lgl-product-gallery .woocommerce-product-gallery__image img {
 	width: 100%;
-	height: auto;
+	height: 100%;
+	object-fit: contain;
 	display: block;
 }
 
@@ -104,10 +143,17 @@
 	font-size: var(--lgl-text-sm);
 }
 
+/*
+ * Only ever rendered inside the buy box now (woocommerce_template_single_price()
+ * is called directly from template-parts/product/buy-box.php, not left on
+ * the woocommerce_single_product_summary hook — see
+ * lgl_reorder_single_product_summary(), inc/woocommerce.php) — sized to
+ * match the reference's "TOTAL PRICE" figure there.
+ */
 .lgl-product__price {
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-extrabold);
-	font-size: var(--lgl-text-3xl);
+	font-size: var(--lgl-text-4xl);
 	color: var(--lgl-text-primary);
 }
 
@@ -119,7 +165,7 @@
 }
 
 .lgl-product__price ins {
-	color: var(--lgl-color-error);
+	color: var(--lgl-color-sale);
 	text-decoration: none;
 }
 
@@ -127,6 +173,19 @@
 	color: var(--lgl-text-secondary);
 	font-size: var(--lgl-text-sm);
 	line-height: var(--lgl-leading-relaxed);
+	/*
+	 * A merchant's short description is meant to be a brief teaser, not a
+	 * full product write-up — the full text is always still available in
+	 * the Description tab below (woocommerce_template_single_excerpt()'s
+	 * own content, duplicated there via the_content()). Without a clamp, a
+	 * long excerpt (or WooCommerce's own multi-paragraph sample data) fills
+	 * the entire summary column height, pushing the rest of the page down
+	 * with it.
+	 */
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
 /* Quantity stepper */
@@ -168,28 +227,317 @@
 
 .lgl-add-to-cart {
 	display: flex;
-	align-items: center;
+	flex-direction: column;
+	align-items: stretch;
 	gap: var(--lgl-space-3);
-	flex-wrap: wrap;
 }
 
-.lgl-add-to-cart .single_add_to_cart_button {
+.lgl-add-to-cart .lgl-quantity {
+	align-self: flex-start;
+}
+
+.lgl-add-to-cart .single_add_to_cart_button,
+.lgl-buy-now-button {
 	height: 2.75rem;
 	padding-inline: var(--lgl-space-6);
 	border: 0;
 	border-radius: var(--lgl-radius-md);
-	background: var(--lgl-color-accent);
-	color: var(--lgl-text-inverse);
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-sm);
 	letter-spacing: var(--lgl-tracking-wide);
 	cursor: pointer;
+	text-align: center;
+}
+
+.lgl-add-to-cart .single_add_to_cart_button {
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
 }
 
 .lgl-add-to-cart .single_add_to_cart_button:hover,
 .lgl-add-to-cart .single_add_to_cart_button:focus-visible {
 	background: var(--lgl-color-brand);
+}
+
+.lgl-buy-now-button {
+	background: var(--lgl-color-warning);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-buy-now-button:hover,
+.lgl-buy-now-button:focus-visible {
+	background: color-mix(in srgb, var(--lgl-color-warning) 85%, black);
+}
+
+/* Variation swatch tiles (color/memory) */
+
+.lgl-swatch-group {
+	margin-top: var(--lgl-space-2);
+}
+
+.lgl-swatch-group__label {
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+	color: var(--lgl-text-muted);
+}
+
+.lgl-swatch-group__value {
+	/* Not the label itself — the selected option's own name ("Midnight
+	   Blue"), which the reference keeps in natural case even though its
+	   "COLOR:"/"MEMORY SIZE:" label is uppercase. */
+	text-transform: none;
+	color: var(--lgl-text-primary);
+}
+
+.lgl-swatch-tiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-3);
+	margin-top: var(--lgl-space-2);
+}
+
+.lgl-swatch-tile {
+	padding: var(--lgl-space-2) var(--lgl-space-4);
+	border: 1.5px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	font-size: var(--lgl-text-sm);
+	font-weight: var(--lgl-weight-semibold);
+	cursor: pointer;
+}
+
+.lgl-swatch-tile.is-active {
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-color-brand-strong);
+}
+
+/* Bundle offer box */
+
+.lgl-bundle-offer {
+	display: flex;
+	gap: var(--lgl-space-4);
+	align-items: center;
+	margin-top: var(--lgl-space-2);
+	padding: var(--lgl-space-4) var(--lgl-space-5);
+	border: 1px solid var(--lgl-color-brand-subtle);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-sunken);
+}
+
+.lgl-bundle-offer__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 2.75rem;
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-success-bg);
+	color: var(--lgl-color-success);
+}
+
+.lgl-bundle-offer__list p {
+	margin: 0;
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+	line-height: var(--lgl-leading-loose);
+}
+
+/* Buy box (3rd column) */
+
+.lgl-product-buybox-col {
+	position: sticky;
+	top: var(--lgl-space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-4);
+}
+
+.lgl-buy-box {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-4);
+	padding: var(--lgl-space-5);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-surface-sunken);
+}
+
+.lgl-buy-box__price-label {
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+	color: var(--lgl-text-muted);
+}
+
+.lgl-buy-box__stock {
+	margin: 0;
+	color: var(--lgl-color-success);
+	font-weight: var(--lgl-weight-semibold);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-buy-box__actions-row {
+	display: flex;
+	justify-content: space-between;
+	padding-top: var(--lgl-space-2);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-buy-box__checkout-trust {
+	padding-top: var(--lgl-space-4);
+	border-top: 1px solid var(--lgl-border-default);
+}
+
+.lgl-buy-box__checkout-trust-label {
+	margin-bottom: var(--lgl-space-2);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-buy-box__payment-icons {
+	display: flex;
+	gap: var(--lgl-space-2);
+}
+
+.lgl-buy-box__payment-icons img {
+	height: 1.5rem;
+	width: auto;
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-sm);
+}
+
+.lgl-buy-box__quick-order {
+	padding: var(--lgl-space-5);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	text-align: center;
+}
+
+.lgl-buy-box__quick-order-label {
+	display: inline-block;
+	padding: var(--lgl-space-2) var(--lgl-space-3);
+	border-radius: var(--lgl-radius-sm);
+	background: var(--lgl-surface-inverse);
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+}
+
+.lgl-buy-box__quick-order-phone {
+	margin-top: var(--lgl-space-3);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+}
+
+/* Delivery estimator (template-parts/product/delivery-estimator.php) */
+
+.lgl-delivery-estimator {
+	padding-top: var(--lgl-space-2);
+	border-top: 1px solid var(--lgl-border-default);
+}
+
+.lgl-delivery-estimator__label {
+	display: block;
+	margin-bottom: var(--lgl-space-2);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-delivery-estimator__row {
+	/*
+	 * Stacked, not side by side — the buy-box column is a fixed 300px, and
+	 * "Enter pincode" + "CHECK DELIVERY" next to each other in that width
+	 * left barely any room for the input, clipping its own placeholder
+	 * text.
+	 */
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+}
+
+.lgl-delivery-estimator__input {
+	width: 100%;
+	height: 2.5rem;
+	padding-inline: var(--lgl-space-3);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-delivery-estimator__button {
+	width: 100%;
+	padding-inline: var(--lgl-space-4);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.lgl-delivery-estimator__button:hover,
+.lgl-delivery-estimator__button:focus-visible {
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-color-brand);
+}
+
+.lgl-delivery-estimator__result {
+	margin: var(--lgl-space-2) 0 0;
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-delivery-estimator__result--success {
+	color: var(--lgl-color-success);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-delivery-estimator__result--error {
+	color: var(--lgl-color-sale);
+}
+
+/* Feature icons row (template-parts/product/feature-icons.php) */
+
+.lgl-feature-icons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-4);
+	margin: 0;
+	padding: var(--lgl-space-3) 0 0;
+	list-style: none;
+	border-top: 1px solid var(--lgl-border-default);
+}
+
+.lgl-feature-icons__item {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	flex: 1 1 auto;
+	min-width: 8rem;
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-feature-icons__glyph {
+	display: inline-flex;
+	color: var(--lgl-color-brand);
 }
 
 /* Tabs (desktop) / accordion (< 768px) */
@@ -212,6 +560,7 @@
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-sm);
+	text-transform: uppercase;
 	border-bottom: 2px solid transparent;
 }
 
@@ -229,13 +578,129 @@
 	line-height: var(--lgl-leading-relaxed);
 }
 
+/* FAQ tab (inc/woocommerce.php's lgl_render_faq_product_tab()) */
+
+.lgl-product-faq {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.lgl-product-faq__item + .lgl-product-faq__item {
+	border-top: 1px solid var(--lgl-border-default);
+}
+
+.lgl-product-faq__details {
+	padding-block: var(--lgl-space-4);
+}
+
+.lgl-product-faq__question {
+	position: relative;
+	padding-inline-end: var(--lgl-space-6);
+	color: var(--lgl-text-primary);
+	font-weight: var(--lgl-weight-semibold);
+	cursor: pointer;
+	list-style: none;
+}
+
+.lgl-product-faq__question::-webkit-details-marker {
+	display: none;
+}
+
+.lgl-product-faq__question::after {
+	content: '+';
+	position: absolute;
+	right: 0;
+	color: var(--lgl-text-muted);
+	transition: transform var(--lgl-dur-fast) var(--lgl-ease-standard);
+}
+
+.lgl-product-faq__details[open] .lgl-product-faq__question::after {
+	transform: rotate(45deg);
+}
+
+.lgl-product-faq__answer {
+	margin-top: var(--lgl-space-3);
+	color: var(--lgl-text-secondary);
+	line-height: var(--lgl-leading-relaxed);
+}
+
+/* Related products carousel (woocommerce/single-product/related.php, assets/js/carousel.js) */
+
+.lgl-carousel {
+	position: relative;
+}
+
+.lgl-related-grid {
+	display: flex;
+	gap: var(--lgl-space-5);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+}
+
+.lgl-related-grid::-webkit-scrollbar {
+	display: none;
+}
+
+.lgl-related-grid > * {
+	flex: 0 0 240px;
+	scroll-snap-align: start;
+}
+
+.lgl-carousel__nav {
+	position: absolute;
+	top: 40%;
+	z-index: 1;
+	display: grid;
+	place-items: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 1px solid var(--lgl-border-default);
+	border-radius: 50%;
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	font-size: 1.25rem;
+	line-height: 1;
+	box-shadow: var(--lgl-shadow-md);
+	transform: translateY(-50%);
+	transition: opacity var(--lgl-dur-fast) var(--lgl-ease-standard);
+}
+
+.lgl-carousel__nav:disabled {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.lgl-carousel__nav--prev {
+	left: -1.25rem;
+}
+
+.lgl-carousel__nav--next {
+	right: -1.25rem;
+}
+
 @media (max-width: 991px) {
 	.lgl-product-layout {
 		grid-template-columns: 1fr;
 	}
 
-	.lgl-product-gallery-col {
+	.lgl-product-gallery-col,
+	.lgl-product-buybox-col {
 		position: static;
+	}
+
+	.lgl-related-grid > * {
+		flex-basis: 200px;
+	}
+}
+
+@media (max-width: 599px) {
+	.lgl-carousel__nav {
+		display: none;
 	}
 }
 
@@ -275,5 +740,110 @@
 
 	.lgl-product-tabs .wc-tab {
 		padding-block: var(--lgl-space-4);
+	}
+}
+
+/* Sticky Add to Cart bar (template-parts/product/sticky-cart.php, assets/js/sticky-cart.js) */
+
+.lgl-sticky-cart {
+	position: fixed;
+	inset-inline: 0;
+	bottom: 0;
+	z-index: var(--lgl-z-dropdown);
+	background: var(--lgl-surface-default);
+	border-top: 1px solid var(--lgl-border-default);
+	box-shadow: var(--lgl-shadow-md);
+	transform: translateY(100%);
+	opacity: 0;
+	transition: transform var(--lgl-dur-base) var(--lgl-ease-standard), opacity var(--lgl-dur-base) var(--lgl-ease-standard);
+}
+
+.lgl-sticky-cart.is-visible {
+	transform: translateY(0);
+	opacity: 1;
+}
+
+.lgl-sticky-cart__inner {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-4);
+	padding-block: var(--lgl-space-3);
+}
+
+.lgl-sticky-cart__media img {
+	width: 3rem;
+	height: 3rem;
+	border-radius: var(--lgl-radius-sm);
+	object-fit: cover;
+}
+
+.lgl-sticky-cart__info {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+}
+
+.lgl-sticky-cart__name {
+	overflow: hidden;
+	color: var(--lgl-text-primary);
+	font-weight: var(--lgl-weight-semibold);
+	font-size: var(--lgl-text-sm);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.lgl-sticky-cart__price {
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-sticky-cart__qty {
+	display: flex;
+	align-items: center;
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-sticky-cart__qty-btn {
+	width: 2rem;
+	height: 2.25rem;
+	background: transparent;
+	color: var(--lgl-text-primary);
+}
+
+.lgl-sticky-cart__qty-input {
+	width: 2.5rem;
+	height: 2.25rem;
+	border: 0;
+	border-inline: 1px solid var(--lgl-border-default);
+	text-align: center;
+	background: transparent;
+	color: var(--lgl-text-primary);
+}
+
+.lgl-sticky-cart__button {
+	padding-inline: var(--lgl-space-5);
+	height: 2.75rem;
+	border: 0;
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.lgl-sticky-cart__button:disabled {
+	background: var(--lgl-surface-sunken);
+	color: var(--lgl-text-faint);
+}
+
+@media (max-width: 599px) {
+	.lgl-sticky-cart__info {
+		display: none;
 	}
 }

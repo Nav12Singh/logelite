@@ -16,26 +16,21 @@
  * @global WC_Checkout $checkout
  */
 
-// Overridden by logelite — reason: adds an lgl-checkout-card class for
-// restyling via assets/css/pages/checkout.css. $checkout->get_checkout_fields()
-// still drives every field — no field list is hardcoded here.
+// Overridden by logelite — reason: no own heading/card box anymore — this
+// now renders as the first part of the single merged "Contact & billing
+// details" card form-checkout.php wraps around both this and
+// form-shipping.php's address fields (see that file's comment). The field
+// wrapper gets a 2-column CSS grid (assets/css/pages/checkout.css) that
+// reads WooCommerce's own existing form-row-first/-last/-wide classes —
+// $checkout->get_checkout_fields() still drives every field, no field
+// list is hardcoded here.
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<div class="woocommerce-billing-fields lgl-checkout-card">
-	<?php if ( wc_ship_to_billing_address_only() && WC()->cart->needs_shipping() ) : ?>
-
-		<h3><?php esc_html_e( 'Billing &amp; Shipping', 'woocommerce' ); ?></h3>
-
-	<?php else : ?>
-
-		<h3><?php esc_html_e( 'Billing details', 'woocommerce' ); ?></h3>
-
-	<?php endif; ?>
-
+<div class="woocommerce-billing-fields">
 	<?php do_action( 'woocommerce_before_checkout_billing_form', $checkout ); ?>
 
-	<div class="woocommerce-billing-fields__field-wrapper">
+	<div class="woocommerce-billing-fields__field-wrapper lgl-checkout-fields-grid">
 		<?php
 		$fields = $checkout->get_checkout_fields( 'billing' );
 
@@ -49,7 +44,8 @@ defined( 'ABSPATH' ) || exit;
 </div>
 
 <?php if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) : ?>
-	<div class="woocommerce-account-fields lgl-checkout-card">
+	<?php // Renders inside the same merged card as the billing fields above (not its own box) — see this file's top comment. ?>
+	<div class="woocommerce-account-fields lgl-checkout-subsection">
 		<?php if ( ! $checkout->is_registration_required() ) : ?>
 
 			<p class="form-row form-row-wide create-account">

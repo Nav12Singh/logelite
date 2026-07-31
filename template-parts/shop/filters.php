@@ -76,7 +76,14 @@ if ( ! function_exists( 'lgl_get_shop_price_bounds' ) ) {
 
 if ( ! function_exists( 'lgl_render_category_filter_list' ) ) {
 	/**
-	 * Recursively render a hierarchical product category link list.
+	 * Recursively render a hierarchical product category list.
+	 *
+	 * Rendered as real links (category browsing is single-term navigation —
+	 * WooCommerce has no native multi-category URL filter, and navigating
+	 * to a term's own archive is how this has always worked), styled with a
+	 * checkbox-look indicator to match the reference's checkbox rows —
+	 * "checked" is simply the currently-viewed term, not a real multi-select
+	 * filter state. See ASSUMPTIONS.md, "Shop category filter".
 	 *
 	 * @since 1.0.0
 	 *
@@ -100,7 +107,8 @@ if ( ! function_exists( 'lgl_render_category_filter_list' ) ) {
 						href="<?php echo esc_url( get_term_link( $lgl_term ) ); ?>"
 						<?php if ( $lgl_term->term_id === $current_term_id ) : ?>aria-current="page"<?php endif; ?>
 					>
-						<span><?php echo esc_html( $lgl_term->name ); ?></span>
+						<span class="lgl-filter-categories__box" aria-hidden="true"></span>
+						<span class="lgl-filter-categories__name"><?php echo esc_html( $lgl_term->name ); ?></span>
 						<span class="lgl-filter-categories__count">
 							<?php echo esc_html( number_format_i18n( $lgl_term->count ) ); ?>
 						</span>
@@ -136,9 +144,15 @@ $lgl_price_bounds         = lgl_get_shop_price_bounds();
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only filter state, no data is written.
 $lgl_min_price = isset( $_GET['min_price'] ) ? absint( wp_unslash( $_GET['min_price'] ) ) : '';
 $lgl_max_price = isset( $_GET['max_price'] ) ? absint( wp_unslash( $_GET['max_price'] ) ) : '';
-$lgl_on_sale   = ! empty( $_GET['on_sale'] );
-$lgl_in_stock  = ! empty( $_GET['in_stock'] );
 
+/*
+ * 'on_sale'/'in_stock' stay in the preserve list even though the sidebar
+ * no longer has an Availability filter UI for them (removed to match the
+ * design reference, which has none) — lgl_filter_products()
+ * (inc/woocommerce.php) still honours both query vars, and the sidebar's
+ * "Clearance" box below links with on_sale=1 set, so a shopper who arrives
+ * via that link and then changes another filter shouldn't lose it.
+ */
 $lgl_preserve_keys = array( 'min_price', 'max_price', 'on_sale', 'in_stock', 'paged', 'submit' );
 
 foreach ( $lgl_attribute_taxonomies as $lgl_attribute ) {
@@ -172,8 +186,44 @@ foreach ( $lgl_attribute_taxonomies as $lgl_attribute ) {
 			<input type="hidden" name="paged" value="1" />
 			<?php wc_query_string_form_fields( null, $lgl_preserve_keys ); ?>
 
+			<?php
+			$lgl_slider_min = (int) floor( $lgl_price_bounds['min'] );
+			$lgl_slider_max = (int) max( ceil( $lgl_price_bounds['max'] ), $lgl_slider_min + 1 );
+			$lgl_value_min  = ( '' !== $lgl_min_price ) ? $lgl_min_price : $lgl_slider_min;
+			$lgl_value_max  = ( '' !== $lgl_max_price ) ? $lgl_max_price : $lgl_slider_max;
+			?>
 			<div class="lgl-filter-group">
 				<h2 class="lgl-filter-group__title"><?php esc_html_e( 'Price', 'logelite' ); ?></h2>
+
+				<div
+					class="lgl-price-slider"
+					data-price-slider
+					data-min="<?php echo esc_attr( $lgl_slider_min ); ?>"
+					data-max="<?php echo esc_attr( $lgl_slider_max ); ?>"
+				>
+					<span class="lgl-price-slider__track">
+						<span class="lgl-price-slider__track-fill" data-price-slider-fill></span>
+					</span>
+					<input
+						type="range"
+						class="lgl-price-slider__range lgl-price-slider__range--min"
+						min="<?php echo esc_attr( $lgl_slider_min ); ?>"
+						max="<?php echo esc_attr( $lgl_slider_max ); ?>"
+						value="<?php echo esc_attr( $lgl_value_min ); ?>"
+						data-price-slider-min
+						aria-label="<?php esc_attr_e( 'Minimum price', 'logelite' ); ?>"
+					/>
+					<input
+						type="range"
+						class="lgl-price-slider__range lgl-price-slider__range--max"
+						min="<?php echo esc_attr( $lgl_slider_min ); ?>"
+						max="<?php echo esc_attr( $lgl_slider_max ); ?>"
+						value="<?php echo esc_attr( $lgl_value_max ); ?>"
+						data-price-slider-max
+						aria-label="<?php esc_attr_e( 'Maximum price', 'logelite' ); ?>"
+					/>
+				</div>
+
 				<div class="lgl-filter-price">
 					<label class="lgl-visually-hidden" for="lgl-min-price">
 						<?php esc_html_e( 'Minimum price', 'logelite' ); ?>
@@ -186,6 +236,7 @@ foreach ( $lgl_attribute_taxonomies as $lgl_attribute ) {
 						min="0"
 						placeholder="<?php echo esc_attr( $lgl_price_bounds['min'] ); ?>"
 						value="<?php echo esc_attr( $lgl_min_price ); ?>"
+						data-price-slider-min-input
 					/>
 					<span aria-hidden="true">&ndash;</span>
 					<label class="lgl-visually-hidden" for="lgl-max-price">
@@ -199,6 +250,7 @@ foreach ( $lgl_attribute_taxonomies as $lgl_attribute ) {
 						min="0"
 						placeholder="<?php echo esc_attr( $lgl_price_bounds['max'] ); ?>"
 						value="<?php echo esc_attr( $lgl_max_price ); ?>"
+						data-price-slider-max-input
 					/>
 				</div>
 			</div>
@@ -226,44 +278,38 @@ foreach ( $lgl_attribute_taxonomies as $lgl_attribute ) {
 				?>
 				<div class="lgl-filter-group">
 					<h2 class="lgl-filter-group__title"><?php echo esc_html( $lgl_attribute->attribute_label ); ?></h2>
-					<div class="lgl-filter-checkboxes">
+					<div class="lgl-filter-pills">
 						<?php foreach ( $lgl_terms as $lgl_term ) : ?>
 							<?php $lgl_checkbox_id = 'lgl-' . $lgl_field_name . '-' . $lgl_term->term_id; ?>
-							<label class="lgl-filter-checkboxes__item" for="<?php echo esc_attr( $lgl_checkbox_id ); ?>">
+							<label class="lgl-filter-pills__item" for="<?php echo esc_attr( $lgl_checkbox_id ); ?>">
 								<input
 									type="checkbox"
 									id="<?php echo esc_attr( $lgl_checkbox_id ); ?>"
 									name="<?php echo esc_attr( $lgl_field_name ); ?>[]"
 									value="<?php echo esc_attr( $lgl_term->slug ); ?>"
+									class="lgl-visually-hidden"
 									<?php checked( in_array( $lgl_term->slug, $lgl_chosen_slugs, true ) ); ?>
 								/>
-								<span><?php echo esc_html( $lgl_term->name ); ?></span>
-								<span class="lgl-filter-checkboxes__count">
-									<?php echo esc_html( number_format_i18n( $lgl_term->count ) ); ?>
-								</span>
+								<span class="lgl-filter-pills__label"><?php echo esc_html( $lgl_term->name ); ?></span>
 							</label>
 						<?php endforeach; ?>
 					</div>
 				</div>
 			<?php endforeach; ?>
 
-			<div class="lgl-filter-group">
-				<h2 class="lgl-filter-group__title"><?php esc_html_e( 'Availability', 'logelite' ); ?></h2>
-				<div class="lgl-filter-checkboxes">
-					<label class="lgl-filter-checkboxes__item" for="lgl-filter-on-sale">
-						<input type="checkbox" id="lgl-filter-on-sale" name="on_sale" value="1" <?php checked( $lgl_on_sale ); ?> />
-						<span><?php esc_html_e( 'On sale', 'logelite' ); ?></span>
-					</label>
-					<label class="lgl-filter-checkboxes__item" for="lgl-filter-in-stock">
-						<input type="checkbox" id="lgl-filter-in-stock" name="in_stock" value="1" <?php checked( $lgl_in_stock ); ?> />
-						<span><?php esc_html_e( 'In stock', 'logelite' ); ?></span>
-					</label>
-				</div>
-			</div>
-
 			<button type="submit" class="lgl-filter-form__submit">
 				<?php esc_html_e( 'Apply filters', 'logelite' ); ?>
 			</button>
 		</form>
+
+		<div class="lgl-filter-clearance">
+			<div class="lgl-filter-clearance__eyebrow"><?php esc_html_e( 'Clearance', 'logelite' ); ?></div>
+			<p class="lgl-filter-clearance__title">
+				<?php esc_html_e( 'Up to 50% off open-box laptops', 'logelite' ); ?>
+			</p>
+			<a class="lgl-filter-clearance__cta" href="<?php echo esc_url( add_query_arg( 'on_sale', '1', $lgl_action_url ) ); ?>">
+				<?php esc_html_e( 'Shop now', 'logelite' ); ?>
+			</a>
+		</div>
 	</div>
 </aside>

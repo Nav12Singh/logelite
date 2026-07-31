@@ -15,15 +15,12 @@
  * @version     10.3.0
  */
 
-// Overridden by logelite — reason: carousel markup. The
+// Overridden by logelite — reason: a slider ("RELATED PRODUCTS" heading +
+// "View all →" link, horizontal-scroll-snap card track with prev/next
+// buttons, assets/js/carousel.js), per the product-page feature brief. The
 // woocommerce_after_single_product_summary priority (20, untouched — see
 // inc/woocommerce.php) and the $related_products loop itself are exactly
-// what core does; only the wrapper (a plain <ul class="products"> grid) is
-// replaced, with lgl_carousel() (inc/template-tags.php) rendering a
-// scrollable/arrow/dot carousel shell around the SAME per-item output —
-// wc_get_template_part( 'content', 'product' ) still runs unchanged per
-// product, which still routes to this theme's content-product.php ->
-// lgl_product_card(), so no new card markup exists anywhere in this file.
+// what core does; only the wrapper markup changed.
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -43,34 +40,33 @@ if ( $related_products ) :
 		}
 	}
 
-	$lgl_heading = apply_filters( 'woocommerce_product_related_products_heading', __( 'Related products', 'woocommerce' ) );
+	$lgl_heading  = apply_filters( 'woocommerce_product_related_products_heading', __( 'Related products', 'woocommerce' ) );
+	$lgl_shop_url = lgl_wc_active() ? wc_get_page_permalink( 'shop' ) : home_url( '/' );
+	?>
+	<div class="lgl-section__header">
+		<h2 class="lgl-section__heading"><?php echo esc_html( $lgl_heading ); ?></h2>
+		<a class="lgl-section__view-all" href="<?php echo esc_url( $lgl_shop_url ); ?>">
+			<?php esc_html_e( 'View all', 'logelite' ); ?> &rarr;
+		</a>
+	</div>
 
-	ob_start();
+	<div class="lgl-carousel" data-lgl-carousel>
+		<div class="lgl-related-grid related products" data-columns="<?php echo esc_attr( $columns ); ?>" data-lgl-carousel-track>
+			<?php
+			foreach ( $related_products as $related_product ) {
+				$post_object = get_post( $related_product->get_id() );
 
-	foreach ( $related_products as $related_product ) {
-		$post_object = get_post( $related_product->get_id() );
+				setup_postdata( $GLOBALS['post'] = $post_object ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, Squiz.PHP.DisallowMultipleAssignments.Found
 
-		setup_postdata( $GLOBALS['post'] = $post_object ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, Squiz.PHP.DisallowMultipleAssignments.Found
+				wc_get_template_part( 'content', 'product' );
+			}
+			?>
+		</div>
 
-		wc_get_template_part( 'content', 'product' );
-	}
-
-	$lgl_items_html = ob_get_clean();
-
-	lgl_carousel(
-		array(
-			'id'               => 'lgl-related-products',
-			'items'            => $lgl_items_html,
-			'heading'          => $lgl_heading,
-			// $columns comes from wc_get_template()'s extract( $args ) — the
-			// same array lgl_related_products_args() filters (inc/woocommerce.php).
-			'per_view_desktop' => max( 1, absint( $columns ) ),
-			'per_view_tablet'  => 2,
-			'per_view_mobile'  => 1,
-			'show_dots'        => true,
-			'class'            => 'lgl-related-products related products',
-		)
-	);
+		<button type="button" class="lgl-carousel__nav lgl-carousel__nav--prev" data-lgl-carousel-prev aria-label="<?php esc_attr_e( 'Previous products', 'logelite' ); ?>">&lsaquo;</button>
+		<button type="button" class="lgl-carousel__nav lgl-carousel__nav--next" data-lgl-carousel-next aria-label="<?php esc_attr_e( 'Next products', 'logelite' ); ?>">&rsaquo;</button>
+	</div>
+	<?php
 endif;
 
 wp_reset_postdata();

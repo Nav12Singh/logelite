@@ -96,179 +96,124 @@ if ( ! function_exists( 'lgl_sanitize_repeater' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lgl_get_icon_choices' ) ) {
+if ( ! function_exists( 'lgl_get_hotline_number' ) ) {
 	/**
-	 * Get the whitelist of icon slugs shipped in assets/img/icons/, each
-	 * with a translated label for admin UI dropdowns/pickers.
+	 * Get the store's customer-service phone number.
 	 *
-	 * This hardcoded list is the ONLY source of truth for which slugs
-	 * lgl_get_svg_icon() will accept — deliberately not a directory scan,
-	 * so no arbitrary file on disk can be read just by guessing a slug.
+	 * One Customizer-editable source of truth, reused by the header
+	 * announcement bar, the footer brand column, and the single-product
+	 * "Quick order" box — all three showed the same hardcoded number in the
+	 * design reference, so it's centralized here rather than repeated as a
+	 * literal in three templates.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array slug => translated label.
+	 * @return string
 	 */
-	function lgl_get_icon_choices() {
+	function lgl_get_hotline_number() {
+		return get_theme_mod( 'lgl_hotline_number', '(+91) 731 4924 322' );
+	}
+}
+
+if ( ! function_exists( 'lgl_get_deal_progress' ) ) {
+	/**
+	 * Get the "Sold X / Y" urgency figure for the homepage "Deals of the
+	 * Day" grid, plus its progress-bar percent.
+	 *
+	 * Sold is real data (WC_Product::get_total_sales()). The denominator
+	 * uses real stock when the product tracks it (sold + remaining stock);
+	 * when it doesn't, there's no real "how many total units exist" figure
+	 * to fall back to — a fixed, documented, filterable placeholder is used
+	 * instead (matching this project's existing convention for illustrative
+	 * numbers with no real backing data, e.g. inc/helpers.php's delivery
+	 * pincode map). See ASSUMPTIONS.md.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WC_Product $product Product.
+	 * @return array { sold: int, total: int, percent: int (0-100) }.
+	 */
+	function lgl_get_deal_progress( WC_Product $product ) {
+		$lgl_sold = absint( $product->get_total_sales() );
+
+		if ( $product->get_manage_stock() && null !== $product->get_stock_quantity() ) {
+			$lgl_total = $lgl_sold + max( 0, (int) $product->get_stock_quantity() );
+		} else {
+			$lgl_total = $lgl_sold + absint( apply_filters( 'lgl_deal_progress_fallback_remaining', 20, $product ) );
+		}
+
+		$lgl_total = max( $lgl_total, $lgl_sold + 1 );
+
 		return array(
-			'truck'         => esc_html__( 'Truck', 'logelite' ),
-			'shield-check'  => esc_html__( 'Shield check', 'logelite' ),
-			'refresh-ccw'   => esc_html__( 'Refresh', 'logelite' ),
-			'headset'       => esc_html__( 'Headset', 'logelite' ),
-			'credit-card'   => esc_html__( 'Credit card', 'logelite' ),
-			'gift'          => esc_html__( 'Gift', 'logelite' ),
-			'leaf'          => esc_html__( 'Leaf', 'logelite' ),
-			'award'         => esc_html__( 'Award', 'logelite' ),
-			'clock'         => esc_html__( 'Clock', 'logelite' ),
-			'map-pin'       => esc_html__( 'Map pin', 'logelite' ),
-			'chevron-left'  => esc_html__( 'Chevron left', 'logelite' ),
-			'chevron-right' => esc_html__( 'Chevron right', 'logelite' ),
-			'chevron-down'  => esc_html__( 'Chevron down', 'logelite' ),
-			'x'             => esc_html__( 'Close (X)', 'logelite' ),
-			'plus'          => esc_html__( 'Plus', 'logelite' ),
-			'minus'         => esc_html__( 'Minus', 'logelite' ),
-			'search'        => esc_html__( 'Search', 'logelite' ),
-			'cart'          => esc_html__( 'Cart', 'logelite' ),
-			'user'          => esc_html__( 'User', 'logelite' ),
+			'sold'    => $lgl_sold,
+			'total'   => $lgl_total,
+			'percent' => (int) round( ( $lgl_sold / $lgl_total ) * 100 ),
 		);
 	}
 }
 
-if ( ! function_exists( 'lgl_get_svg_icon' ) ) {
+if ( ! function_exists( 'lgl_get_per_page_choices' ) ) {
 	/**
-	 * Get an inline SVG icon by slug, from assets/img/icons/{slug}.svg.
-	 *
-	 * The raw $slug is rejected outright if it contains '.' or '/' —
-	 * checked BEFORE sanitizing, since sanitize_key() alone would silently
-	 * strip those characters and could turn a malicious value into a
-	 * different, coincidentally-valid-looking slug rather than rejecting
-	 * it. The real guard is lgl_get_icon_choices() (a hardcoded whitelist)
-	 * checked after sanitizing — not the sanitization itself, which is
-	 * only there to normalize case/formatting.
-	 *
-	 * <?xml ...?> and <!DOCTYPE ...> declarations, if present in the
-	 * source file, are stripped so the markup is safe to print inline.
-	 * Results are cached in a static array for the lifetime of the request.
+	 * Whitelist of "products per page" values for the shop toolbar's
+	 * "Show N" selector (template-parts/shop/per-page-select.php),
+	 * matched against the `per_page` GET override in
+	 * lgl_products_per_page() (inc/woocommerce.php).
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $slug  Icon slug — see lgl_get_icon_choices().
-	 * @param array  $attrs Optional extra attributes to inject onto the
-	 *                      root <svg> tag, e.g. array( 'class' => 'lgl-icon' ).
-	 * @return string SVG markup, or '' if the slug isn't whitelisted or
-	 *                the file is missing.
+	 * @return int[]
 	 */
-	function lgl_get_svg_icon( $slug, array $attrs = array() ) {
-		static $lgl_cache = array();
-
-		if ( ! is_string( $slug ) || false !== strpos( $slug, '.' ) || false !== strpos( $slug, '/' ) ) {
-			return '';
-		}
-
-		$slug = sanitize_key( $slug );
-
-		if ( '' === $slug || ! array_key_exists( $slug, lgl_get_icon_choices() ) ) {
-			return '';
-		}
-
-		if ( ! array_key_exists( $slug, $lgl_cache ) ) {
-			$lgl_path = get_theme_file_path( "assets/img/icons/{$slug}.svg" );
-
-			if ( ! file_exists( $lgl_path ) ) {
-				$lgl_cache[ $slug ] = '';
-			} else {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local, theme-bundled asset, not a remote URL or user upload.
-				$lgl_svg = (string) file_get_contents( $lgl_path );
-				$lgl_svg = preg_replace( '/<\?xml.*?\?>/s', '', $lgl_svg );
-				$lgl_svg = preg_replace( '/<!DOCTYPE.*?>/s', '', $lgl_svg );
-				$lgl_cache[ $slug ] = trim( $lgl_svg );
-			}
-		}
-
-		$lgl_svg = $lgl_cache[ $slug ];
-
-		if ( '' === $lgl_svg ) {
-			return '';
-		}
-
-		$attrs['aria-hidden'] = 'true';
-		$attrs['focusable']   = 'false';
-
-		$lgl_attr_string = '';
-
-		foreach ( $attrs as $lgl_attr_key => $lgl_attr_value ) {
-			$lgl_attr_string .= ' ' . sanitize_key( $lgl_attr_key ) . '="' . esc_attr( $lgl_attr_value ) . '"';
-		}
-
-		return preg_replace( '/<svg/', '<svg' . $lgl_attr_string, $lgl_svg, 1 );
+	function lgl_get_per_page_choices() {
+		return apply_filters( 'lgl_per_page_choices', array( 10, 20, 30, 50 ) );
 	}
 }
 
-if ( ! function_exists( 'lgl_get_feature_icons' ) ) {
+if ( ! function_exists( 'lgl_get_product_tag_label' ) ) {
 	/**
-	 * Resolve the feature icons rows to display for a product.
+	 * Resolve the one marketing tag a product card shows under its price
+	 * (Free Shipping / Free Gift / In Stock), used by both the standard
+	 * product card and the homepage "Deals of the Day" card so the two
+	 * never drift out of sync on this rule.
 	 *
-	 * Resolution order:
-	 * 1. The product's own rows (`_lgl_feature_icons`), if
-	 *    `_lgl_feature_icons_override` is on AND those rows are non-empty.
-	 * 2. Otherwise, the global `lgl_feature_icons` option.
-	 * 3. Otherwise (option never saved), lgl_default_feature_icons()
-	 *    (inc/settings-page.php).
+	 * WooCommerce has no native per-product "delivery tag" field, so this
+	 * maps onto the closest real data — see ASSUMPTIONS.md, "Product card
+	 * tag".
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $product_id Product ID. Defaults to the current global $product/post.
-	 * @return array
+	 * @param WC_Product $product Product.
+	 * @return string Translated label, or '' if none applies.
 	 */
-	function lgl_get_feature_icons( $product_id = 0 ) {
-		static $lgl_cache = array();
-
-		if ( ! $product_id ) {
-			$product_id = get_the_ID();
+	function lgl_get_product_tag_label( WC_Product $product ) {
+		if ( 'free-shipping' === $product->get_shipping_class() ) {
+			return esc_html__( 'Free Shipping', 'logelite' );
 		}
 
-		$product_id = absint( $product_id );
-
-		if ( array_key_exists( $product_id, $lgl_cache ) ) {
-			return $lgl_cache[ $product_id ];
+		if ( lgl_get_bundle_offer_tiers( $product->get_id() ) ) {
+			return esc_html__( 'Free Gift', 'logelite' );
 		}
 
-		$lgl_rows = array();
-
-		if ( $product_id && (bool) get_post_meta( $product_id, '_lgl_feature_icons_override', true ) ) {
-			$lgl_override_rows = get_post_meta( $product_id, '_lgl_feature_icons', true );
-
-			if ( is_array( $lgl_override_rows ) && ! empty( $lgl_override_rows ) ) {
-				$lgl_rows = $lgl_override_rows;
-			}
+		if ( $product->is_in_stock() ) {
+			return esc_html__( 'In Stock', 'logelite' );
 		}
 
-		if ( empty( $lgl_rows ) ) {
-			$lgl_rows = get_option( 'lgl_feature_icons', lgl_default_feature_icons() );
-		}
-
-		if ( ! is_array( $lgl_rows ) || empty( $lgl_rows ) ) {
-			$lgl_rows = lgl_default_feature_icons();
-		}
-
-		$lgl_rows = (array) apply_filters( 'lgl_feature_icons', $lgl_rows, $product_id );
-
-		$lgl_cache[ $product_id ] = $lgl_rows;
-
-		return $lgl_rows;
+		return '';
 	}
 }
 
-if ( ! function_exists( 'lgl_get_product_faqs' ) ) {
+if ( ! function_exists( 'lgl_get_bundle_offer_tiers' ) ) {
 	/**
-	 * Get a product's sanitized FAQ rows.
+	 * Get a product's configured bundle-offer tiers ("buy N units, get a free
+	 * gift"), set via the product's Bundle Offer meta box (inc/meta-boxes.php).
+	 * Returns an empty array when the admin hasn't configured any — callers
+	 * must treat that as "don't render the box", not an error.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param int $product_id Product ID. Defaults to the current global $post.
-	 * @return array Each row: question, answer, open.
+	 * @return array Each row: array( 'qty' => int, 'gift' => string ).
 	 */
-	function lgl_get_product_faqs( $product_id = 0 ) {
+	function lgl_get_bundle_offer_tiers( $product_id = 0 ) {
 		static $lgl_cache = array();
 
 		if ( ! $product_id ) {
@@ -281,119 +226,14 @@ if ( ! function_exists( 'lgl_get_product_faqs' ) ) {
 			return $lgl_cache[ $product_id ];
 		}
 
-		$lgl_rows = get_post_meta( $product_id, '_lgl_faq', true );
+		$lgl_rows = get_post_meta( $product_id, '_lgl_bundle_offer', true );
 		$lgl_rows = is_array( $lgl_rows ) ? $lgl_rows : array();
 
-		$lgl_rows = (array) apply_filters( 'lgl_product_faqs', $lgl_rows, $product_id );
+		$lgl_rows = (array) apply_filters( 'lgl_bundle_offer_tiers', $lgl_rows, $product_id );
 
 		$lgl_cache[ $product_id ] = $lgl_rows;
 
 		return $lgl_rows;
-	}
-}
-
-if ( ! function_exists( 'lgl_get_delivery_map' ) ) {
-	/**
-	 * Exact-pincode delivery overrides.
-	 *
-	 * Dummy data, as permitted by the brief — a handful of major-city
-	 * pincodes with hand-picked ETAs, standing in for a real logistics/rate
-	 * lookup that a production build would call instead.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return array pincode => array( days, label, cod ).
-	 */
-	function lgl_get_delivery_map() {
-		$lgl_map = array(
-			'110001' => array(
-				'days'  => 1,
-				'label' => esc_html__( 'Delivery by tomorrow', 'logelite' ),
-				'cod'   => true,
-			),
-			'400001' => array(
-				'days'  => 2,
-				'label' => esc_html__( 'Delivery in 2 days', 'logelite' ),
-				'cod'   => true,
-			),
-			'560001' => array(
-				'days'  => 3,
-				'label' => esc_html__( 'Delivery in 3 days', 'logelite' ),
-				'cod'   => true,
-			),
-			'700001' => array(
-				'days'  => 4,
-				'label' => esc_html__( 'Delivery in 4 days', 'logelite' ),
-				'cod'   => false,
-			),
-			'600001' => array(
-				'days'  => 3,
-				'label' => esc_html__( 'Delivery in 3 days', 'logelite' ),
-				'cod'   => true,
-			),
-		);
-
-		return apply_filters( 'lgl_delivery_map', $lgl_map );
-	}
-}
-
-if ( ! function_exists( 'lgl_get_delivery_zone_prefixes' ) ) {
-	/**
-	 * 3-digit pincode-prefix -> zone lookup, used as the fallback when a
-	 * pincode isn't one of lgl_get_delivery_map()'s exact entries.
-	 *
-	 * Illustrative only (a handful of metro and tier-2 city prefixes) —
-	 * logged as an inferred/dummy assumption in ASSUMPTIONS.md, same as the
-	 * exact-match map above.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return array zone => array of 3-digit prefix strings.
-	 */
-	function lgl_get_delivery_zone_prefixes() {
-		return apply_filters(
-			'lgl_delivery_zone_prefixes',
-			array(
-				'metro'  => array( '110', '400', '560', '600', '700', '500', '380', '411' ),
-				'tier_2' => array( '226', '302', '452', '160', '641', '682', '751', '831' ),
-			)
-		);
-	}
-}
-
-if ( ! function_exists( 'lgl_get_delivery_zone_defaults' ) ) {
-	/**
-	 * Fallback days/label/cod per zone, keyed to lgl_get_delivery_zone_prefixes().
-	 *
-	 * 'rest' (no prefix match) defaults to a 5-7 day window with COD
-	 * unavailable — inferred, since the brief specified the day range but
-	 * not a COD default for unmapped/remote areas; logged in ASSUMPTIONS.md.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return array zone => array( days, label, cod ).
-	 */
-	function lgl_get_delivery_zone_defaults() {
-		return apply_filters(
-			'lgl_delivery_zone_defaults',
-			array(
-				'metro'  => array(
-					'days'  => 3,
-					'label' => esc_html__( 'Delivery in 3 days', 'logelite' ),
-					'cod'   => true,
-				),
-				'tier_2' => array(
-					'days'  => 5,
-					'label' => esc_html__( 'Delivery in 5 days', 'logelite' ),
-					'cod'   => true,
-				),
-				'rest'   => array(
-					'days'  => 7,
-					'label' => esc_html__( 'Delivery in 5-7 days', 'logelite' ),
-					'cod'   => false,
-				),
-			)
-		);
 	}
 }
 
@@ -430,81 +270,210 @@ if ( ! function_exists( 'lgl_add_business_days' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lgl_lookup_delivery' ) ) {
+
+if ( ! function_exists( 'lgl_get_estimated_delivery_range' ) ) {
 	/**
-	 * Resolve a delivery estimate for a pincode.
+	 * Get the "Arrives By" date range shown on the thank-you page order-info
+	 * grid, e.g. "Aug 3 – Aug 5".
 	 *
-	 * Resolution order: an unserviceable-list block, then an exact match in
-	 * lgl_get_delivery_map(), then a first-3-digits zone fallback via
-	 * lgl_get_delivery_zone_prefixes()/lgl_get_delivery_zone_defaults().
+	 * The reference has no real delivery-estimate data behind this figure
+	 * (WooCommerce core doesn't ship one), so this is a documented business
+	 * rule, not derived from anything the order itself specifies: order
+	 * date + a fixed 5–8 business day window, reusing lgl_add_business_days()
+	 * (the same generic business-day arithmetic previously used by the
+	 * now-removed delivery estimator). See ASSUMPTIONS.md.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $pincode    Validated 6-digit pincode.
-	 * @param int    $product_id Optional product ID, passed through to the
-	 *                           lgl_delivery_result filter as a hook point
-	 *                           for per-product delivery overrides.
-	 * @return array {
-	 *     @type bool        $serviceable Whether delivery is available.
-	 *     @type string      $eta_label   Human-readable ETA text.
-	 *     @type int|null    $eta_days    Business days until delivery, or null if unserviceable.
-	 *     @type string|null $eta_date    Formatted ETA date, or null if unserviceable.
-	 *     @type bool        $cod         Whether cash-on-delivery is available.
-	 *     @type string      $pincode     The pincode looked up.
-	 * }
+	 * @param WC_Order $order Order.
+	 * @return string Formatted range, e.g. "Aug 3 – Aug 5".
 	 */
-	function lgl_lookup_delivery( $pincode, $product_id = 0 ) {
-		$pincode    = sanitize_text_field( $pincode );
-		$product_id = absint( $product_id );
+	function lgl_get_estimated_delivery_range( WC_Order $order ) {
+		$lgl_created = $order->get_date_created();
+		$lgl_base    = $lgl_created instanceof WC_DateTime ? $lgl_created->getTimestamp() : time();
 
-		$lgl_blocked = (array) apply_filters( 'lgl_delivery_blocked', array() );
+		$lgl_from = lgl_add_business_days( $lgl_base, apply_filters( 'lgl_estimated_delivery_min_days', 5 ) );
+		$lgl_to   = lgl_add_business_days( $lgl_base, apply_filters( 'lgl_estimated_delivery_max_days', 8 ) );
 
-		if ( in_array( $pincode, $lgl_blocked, true ) ) {
-			$lgl_result = array(
-				'serviceable' => false,
-				'eta_label'   => esc_html__( 'Delivery is not available for this pincode.', 'logelite' ),
-				'eta_days'    => null,
-				'eta_date'    => null,
-				'cod'         => false,
-				'pincode'     => $pincode,
-			);
+		return sprintf(
+			/* translators: 1: earliest arrival date, 2: latest arrival date. */
+			esc_html__( '%1$s – %2$s', 'logelite' ),
+			esc_html( wp_date( 'M j', $lgl_from ) ),
+			esc_html( wp_date( 'M j', $lgl_to ) )
+		);
+	}
+}
 
-			return apply_filters( 'lgl_delivery_result', $lgl_result, $pincode, $product_id );
+if ( ! function_exists( 'lgl_get_icon_choices' ) ) {
+	/**
+	 * Get the fixed set of icon choices offered by the Feature Icons meta
+	 * box (inc/meta-boxes.php), keyed by the value stored in
+	 * `_lgl_feature_icons` and matched against at render time only — never
+	 * at save time, so a future icon-set change can't invalidate already
+	 * saved data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string[] Icon key => translated label.
+	 */
+	function lgl_get_icon_choices() {
+		return apply_filters(
+			'lgl_feature_icon_choices',
+			array(
+				'shipping' => esc_html__( 'Shipping (truck)', 'logelite' ),
+				'secure'   => esc_html__( 'Secure (shield)', 'logelite' ),
+				'returns'  => esc_html__( 'Returns (arrow)', 'logelite' ),
+				'warranty' => esc_html__( 'Warranty (badge)', 'logelite' ),
+			)
+		);
+	}
+}
+
+if ( ! function_exists( 'lgl_get_feature_icon_svg' ) ) {
+	/**
+	 * Get a simple inline SVG glyph for a known feature-icon key.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $key One of lgl_get_icon_choices()'s keys.
+	 * @return string Raw SVG markup, or the 'shipping' glyph for an unknown key.
+	 */
+	function lgl_get_feature_icon_svg( $key ) {
+		$lgl_icons = array(
+			'shipping' => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 6h12v9H2z" fill="none" stroke="currentColor" stroke-width="1.6"></path><path d="M14 10h4l3 3v2h-7z" fill="none" stroke="currentColor" stroke-width="1.6"></path><circle cx="6.5" cy="17.5" r="1.6" fill="currentColor"></circle><circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"></circle></svg>',
+			'secure'   => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l8 3.5v6c0 5-3.4 8.7-8 10.5-4.6-1.8-8-5.5-8-10.5v-6z" fill="none" stroke="currentColor" stroke-width="1.6"></path><path d="M8.5 12l2.3 2.3L15.5 9.5" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>',
+			'returns'  => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9a8 8 0 1 1 2 5.3" fill="none" stroke="currentColor" stroke-width="1.6"></path><path d="M4 4v5h5" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>',
+			'warranty' => '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V5z" fill="none" stroke="currentColor" stroke-width="1.6"></path><path d="M9.5 12l1.8 1.8L14.8 10" fill="none" stroke="currentColor" stroke-width="1.6"></path></svg>',
+		);
+
+		return isset( $lgl_icons[ $key ] ) ? $lgl_icons[ $key ] : $lgl_icons['shipping'];
+	}
+}
+
+if ( ! function_exists( 'lgl_get_feature_icons' ) ) {
+	/**
+	 * Get a product's configured feature icons (shown under Add to Cart),
+	 * set via the product's "Feature Icons" meta box (inc/meta-boxes.php).
+	 *
+	 * Falls back to a filterable sitewide default when the product has
+	 * none configured yet — same "sensible default until customized"
+	 * pattern as lgl_get_hotline_number() and the home page hero fallbacks,
+	 * so a fresh product isn't missing this row entirely.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $product_id Product ID. Defaults to the current global $post.
+	 * @return array Each row: array( 'icon' => string, 'label' => string ).
+	 */
+	function lgl_get_feature_icons( $product_id = 0 ) {
+		if ( ! $product_id ) {
+			$product_id = get_the_ID();
 		}
 
+		$lgl_rows = get_post_meta( absint( $product_id ), '_lgl_feature_icons', true );
+		$lgl_rows = is_array( $lgl_rows ) ? $lgl_rows : array();
+
+		if ( empty( $lgl_rows ) ) {
+			$lgl_rows = apply_filters(
+				'lgl_default_feature_icons',
+				array(
+					array(
+						'icon'  => 'shipping',
+						'label' => esc_html__( 'Free Shipping', 'logelite' ),
+					),
+					array(
+						'icon'  => 'secure',
+						'label' => esc_html__( 'Secure Checkout', 'logelite' ),
+					),
+					array(
+						'icon'  => 'returns',
+						'label' => esc_html__( 'Easy Returns', 'logelite' ),
+					),
+				)
+			);
+		}
+
+		return apply_filters( 'lgl_feature_icons', $lgl_rows, $product_id );
+	}
+}
+
+if ( ! function_exists( 'lgl_get_delivery_map' ) ) {
+	/**
+	 * Get the dummy pincode => delivery-estimate lookup used by the product
+	 * page's delivery estimator. Deliberately not a real logistics/courier
+	 * API integration — the brief explicitly allows dummy logic. Filterable
+	 * so a real integration can override it without editing theme code.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string[] 6-digit pincode => translated estimate label.
+	 */
+	function lgl_get_delivery_map() {
+		return apply_filters(
+			'lgl_delivery_map',
+			array(
+				'110001' => esc_html__( 'Delivery Tomorrow', 'logelite' ),
+				'560001' => esc_html__( 'Delivery in 3 Days', 'logelite' ),
+			)
+		);
+	}
+}
+
+if ( ! function_exists( 'lgl_lookup_delivery_estimate' ) ) {
+	/**
+	 * Resolve a delivery estimate for a pincode.
+	 *
+	 * Exact matches against lgl_get_delivery_map() first; anything else
+	 * gets a generic estimate computed the same way the thank-you page's
+	 * "Arrives By" figure is (lgl_add_business_days()) — a documented dummy
+	 * default, not real serviceability data, since no real pincode isn't
+	 * "servicable" or not in this dummy-data feature.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $pincode 6-digit pincode, already validated by the caller.
+	 * @return string Translated estimate label.
+	 */
+	function lgl_lookup_delivery_estimate( $pincode ) {
 		$lgl_map = lgl_get_delivery_map();
 
 		if ( isset( $lgl_map[ $pincode ] ) ) {
-			$lgl_entry = $lgl_map[ $pincode ];
-		} else {
-			$lgl_prefix    = substr( $pincode, 0, 3 );
-			$lgl_prefixes  = lgl_get_delivery_zone_prefixes();
-			$lgl_zone_defs = lgl_get_delivery_zone_defaults();
-			$lgl_zone      = 'rest';
-
-			foreach ( $lgl_prefixes as $lgl_zone_key => $lgl_zone_prefixes ) {
-				if ( in_array( $lgl_prefix, $lgl_zone_prefixes, true ) ) {
-					$lgl_zone = $lgl_zone_key;
-					break;
-				}
-			}
-
-			$lgl_entry = $lgl_zone_defs[ $lgl_zone ];
+			return $lgl_map[ $pincode ];
 		}
 
-		// phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested -- a Unix timestamp is required as the base for lgl_add_business_days()'s strtotime() arithmetic; wp_date() below handles locale/timezone-aware formatting.
-		$lgl_eta_timestamp = lgl_add_business_days( current_time( 'timestamp' ), $lgl_entry['days'] );
+		$lgl_from = lgl_add_business_days( time(), apply_filters( 'lgl_delivery_default_min_days', 4 ) );
+		$lgl_to   = lgl_add_business_days( time(), apply_filters( 'lgl_delivery_default_max_days', 6 ) );
 
-		$lgl_result = array(
-			'serviceable' => true,
-			'eta_label'   => $lgl_entry['label'],
-			'eta_days'    => absint( $lgl_entry['days'] ),
-			'eta_date'    => wp_date( get_option( 'date_format' ), $lgl_eta_timestamp ),
-			'cod'         => (bool) $lgl_entry['cod'],
-			'pincode'     => $pincode,
+		return sprintf(
+			/* translators: 1: earliest arrival date, 2: latest arrival date. */
+			esc_html__( 'Delivery between %1$s – %2$s', 'logelite' ),
+			esc_html( wp_date( 'M j', $lgl_from ) ),
+			esc_html( wp_date( 'M j', $lgl_to ) )
 		);
+	}
+}
 
-		return apply_filters( 'lgl_delivery_result', $lgl_result, $pincode, $product_id );
+if ( ! function_exists( 'lgl_get_product_faqs' ) ) {
+	/**
+	 * Get a product's configured FAQs, set via the product's "Product FAQs"
+	 * meta box (inc/meta-boxes.php). Returns an empty array when the admin
+	 * hasn't configured any — the FAQ tab only registers itself when this
+	 * is non-empty (inc/woocommerce.php).
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $product_id Product ID. Defaults to the current global $post.
+	 * @return array Each row: array( 'question' => string, 'answer' => string (rich HTML) ).
+	 */
+	function lgl_get_product_faqs( $product_id = 0 ) {
+		if ( ! $product_id ) {
+			$product_id = get_the_ID();
+		}
+
+		$lgl_rows = get_post_meta( absint( $product_id ), '_lgl_product_faqs', true );
+		$lgl_rows = is_array( $lgl_rows ) ? $lgl_rows : array();
+
+		return apply_filters( 'lgl_product_faqs', $lgl_rows, $product_id );
 	}
 }
 

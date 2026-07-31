@@ -2,9 +2,10 @@
  * Generic admin repeater engine: clones a <template> row, renumbers
  * name="x[__i__][field]" (and matching id/for pairs) on add/remove/move,
  * and dispatches a `change` event after every mutation so other code
- * (e.g. a live preview) can react. Used by the FAQ and feature-icons meta
- * boxes — this file only builds the generic engine; no field-specific
- * markup lives here.
+ * (e.g. a live preview) can react. Used by the Bundle Offer, Feature
+ * Icons, and Product FAQs product meta boxes (inc/meta-boxes.php) — this
+ * file only builds the generic engine; no field-specific markup lives
+ * here.
  *
  * Reordering uses up/down buttons rather than HTML5 drag-and-drop: drag
  * handles still need a keyboard-operable fallback for accessibility (drag
@@ -15,28 +16,27 @@
  * with zero extra code.
  *
  * Markup contract (each row within a `[data-repeater]` container):
- *   <div data-repeater data-repeater-name="lgl_faq">
+ *   <div data-repeater data-repeater-name="_lgl_bundle_offer">
  *     <p data-repeater-empty>Shown when there are zero rows (optional).</p>
  *     <div data-repeater-rows>
- *       <div data-repeater-row>...fields named "lgl_faq[0][question]"...
+ *       <div data-repeater-row>...fields named "_lgl_bundle_offer[0][qty]"...
  *         <button type="button" data-repeater-move-up>...</button>
  *         <button type="button" data-repeater-move-down>...</button>
  *         <button type="button" data-repeater-remove>...</button>
  *       </div>
  *     </div>
  *     <template data-repeater-template>
- *       <div data-repeater-row>...fields named "lgl_faq[__i__][question]"...</div>
+ *       <div data-repeater-row>...fields named "_lgl_bundle_offer[__i__][qty]"...</div>
  *     </template>
  *     <button type="button" data-repeater-add>Add row</button>
  *   </div>
  *
  * By default, removing the last remaining row clears its fields instead of
- * removing it, so a repeater never disappears entirely (this is what the
- * feature-icons repeaters — inc/settings-page.php — rely on: there's always
- * at least one row of fields on screen). Add `data-repeater-allow-empty` to
- * the root `[data-repeater]` element to opt out and allow the row count to
- * reach zero instead (the FAQ meta box, inc/meta-boxes.php, uses this since
- * "no FAQs" is a valid, common state with its own empty-state message).
+ * removing it, so a repeater never disappears entirely. Add
+ * `data-repeater-allow-empty` to the root `[data-repeater]` element to opt
+ * out and allow the row count to reach zero instead (the Bundle Offer meta
+ * box, inc/meta-boxes.php, uses this since "no bundle tiers" is the common
+ * default state, with its own empty-state message).
  *
  * No jQuery.
  */

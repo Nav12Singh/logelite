@@ -1,65 +1,114 @@
 /**
  * Front page (front-page.php + template-parts/home/*).
  *
+ * .lgl-section/.lgl-section__heading/.lgl-section__header/__tabs/__view-all
+ * and .lgl-product-grid moved to assets/css/components.css — they're also
+ * used by woocommerce/checkout/thankyou.php's "You might also like" row,
+ * which doesn't load this page's stylesheet.
+ *
  * data-animate="fade-up" attributes are placeholders for a later
  * animation pass (T5) — no transition/animation rules are added here.
  *
  * @package logelite
  */
 
-.lgl-section {
-	padding-block: var(--lgl-space-12);
+/* Hero row: "Shop by Category" sidebar + hero/tiles main column */
+
+.lgl-home-hero-row {
+	display: grid;
+	grid-template-columns: 280px 1fr;
+	gap: var(--lgl-space-6);
+	align-items: start;
 }
 
-.lgl-section__heading {
-	margin-bottom: var(--lgl-space-6);
+.lgl-home-hero-row__main {
+	display: flex;
+	flex-direction: column;
+}
+
+/* "Shop by Category" sidebar */
+
+.lgl-category-sidebar {
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	padding: var(--lgl-space-5);
+}
+
+.lgl-category-sidebar__heading {
+	margin: 0;
+	padding-bottom: var(--lgl-space-4);
+	border-bottom: 1px solid var(--lgl-border-default);
 	font-family: var(--lgl-font-heading);
-	font-weight: var(--lgl-weight-extrabold);
-	font-size: var(--lgl-text-2xl);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-md);
 	color: var(--lgl-text-primary);
 }
 
-/* Trust strip */
-
-.lgl-section--usp {
-	padding-block: var(--lgl-space-4);
-	background: var(--lgl-color-brand);
-}
-
-.lgl-usp-list {
+.lgl-category-sidebar__list {
 	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: var(--lgl-space-6);
+	flex-direction: column;
+	gap: 2px;
+	margin: var(--lgl-space-2) 0 0;
+	padding: 0;
 	list-style: none;
 }
 
-.lgl-usp-list__item {
-	color: var(--lgl-text-inverse);
-	font-size: var(--lgl-text-xs);
-	font-weight: var(--lgl-weight-semibold);
-	letter-spacing: var(--lgl-tracking-wide);
+.lgl-category-sidebar__link {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+	padding: var(--lgl-space-3) var(--lgl-space-2);
+	border-radius: var(--lgl-radius-md);
+	color: var(--lgl-text-primary);
+	font-size: var(--lgl-text-sm);
 }
 
-/* Category grid */
+.lgl-category-sidebar__link:hover,
+.lgl-category-sidebar__link:focus-visible {
+	background: var(--lgl-surface-sunken);
+	color: var(--lgl-color-brand);
+}
+
+.lgl-category-sidebar__swatch {
+	flex: 0 0 26px;
+	width: 26px;
+	height: 26px;
+	border-radius: var(--lgl-radius-sm);
+	background: var(--lgl-color-brand-subtle);
+}
+
+.lgl-category-sidebar__name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.lgl-category-sidebar__count {
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-xs);
+}
+
+/* Category tile row (beside the hero) */
 
 .lgl-category-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-	gap: var(--lgl-space-5);
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--lgl-space-4);
+	margin-top: var(--lgl-space-6);
 }
 
 .lgl-category-card {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	gap: var(--lgl-space-3);
-	padding: var(--lgl-space-5);
+	padding: var(--lgl-space-4);
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-lg);
 	background: var(--lgl-surface-default);
 	color: var(--lgl-text-primary);
-	text-align: center;
 	transition: border-color var(--lgl-dur-base) var(--lgl-ease-out),
 		box-shadow var(--lgl-dur-base) var(--lgl-ease-out);
 }
@@ -72,8 +121,9 @@
 
 .lgl-category-card__media {
 	display: block;
-	width: 64px;
-	height: 64px;
+	flex: 0 0 44px;
+	width: 44px;
+	height: 44px;
 	border-radius: var(--lgl-radius-md);
 	overflow: hidden;
 }
@@ -88,14 +138,24 @@
 	display: block;
 	width: 100%;
 	height: 100%;
-	background: var(--lgl-neutral-150);
+	background: var(--lgl-neutral-150) url('../../img/placeholders/product.png') center / cover;
 	border-radius: var(--lgl-radius-md);
+}
+
+.lgl-category-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-1);
+	min-width: 0;
 }
 
 .lgl-category-card__name {
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-sm);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .lgl-category-card__count {
@@ -103,97 +163,152 @@
 	font-size: var(--lgl-text-xs);
 }
 
-/* Featured products */
+/* Deals of the Day */
 
-.lgl-product-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: var(--lgl-space-5);
-}
-
-/* Testimonials */
-
-.lgl-testimonial-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-	gap: var(--lgl-space-6);
-}
-
-.lgl-testimonial-card {
-	display: flex;
-	flex-direction: column;
-	gap: var(--lgl-space-3);
-	padding: var(--lgl-space-6);
+.lgl-deals {
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-lg);
 	background: var(--lgl-surface-default);
+	overflow: hidden;
 }
 
-.lgl-testimonial-card__rating {
-	color: var(--lgl-color-warning);
-	font-size: var(--lgl-text-md);
-	letter-spacing: var(--lgl-tracking-wide);
-}
-
-.lgl-testimonial-card__quote {
-	margin: 0;
-	color: var(--lgl-text-secondary);
-	font-size: var(--lgl-text-base);
-	line-height: var(--lgl-leading-relaxed);
-}
-
-.lgl-testimonial-card__meta {
+.lgl-deals__header {
 	display: flex;
 	align-items: center;
-	gap: var(--lgl-space-3);
+	gap: var(--lgl-space-5);
+	padding: var(--lgl-space-4) var(--lgl-space-5);
+	background: var(--lgl-color-brand);
 }
 
-.lgl-testimonial-card__avatar {
-	width: 2.5rem;
-	height: 2.5rem;
-	border-radius: var(--lgl-radius-full);
-	object-fit: cover;
+.lgl-deals__title {
+	margin: 0;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-md);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+	color: var(--lgl-text-inverse);
 }
 
-.lgl-testimonial-card__author {
+.lgl-deals__countdown {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	margin-inline-start: auto;
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+}
+
+.lgl-deals__countdown-unit {
+	background: rgba(255, 255, 255, 0.16);
+	border-radius: var(--lgl-radius-sm);
+	padding: var(--lgl-space-2) var(--lgl-space-2);
+	font-weight: var(--lgl-weight-bold);
+	font-variant-numeric: tabular-nums;
+}
+
+.lgl-deals__grid {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+}
+
+.lgl-deals__item {
+	border: 0;
+	border-inline-end: 1px solid var(--lgl-border-default);
+	border-radius: 0;
+	padding: var(--lgl-space-5) var(--lgl-space-4);
+}
+
+.lgl-deals__item:last-child {
+	border-inline-end: 0;
+}
+
+.lgl-deals__item .lgl-card__link {
+	padding: 0;
+}
+
+/* Only the Deals of the Day card reddens its active price in the
+ * reference — shop/best-sellers cards show it in plain text. */
+.lgl-deals__item .lgl-card__price ins {
+	color: var(--lgl-color-sale);
+}
+
+.lgl-deals__progress {
 	display: flex;
 	flex-direction: column;
-	font-weight: var(--lgl-weight-semibold);
-	font-size: var(--lgl-text-sm);
-	color: var(--lgl-text-primary);
+	gap: var(--lgl-space-2);
+	margin-top: var(--lgl-space-2);
 }
 
-.lgl-testimonial-card__role {
-	color: var(--lgl-text-faint);
-	font-weight: var(--lgl-weight-regular);
+.lgl-deals__progress-track {
+	display: block;
+	height: 5px;
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-neutral-200);
+	overflow: hidden;
+}
+
+.lgl-deals__progress-fill {
+	display: block;
+	height: 100%;
+	background: var(--lgl-color-brand);
+}
+
+.lgl-deals__progress-label {
+	color: var(--lgl-text-subtle);
 	font-size: var(--lgl-text-xs);
 }
 
-/* Newsletter banner */
+/* Best Sellers: heading/tabs/product-grid live in components.css now */
+
+/* Closing banners row: CTA + newsletter panel */
+
+.lgl-home-banners {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: var(--lgl-space-5);
+	align-items: stretch;
+}
+
+.lgl-home-banners__cta .lgl-hero__inner {
+	grid-template-columns: 1fr 1fr;
+	padding-block: var(--lgl-space-8);
+	min-height: 220px;
+}
+
+.lgl-home-banners__cta .lgl-hero__title {
+	font-size: var(--lgl-text-3xl);
+}
 
 .lgl-newsletter-banner {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--lgl-space-3);
 	padding: var(--lgl-space-8);
 	border-radius: var(--lgl-radius-lg);
 	background: var(--lgl-color-brand);
 	color: var(--lgl-text-inverse);
-	text-align: center;
 }
 
 .lgl-newsletter-banner__title {
+	margin: 0;
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-extrabold);
-	font-size: var(--lgl-text-2xl);
+	font-size: var(--lgl-text-xl);
+	line-height: var(--lgl-leading-snug);
 }
 
 .lgl-newsletter-banner__text {
-	margin-top: var(--lgl-space-2);
+	margin: 0;
 	opacity: 0.9;
 }
 
 .lgl-newsletter-banner__form {
 	display: flex;
-	max-width: 420px;
-	margin: var(--lgl-space-5) auto 0;
+	margin-top: var(--lgl-space-1);
 	border-radius: var(--lgl-radius-md);
 	overflow: hidden;
 	background: var(--lgl-surface-default);
@@ -201,6 +316,7 @@
 
 .lgl-newsletter-banner__input {
 	flex: 1;
+	min-width: 0;
 	height: 2.75rem;
 	padding-inline: var(--lgl-space-4);
 	border: 0;
@@ -217,4 +333,45 @@
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-xs);
 	letter-spacing: var(--lgl-tracking-wide);
+}
+
+@media (max-width: 991px) {
+	.lgl-home-hero-row {
+		grid-template-columns: 1fr;
+	}
+
+	.lgl-category-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.lgl-deals__grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	.lgl-deals__item:nth-child(3) {
+		border-inline-end: 0;
+	}
+
+	.lgl-home-banners {
+		grid-template-columns: 1fr;
+	}
+
+	.lgl-home-banners__cta .lgl-hero__inner {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 599px) {
+	.lgl-category-grid,
+	.lgl-deals__grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.lgl-deals__item:nth-child(3) {
+		border-inline-end: 1px solid var(--lgl-border-default);
+	}
+
+	.lgl-deals__item:nth-child(2n) {
+		border-inline-end: 0;
+	}
 }

@@ -1,0 +1,147 @@
+/**
+ * Global promo strip (template-parts/header/promo-strip.php) — category
+ * dropdown, product search, and trust badges, rendered below the header
+ * on every page.
+ *
+ * @package logelite
+ */
+
+/*
+ * .lgl-promo-strip only constrains width (shares .lgl-container's max-width
+ * + side padding) — the reference's teal bar is an INSET rounded rectangle
+ * within that 1320px container, not a full-viewport-width band. The teal
+ * background/border-radius/bar-height live on __inner instead.
+ */
+.lgl-promo-strip {
+	margin-block-end: var(--lgl-space-5);
+}
+
+.lgl-promo-strip__inner {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-6);
+	height: 60px;
+	padding: 10px;
+	background: var(--lgl-color-brand);
+	border-radius: var(--lgl-radius-md);
+	overflow: hidden;
+}
+
+.lgl-promo-strip__search {
+	display: flex;
+	align-items: stretch;
+	background: var(--lgl-surface-default);
+	border-radius: var(--lgl-radius-md);
+	height: 2.5rem;
+	flex: 1 1 420px;
+	max-width: 560px;
+	overflow: hidden;
+}
+
+.lgl-promo-strip__categories {
+	position: relative;
+	flex: 0 0 auto;
+	border-right: 1px solid var(--lgl-border-default);
+}
+
+.lgl-promo-strip__categories summary {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	height: 100%;
+	padding-inline: var(--lgl-space-4);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+	white-space: nowrap;
+	cursor: pointer;
+	list-style: none;
+}
+
+.lgl-promo-strip__categories summary::-webkit-details-marker {
+	display: none;
+}
+
+.lgl-promo-strip__categories summary::after {
+	content: '▾';
+	color: var(--lgl-text-faint);
+	font-size: 0.7em;
+}
+
+.lgl-promo-strip__categories-list {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	z-index: var(--lgl-z-dropdown);
+	min-width: 220px;
+	max-height: 60vh;
+	overflow-y: auto;
+	margin: 0;
+	padding: var(--lgl-space-2) 0;
+	list-style: none;
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	box-shadow: var(--lgl-shadow-md);
+}
+
+.lgl-promo-strip__categories-list a {
+	display: block;
+	padding: var(--lgl-space-2) var(--lgl-space-4);
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-promo-strip__categories-list a:hover,
+.lgl-promo-strip__categories-list a:focus-visible {
+	background: var(--lgl-surface-sunken);
+	color: var(--lgl-color-brand);
+}
+
+/*
+ * search-form.css's own .lgl-search-form already draws a bordered/rounded
+ * box — neutralized here since .lgl-promo-strip__search (the parent) is
+ * the one drawing that box in this context, to avoid a double border.
+ */
+.lgl-promo-strip__search .lgl-search-form {
+	display: flex;
+	flex: 1;
+	align-items: stretch;
+	border: 0;
+	border-radius: 0;
+	padding-inline-start: 0;
+	background: transparent;
+}
+
+.lgl-promo-strip__search .lgl-search-form__input {
+	flex: 1;
+	min-width: 0;
+	padding-inline: var(--lgl-space-4);
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-promo-strip__search .lgl-search-form__submit {
+	background: transparent;
+	color: var(--lgl-color-brand);
+	border-radius: 0;
+}
+
+.lgl-promo-strip__usp {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-8);
+	margin-inline-start: auto;
+	list-style: none;
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+	.lgl-promo-strip__usp {
+		display: none;
+	}
+}

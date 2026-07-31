@@ -7,45 +7,18 @@
 /* Shop hero */
 
 .lgl-shop-hero {
-	position: relative;
-	margin-bottom: var(--lgl-space-8);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--lgl-space-6);
+	margin-block: var(--lgl-space-4) var(--lgl-space-6);
+	padding: var(--lgl-space-6) var(--lgl-space-8);
 	background: var(--lgl-surface-default);
-	border-bottom: 1px solid var(--lgl-border-default);
-}
-
-.lgl-shop-hero--has-banner {
-	color: var(--lgl-text-inverse);
-}
-
-.lgl-shop-hero__banner {
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	overflow: hidden;
-}
-
-.lgl-shop-hero__banner-image {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-}
-
-.lgl-shop-hero--has-banner::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	background: color-mix(in srgb, var(--lgl-surface-inverse) 55%, transparent);
-}
-
-.lgl-shop-hero__inner {
-	position: relative;
-	z-index: 1;
-	padding-block: var(--lgl-space-8);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
 }
 
 .lgl-shop-hero__title {
-	margin-top: var(--lgl-space-3);
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-extrabold);
 	font-size: var(--lgl-text-3xl);
@@ -58,9 +31,32 @@
 	font-size: var(--lgl-text-sm);
 }
 
-.lgl-shop-hero--has-banner .lgl-shop-hero__description {
-	color: var(--lgl-text-inverse);
-	opacity: 0.9;
+.lgl-shop-hero__chips {
+	display: flex;
+	flex: 0 0 auto;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-shop-hero__chip {
+	padding: var(--lgl-space-2) var(--lgl-space-4);
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-neutral-150);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-semibold);
+	white-space: nowrap;
+}
+
+.lgl-shop-hero__chip--brand {
+	background: var(--lgl-color-brand-subtle);
+	color: var(--lgl-color-brand-strong);
+}
+
+@media (max-width: 767px) {
+	.lgl-shop-hero {
+		flex-direction: column;
+		align-items: flex-start;
+	}
 }
 
 /* Layout */
@@ -115,11 +111,18 @@
 .lgl-filter-categories__link {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: var(--lgl-space-2);
+	gap: var(--lgl-space-3);
 	padding-block: var(--lgl-space-2);
 	color: var(--lgl-text-secondary);
 	font-size: var(--lgl-text-sm);
+}
+
+.lgl-filter-categories__box {
+	flex: 0 0 15px;
+	width: 15px;
+	height: 15px;
+	border: 1.5px solid var(--lgl-border-muted);
+	border-radius: var(--lgl-radius-sm);
 }
 
 .lgl-filter-categories__link[aria-current="page"] {
@@ -127,9 +130,82 @@
 	font-weight: var(--lgl-weight-semibold);
 }
 
+.lgl-filter-categories__link[aria-current="page"] .lgl-filter-categories__box {
+	background: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+}
+
+.lgl-filter-categories__name {
+	flex: 1;
+	min-width: 0;
+}
+
 .lgl-filter-categories__count {
 	color: var(--lgl-text-faint);
 	font-size: var(--lgl-text-xs);
+}
+
+/* Price slider */
+
+.lgl-price-slider {
+	position: relative;
+	height: 16px;
+	margin: var(--lgl-space-3) var(--lgl-space-1) var(--lgl-space-4);
+}
+
+.lgl-price-slider__track {
+	position: absolute;
+	top: 6px;
+	left: 0;
+	right: 0;
+	height: 4px;
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-neutral-200);
+}
+
+.lgl-price-slider__track-fill {
+	position: absolute;
+	top: 0;
+	height: 100%;
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-color-brand);
+}
+
+.lgl-price-slider__range {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	margin: 0;
+	background: transparent;
+	appearance: none;
+	pointer-events: none;
+}
+
+.lgl-price-slider__range::-webkit-slider-thumb {
+	appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--lgl-surface-default);
+	border: 3px solid var(--lgl-color-brand);
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+.lgl-price-slider__range::-moz-range-thumb {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--lgl-surface-default);
+	border: 3px solid var(--lgl-color-brand);
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+.lgl-price-slider__range::-webkit-slider-runnable-track,
+.lgl-price-slider__range::-moz-range-track {
+	background: transparent;
 }
 
 .lgl-filter-price {
@@ -147,28 +223,72 @@
 	border-radius: var(--lgl-radius-md);
 }
 
-.lgl-filter-checkboxes {
+/* Attribute pills (e.g. "Brand") */
+
+.lgl-filter-pills {
 	display: flex;
-	flex-direction: column;
+	flex-wrap: wrap;
 	gap: var(--lgl-space-2);
 }
 
-.lgl-filter-checkboxes__item {
-	display: flex;
-	align-items: center;
-	gap: var(--lgl-space-2);
-	font-size: var(--lgl-text-sm);
+.lgl-filter-pills__item {
+	display: inline-flex;
+	padding: var(--lgl-space-2) var(--lgl-space-3);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-full);
 	color: var(--lgl-text-secondary);
-}
-
-.lgl-filter-checkboxes__item input {
-	accent-color: var(--lgl-color-brand);
-}
-
-.lgl-filter-checkboxes__count {
-	margin-left: auto;
-	color: var(--lgl-text-faint);
 	font-size: var(--lgl-text-xs);
+	cursor: pointer;
+}
+
+.lgl-filter-pills__item:has(input:checked) {
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-color-brand-strong);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-filter-pills__item:has(input:focus-visible) {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 2px;
+}
+
+/* Clearance promo box */
+
+.lgl-filter-clearance {
+	margin-top: var(--lgl-space-4);
+	padding: var(--lgl-space-6);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+}
+
+.lgl-filter-clearance__eyebrow {
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wider);
+	text-transform: uppercase;
+	color: color-mix(in srgb, var(--lgl-text-inverse) 75%, transparent);
+}
+
+.lgl-filter-clearance__title {
+	margin: var(--lgl-space-2) 0 0;
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+	line-height: var(--lgl-leading-snug);
+}
+
+.lgl-filter-clearance__cta {
+	display: inline-block;
+	margin-top: var(--lgl-space-4);
+	padding: var(--lgl-space-3) var(--lgl-space-5);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
 }
 
 .lgl-filter-form__submit {
@@ -221,38 +341,21 @@
 	margin-left: auto;
 }
 
-.lgl-shop-orderby {
+.lgl-shop-orderby,
+.lgl-shop-per-page {
 	display: flex;
 	align-items: center;
 	gap: var(--lgl-space-2);
 }
 
-.lgl-shop-orderby__select {
+.lgl-shop-orderby__select,
+.lgl-shop-per-page__select {
 	height: 2.25rem;
 	padding-inline: var(--lgl-space-3);
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-md);
 	font-size: var(--lgl-text-sm);
-}
-
-.lgl-view-toggle {
-	display: flex;
-	gap: var(--lgl-space-1);
-}
-
-.lgl-view-toggle__button {
-	padding: var(--lgl-space-2) var(--lgl-space-3);
-	border: 1px solid var(--lgl-border-default);
-	border-radius: var(--lgl-radius-sm);
-	color: var(--lgl-text-muted);
-	font-size: var(--lgl-text-xs);
 	font-weight: var(--lgl-weight-semibold);
-}
-
-.lgl-view-toggle__button[aria-current="true"] {
-	background: var(--lgl-color-brand);
-	border-color: var(--lgl-color-brand);
-	color: var(--lgl-text-inverse);
 }
 
 /* Active filter chips */
@@ -297,6 +400,51 @@
 	list-style: none;
 }
 
+/*
+ * WooCommerce's core CSS puts a float-clearfix on `ul.products` (::before /
+ * ::after with `content` + `display: table`, needed to contain its own
+ * default float-based `li.product` layout). A CSS Grid container doesn't
+ * need clearing — worse, generated content with a `content` value is NOT
+ * exempt from grid layout: these two pseudo-elements become real,
+ * auto-placed grid items themselves, silently consuming the first and
+ * last cell that a real product card should have occupied and shifting
+ * every card after the first by one position. `ul.products::before,
+ * ul.products::after` (2 types + 1 class, no `:where()`) outweighs
+ * WooCommerce's own `ul.products,.woocommerce-page ul.products::before`.
+ */
+.lgl-shop-products ul.products::before,
+.lgl-shop-products ul.products::after {
+	content: none;
+}
+
+/*
+ * WooCommerce's own core stylesheet (assets/css/woocommerce-layout.css,
+ * still loaded — this theme never dequeues it) styles `li.product` for
+ * its OWN default float-based grid: `float: left; width: 22.05%;
+ * margin: 0 3.8% ...`. `float` on a grid item computes to `none` per spec,
+ * so that part is harmless, but `width: 22.05%` is a real, explicit width
+ * that a grid item's own specified size always wins with over the grid's
+ * default stretch behavior — each card was rendering at ~22% of its
+ * already-1/4-width cell, a compounding shrink, which is exactly the
+ * "narrow card, huge gap" symptom. `ul.products li.product` carries real
+ * specificity (2 types + 2 classes) that this theme's own `:where()`-based
+ * grid rule above (deliberately 0-specificity, so per-column-count variants
+ * can override it) never had a chance against — this selector is written
+ * WITHOUT `:where()` specifically so it outweighs WooCommerce's default.
+ *
+ * Also carries the same `min-width: 0` fix as .lgl-product-gallery-col on
+ * the single product page: a grid item's "automatic minimum size"
+ * (min-width: auto, the default) otherwise resolves to its own content's
+ * intrinsic width — here, each card's product image — which can exceed a
+ * `1fr` track's fair share and force that column to blow out.
+ */
+.lgl-shop-products ul.products > li.product {
+	float: none;
+	width: auto;
+	min-width: 0;
+	margin: 0;
+}
+
 .lgl-shop-products :where(ul.products.columns-2) {
 	grid-template-columns: repeat(2, 1fr);
 }
@@ -311,20 +459,6 @@
 
 .lgl-shop-products :where(ul.products.columns-5) {
 	grid-template-columns: repeat(5, 1fr);
-}
-
-.lgl-shop-products--list :where(ul.products) {
-	grid-template-columns: 1fr;
-}
-
-.lgl-shop-products--list .lgl-card__link {
-	flex-direction: row;
-	align-items: center;
-}
-
-.lgl-shop-products--list .lgl-card__media {
-	width: 140px;
-	flex: 0 0 140px;
 }
 
 .lgl-shop-empty {

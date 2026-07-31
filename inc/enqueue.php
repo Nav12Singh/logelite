@@ -63,13 +63,6 @@ if ( ! function_exists( 'lgl_enqueue_header_styles' ) ) {
 			array( 'lgl-components' ),
 			lgl_asset_version( 'assets/css/components/search-form.css' )
 		);
-
-		wp_enqueue_style(
-			'lgl-search-overlay',
-			get_theme_file_uri( 'assets/css/components/search-overlay.css' ),
-			array( 'lgl-search-form' ),
-			lgl_asset_version( 'assets/css/components/search-overlay.css' )
-		);
 	}
 }
 
@@ -121,54 +114,12 @@ if ( ! function_exists( 'lgl_enqueue_global_styles' ) ) {
 		wp_enqueue_style(
 			'lgl-app',
 			get_stylesheet_uri(),
-			array( 'lgl-components', 'lgl-nav', 'lgl-nav-mobile', 'lgl-search-overlay' ),
+			array( 'lgl-components', 'lgl-nav', 'lgl-nav-mobile', 'lgl-search-form' ),
 			lgl_asset_version( 'style.css' )
 		);
 	}
 }
 
-if ( ! function_exists( 'lgl_enqueue_carousel_style' ) ) {
-	/**
-	 * Enqueue the reusable carousel's stylesheet.
-	 *
-	 * Called from every page context that can render a carousel
-	 * (is_front_page(), is_product(), is_cart()) — wp_enqueue_style() is
-	 * idempotent per handle, so calling this more than once per request is
-	 * harmless.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function lgl_enqueue_carousel_style() {
-		wp_enqueue_style(
-			'lgl-carousel',
-			get_theme_file_uri( 'assets/css/components/carousel.css' ),
-			array( 'lgl-app' ),
-			lgl_asset_version( 'assets/css/components/carousel.css' )
-		);
-	}
-}
-
-if ( ! function_exists( 'lgl_enqueue_carousel_script' ) ) {
-	/**
-	 * Enqueue the reusable carousel's script.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function lgl_enqueue_carousel_script() {
-		wp_enqueue_script(
-			'lgl-carousel',
-			get_theme_file_uri( 'assets/js/carousel.js' ),
-			array(),
-			lgl_asset_version( 'assets/js/carousel.js' ),
-			true
-		);
-		wp_script_add_data( 'lgl-carousel', 'strategy', 'defer' );
-	}
-}
 
 if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 	/**
@@ -189,8 +140,15 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				array( 'lgl-app' ),
 				lgl_asset_version( 'assets/css/pages/home.css' )
 			);
+		}
 
-			lgl_enqueue_carousel_style();
+		if ( is_page( 'contact' ) ) {
+			wp_enqueue_style(
+				'lgl-contact',
+				get_theme_file_uri( 'assets/css/pages/contact.css' ),
+				array( 'lgl-app' ),
+				lgl_asset_version( 'assets/css/pages/contact.css' )
+			);
 		}
 
 		if ( ! lgl_wc_active() ) {
@@ -204,34 +162,6 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				array( 'lgl-app' ),
 				lgl_asset_version( 'assets/css/pages/product.css' )
 			);
-
-			wp_enqueue_style(
-				'lgl-sticky-cart',
-				get_theme_file_uri( 'assets/css/components/sticky-cart.css' ),
-				array( 'lgl-app' ),
-				lgl_asset_version( 'assets/css/components/sticky-cart.css' )
-			);
-
-			wp_enqueue_style(
-				'lgl-faq',
-				get_theme_file_uri( 'assets/css/components/faq.css' ),
-				array( 'lgl-app' ),
-				lgl_asset_version( 'assets/css/components/faq.css' )
-			);
-
-			// T6 fix: features.css was previously bundled into the
-			// always-loaded components.css via @import — feature icons only
-			// ever render on single product pages (woocommerce_after_add_to_cart_form),
-			// so it has no reason to load anywhere else. Moved to its own
-			// conditional enqueue here, matching sticky-cart/faq/product.
-			wp_enqueue_style(
-				'lgl-features',
-				get_theme_file_uri( 'assets/css/components/features.css' ),
-				array( 'lgl-app' ),
-				lgl_asset_version( 'assets/css/components/features.css' )
-			);
-
-			lgl_enqueue_carousel_style();
 		}
 
 		if ( is_checkout() || is_cart() ) {
@@ -266,10 +196,6 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 			);
 		}
 
-		if ( is_cart() ) {
-			lgl_enqueue_carousel_style();
-		}
-
 		if ( is_shop() || is_product_taxonomy() ) {
 			wp_enqueue_style(
 				'lgl-shop',
@@ -278,6 +204,7 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 				lgl_asset_version( 'assets/css/pages/shop.css' )
 			);
 		}
+
 	}
 }
 
@@ -308,15 +235,6 @@ if ( ! function_exists( 'lgl_enqueue_dialog_scripts' ) ) {
 			true
 		);
 		wp_script_add_data( 'lgl-nav-mobile', 'strategy', 'defer' );
-
-		wp_enqueue_script(
-			'lgl-search-overlay',
-			get_theme_file_uri( 'assets/js/search-overlay.js' ),
-			array( 'lgl-navigation', 'lgl-a11y' ),
-			lgl_asset_version( 'assets/js/search-overlay.js' ),
-			true
-		);
-		wp_script_add_data( 'lgl-search-overlay', 'strategy', 'defer' );
 	}
 }
 
@@ -343,46 +261,6 @@ if ( ! function_exists( 'lgl_enqueue_quantity_script' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lgl_enqueue_delivery_script' ) ) {
-	/**
-	 * Enqueue the delivery estimator script and localize the REST route
-	 * URL, nonce, product ID, and UI strings it needs.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function lgl_enqueue_delivery_script() {
-		wp_enqueue_script(
-			'lgl-delivery',
-			get_theme_file_uri( 'assets/js/delivery.js' ),
-			array(),
-			lgl_asset_version( 'assets/js/delivery.js' ),
-			true
-		);
-		wp_script_add_data( 'lgl-delivery', 'strategy', 'defer' );
-
-		wp_localize_script(
-			'lgl-delivery',
-			'lglDelivery',
-			array(
-				'restUrl'   => esc_url_raw( rest_url( 'lgl/v1/delivery' ) ),
-				'nonce'     => wp_create_nonce( 'wp_rest' ),
-				'productId' => get_queried_object_id(),
-				'i18n'      => array(
-					'loading'        => esc_html__( 'Checking delivery options…', 'logelite' ),
-					'invalidPincode' => esc_html__( 'Enter a valid 6-digit pincode.', 'logelite' ),
-					'rateLimited'    => esc_html__( 'Too many requests. Please wait a minute and try again.', 'logelite' ),
-					'serverError'    => esc_html__( 'Something went wrong. Please try again later.', 'logelite' ),
-					'genericError'   => esc_html__( 'Unable to check delivery right now. Please try again.', 'logelite' ),
-					'unserviceable'  => esc_html__( 'Delivery is not available for this pincode.', 'logelite' ),
-					'codAvailable'   => esc_html__( 'Cash on delivery available.', 'logelite' ),
-					'codUnavailable' => esc_html__( 'Cash on delivery not available for this pincode.', 'logelite' ),
-				),
-			)
-		);
-	}
-}
 
 if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 	/**
@@ -394,7 +272,14 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 	 */
 	function lgl_enqueue_conditional_scripts() {
 		if ( is_front_page() ) {
-			lgl_enqueue_carousel_script();
+			wp_enqueue_script(
+				'lgl-countdown',
+				get_theme_file_uri( 'assets/js/countdown.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/countdown.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-countdown', 'strategy', 'defer' );
 		}
 
 		if ( ! lgl_wc_active() ) {
@@ -410,6 +295,15 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 				true
 			);
 			wp_script_add_data( 'lgl-shop', 'strategy', 'defer' );
+
+			wp_enqueue_script(
+				'lgl-price-slider',
+				get_theme_file_uri( 'assets/js/price-slider.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/price-slider.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-price-slider', 'strategy', 'defer' );
 		}
 
 		if ( is_product() ) {
@@ -424,36 +318,46 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 			);
 			wp_script_add_data( 'lgl-product', 'strategy', 'defer' );
 
-			lgl_enqueue_delivery_script();
+			wp_enqueue_script(
+				'lgl-delivery',
+				get_theme_file_uri( 'assets/js/delivery.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/delivery.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-delivery', 'strategy', 'defer' );
+
+			wp_localize_script(
+				'lgl-delivery',
+				'lglDelivery',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'lgl_nonce' ),
+					'i18n'    => array(
+						'checking' => esc_html__( 'Checking…', 'logelite' ),
+						'invalid'  => esc_html__( 'Enter a valid 6-digit pincode.', 'logelite' ),
+						'error'    => esc_html__( 'Something went wrong. Please try again.', 'logelite' ),
+					),
+				)
+			);
 
 			wp_enqueue_script(
 				'lgl-sticky-cart',
 				get_theme_file_uri( 'assets/js/sticky-cart.js' ),
-				array( 'jquery' ),
+				array(),
 				lgl_asset_version( 'assets/js/sticky-cart.js' ),
 				true
 			);
 			wp_script_add_data( 'lgl-sticky-cart', 'strategy', 'defer' );
 
 			wp_enqueue_script(
-				'lgl-faq',
-				get_theme_file_uri( 'assets/js/faq.js' ),
+				'lgl-carousel',
+				get_theme_file_uri( 'assets/js/carousel.js' ),
 				array(),
-				lgl_asset_version( 'assets/js/faq.js' ),
+				lgl_asset_version( 'assets/js/carousel.js' ),
 				true
 			);
-			wp_script_add_data( 'lgl-faq', 'strategy', 'defer' );
-
-			wp_enqueue_script(
-				'lgl-faq-toggle',
-				get_theme_file_uri( 'assets/js/faq-toggle.js' ),
-				array(),
-				lgl_asset_version( 'assets/js/faq-toggle.js' ),
-				true
-			);
-			wp_script_add_data( 'lgl-faq-toggle', 'strategy', 'defer' );
-
-			lgl_enqueue_carousel_script();
+			wp_script_add_data( 'lgl-carousel', 'strategy', 'defer' );
 		}
 
 		if ( is_cart() ) {
@@ -467,8 +371,6 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 				true
 			);
 			wp_script_add_data( 'lgl-cart', 'strategy', 'defer' );
-
-			lgl_enqueue_carousel_script();
 		}
 	}
 }
@@ -537,7 +439,7 @@ add_action( 'wp_enqueue_scripts', 'lgl_enqueue_assets' );
 if ( ! function_exists( 'lgl_admin_enqueue_assets' ) ) {
 	/**
 	 * Enqueue admin-only assets: the generic repeater engine used by the
-	 * FAQ / feature-icon product meta boxes (see inc/meta-boxes.php).
+	 * bundle-offer product meta box (see inc/meta-boxes.php).
 	 *
 	 * Loaded only on the product edit screen — nowhere else in wp-admin
 	 * needs it.

@@ -17,6 +17,8 @@
 @import url('components/button.css');
 @import url('components/breadcrumbs.css');
 @import url('components/footer.css');
+@import url('components/promo-strip.css');
+@import url('components/section-grid.css');
 
 /* Header shell */
 
@@ -67,6 +69,12 @@
 	font-weight: var(--lgl-weight-semibold);
 }
 
+.lgl-header__announcement-right {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-5);
+}
+
 .lgl-header__announcement-nav {
 	display: flex;
 	gap: var(--lgl-space-5);
@@ -74,6 +82,18 @@
 
 .lgl-header__announcement-nav a {
 	color: var(--lgl-text-muted);
+}
+
+.lgl-header__locale {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-1);
+}
+
+.lgl-header__locale::after {
+	content: '▾';
+	color: var(--lgl-text-faint);
+	font-size: 0.6em;
 }
 
 /* Main row */
@@ -133,7 +153,11 @@
 }
 
 .lgl-nav__list a:hover,
-.lgl-nav__list a:focus-visible {
+.lgl-nav__list a:focus-visible,
+.lgl-nav__list a[aria-current="page"],
+.lgl-nav__list .current-menu-item > a,
+.lgl-nav__list .current-menu-ancestor > a,
+.lgl-nav__list .current_page_item > a {
 	color: var(--lgl-color-brand);
 	border-color: var(--lgl-color-brand);
 }
@@ -145,26 +169,46 @@
 	justify-self: end;
 }
 
-.lgl-header__search-toggle,
-.lgl-header__account,
+.lgl-header__wishlist,
+.lgl-header__icon-secondary,
+.lgl-header__cart-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-neutral-150);
+	color: var(--lgl-text-muted);
+}
+
 .lgl-header__cart {
 	display: inline-flex;
 	align-items: center;
-	gap: var(--lgl-space-2);
+	gap: var(--lgl-space-3);
+	padding-inline-start: var(--lgl-space-4);
+	border-left: 1px solid var(--lgl-border-default);
 	color: var(--lgl-text-primary);
 }
 
-.lgl-header__search-toggle {
-	border: 0;
-	background: none;
-	padding: var(--lgl-space-2);
+.lgl-header__cart-inner {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+}
+
+.lgl-header__cart-icon {
+	position: relative;
 }
 
 .lgl-header__cart-count {
+	position: absolute;
+	top: -3px;
+	right: -3px;
 	display: inline-grid;
 	place-items: center;
-	min-width: 1.25rem;
-	height: 1.25rem;
+	min-width: 1.2rem;
+	height: 1.2rem;
 	padding-inline: var(--lgl-space-1);
 	border-radius: var(--lgl-radius-full);
 	background: var(--lgl-color-accent);
@@ -173,9 +217,52 @@
 	font-weight: var(--lgl-weight-bold);
 }
 
+.lgl-header__cart-text {
+	display: flex;
+	flex-direction: column;
+	line-height: var(--lgl-leading-snug);
+}
+
+.lgl-header__cart-label {
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+	color: var(--lgl-text-faint);
+}
+
+.lgl-header__cart-total {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+	color: var(--lgl-color-brand);
+}
+
+.lgl-header__account {
+	display: flex;
+	flex-direction: column;
+	line-height: var(--lgl-leading-snug);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-header__account-label {
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+	color: var(--lgl-text-faint);
+}
+
+.lgl-header__account-action {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-sm);
+}
+
+@media (max-width: 767px) {
+	.lgl-header__account {
+		display: none;
+	}
+}
+
 /*
- * Mobile off-canvas nav panel styling lives in components/nav-mobile.css;
- * the search overlay's own chrome lives in components/search-overlay.css.
+ * Mobile off-canvas nav panel styling lives in components/nav-mobile.css.
  * This file only decides which trigger (toggle button vs. inline nav) is
  * visible at each breakpoint.
  */

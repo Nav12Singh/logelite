@@ -1,9 +1,8 @@
 /**
  * Mobile off-canvas nav: open/close sequencing, accordion toggles, and
  * aria-expanded sync on the header's mobile toggle button. The Tab-cycling
- * focus trap itself lives in assets/js/a11y.js (shared with
- * assets/js/search-overlay.js) rather than being duplicated here.
- * No jQuery.
+ * focus trap itself lives in assets/js/a11y.js (a shared, reusable module)
+ * rather than being duplicated here. No jQuery.
  */
 ( function () {
 	'use strict';

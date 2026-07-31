@@ -1,15 +1,12 @@
 <?php
 /**
- * Product meta boxes: registration, save dispatch, and post meta
- * registration for the FAQ and feature-icons T3 features.
+ * Product meta boxes: registration and save dispatch.
  *
- * Feature icons is a per-product override of the global defaults
- * registered in inc/settings-page.php, reusing that file's repeater
- * renderer and sanitizer so the two admin surfaces can never drift apart.
- * FAQ is its own self-contained repeater (question/answer/open-by-default),
- * rendered on the front end via template-parts/product/faq.php — see
- * inc/woocommerce.php for tab/section placement and the FAQPage JSON-LD
- * output.
+ * Three boxes, all reusing the generic repeater engine
+ * (lgl_sanitize_repeater(), assets/js/admin-repeater.js):
+ * "Bundle Offer" (buy-N-get-a-free-gift tiers, template-parts/product/bundle-offer.php),
+ * "Feature Icons" (shown under Add to Cart, template-parts/product/feature-icons.php),
+ * and "Product FAQs" (collapsible FAQ tab, see inc/woocommerce.php).
  *
  * @package logelite
  */
@@ -43,117 +40,86 @@ if ( ! function_exists( 'lgl_product_meta_nonce_field' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lgl_render_faq_row_fields' ) ) {
+if ( ! function_exists( 'lgl_render_bundle_offer_row_fields' ) ) {
 	/**
-	 * Render one FAQ repeater row: a collapsible <details> whose <summary>
-	 * is the question, so a long FAQ list doesn't turn into a wall of
-	 * textareas. The move/remove/reorder buttons live in a toolbar OUTSIDE
-	 * the <summary> (as siblings of the <details>, not descendants of its
-	 * <summary>) specifically so a button click never also triggers the
-	 * browser's native summary-click toggle — no event.stopPropagation()
-	 * gymnastics needed.
-	 *
-	 * Answer is a plain <textarea>, not wp_editor(): wp_editor() renders a
-	 * TinyMCE instance tied to a fixed textarea ID, and a JS-cloned repeater
-	 * row would need explicit wp.editor.initialize()/wp.editor.remove() calls
-	 * on every add/remove to keep those instances in sync — real, fiddly
-	 * work for a field that's realistically a sentence or two of plain text
-	 * with maybe a link. A textarea plus wp_kses_post() on save/output
-	 * covers "basic HTML allowed" (links, bold, italics, lists) without any
-	 * of that complexity.
+	 * Render one bundle-offer repeater row: a quantity threshold and the
+	 * free-gift label shown once that many units are in the cart (e.g.
+	 * "Buy 2 units and get a free Fast Charger").
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $index     Row index, or the literal '__i__' placeholder.
-	 * @param array  $row       Row values: question, answer, open.
-	 * @param bool   $collapsed Whether the <details> should start closed.
+	 * @param string $index Row index, or the literal '__i__' placeholder.
+	 * @param array  $row   Row values: qty, gift.
 	 * @return void
 	 */
-	function lgl_render_faq_row_fields( $index, array $row, $collapsed ) {
-		$row          = wp_parse_args( $row, array( 'question' => '', 'answer' => '', 'open' => false ) );
-		$field_id     = 'lgl-faq-' . sanitize_html_class( $index );
-		$summary_text = '' !== $row['question'] ? $row['question'] : __( 'New FAQ', 'logelite' );
+	function lgl_render_bundle_offer_row_fields( $index, array $row ) {
+		$row      = wp_parse_args( $row, array( 'qty' => '', 'gift' => '' ) );
+		$field_id = 'lgl-bundle-offer-' . sanitize_html_class( $index );
 		?>
-		<div class="lgl-repeater__row lgl-faq-row" data-repeater-row>
-			<div class="lgl-faq-row__toolbar">
-				<button type="button" class="button" data-repeater-move-up aria-label="<?php esc_attr_e( 'Move row up', 'logelite' ); ?>">&uarr;</button>
-				<button type="button" class="button" data-repeater-move-down aria-label="<?php esc_attr_e( 'Move row down', 'logelite' ); ?>">&darr;</button>
+		<div class="lgl-repeater__row" data-repeater-row>
+			<div class="lgl-repeater__row-fields">
+				<label for="<?php echo esc_attr( $field_id . '-qty' ); ?>">
+					<?php esc_html_e( 'Buy quantity', 'logelite' ); ?>
+					<input
+						type="number"
+						min="1"
+						id="<?php echo esc_attr( $field_id . '-qty' ); ?>"
+						name="_lgl_bundle_offer[<?php echo esc_attr( $index ); ?>][qty]"
+						value="<?php echo esc_attr( $row['qty'] ); ?>"
+					/>
+				</label>
+				<label for="<?php echo esc_attr( $field_id . '-gift' ); ?>">
+					<?php esc_html_e( 'Free gift label', 'logelite' ); ?>
+					<input
+						type="text"
+						class="widefat"
+						id="<?php echo esc_attr( $field_id . '-gift' ); ?>"
+						name="_lgl_bundle_offer[<?php echo esc_attr( $index ); ?>][gift]"
+						value="<?php echo esc_attr( $row['gift'] ); ?>"
+					/>
+				</label>
+			</div>
+			<div class="lgl-repeater__row-actions">
 				<button type="button" class="button" data-repeater-remove aria-label="<?php esc_attr_e( 'Remove row', 'logelite' ); ?>">&times;</button>
 			</div>
-			<details class="lgl-faq-row__details" <?php echo esc_attr( $collapsed ? '' : 'open' ); ?>>
-				<summary class="lgl-faq-row__summary" data-faq-row-summary><?php echo esc_html( $summary_text ); ?></summary>
-				<div class="lgl-faq-row__fields">
-					<p>
-						<label for="<?php echo esc_attr( $field_id . '-question' ); ?>"><?php esc_html_e( 'Question', 'logelite' ); ?></label><br />
-						<input
-							type="text"
-							id="<?php echo esc_attr( $field_id . '-question' ); ?>"
-							class="widefat"
-							name="lgl_faq[<?php echo esc_attr( $index ); ?>][question]"
-							value="<?php echo esc_attr( $row['question'] ); ?>"
-							data-faq-question
-						/>
-					</p>
-					<p>
-						<label for="<?php echo esc_attr( $field_id . '-answer' ); ?>"><?php esc_html_e( 'Answer', 'logelite' ); ?></label><br />
-						<textarea
-							id="<?php echo esc_attr( $field_id . '-answer' ); ?>"
-							class="widefat"
-							rows="4"
-							name="lgl_faq[<?php echo esc_attr( $index ); ?>][answer]"
-						><?php echo esc_textarea( $row['answer'] ); ?></textarea>
-						<span class="description"><?php esc_html_e( 'Basic HTML is allowed (links, bold, italics, lists).', 'logelite' ); ?></span>
-					</p>
-					<p>
-						<label>
-							<input type="checkbox" name="lgl_faq[<?php echo esc_attr( $index ); ?>][open]" value="1" <?php checked( ! empty( $row['open'] ) ); ?> />
-							<?php esc_html_e( 'Open by default on the front end', 'logelite' ); ?>
-						</label>
-					</p>
-				</div>
-			</details>
 		</div>
 		<?php
 	}
 }
 
-if ( ! function_exists( 'lgl_render_faq_meta_box' ) ) {
+if ( ! function_exists( 'lgl_render_bundle_offer_meta_box' ) ) {
 	/**
-	 * Render the FAQ meta box: a repeater of collapsible question/answer
-	 * rows (see lgl_render_faq_row_fields()), an empty-state message, and
-	 * an "Add FAQ" button. No client-side row limit — lgl_sanitize_faq_meta()
-	 * caps at 30 on save.
-	 *
-	 * `data-repeater-allow-empty` opts this repeater out of admin-repeater.js's
-	 * default "always keep at least one row" behavior, since "no FAQs" is a
-	 * normal, common state here, unlike the feature-icons repeaters.
+	 * Render the Bundle Offer meta box: a repeater of qty/gift tiers, shown
+	 * in the buy box (template-parts/product/bundle-offer.php) only when at
+	 * least one tier is configured — most products won't have one, hence
+	 * `data-repeater-allow-empty`.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param WP_Post $post Current post object.
 	 * @return void
 	 */
-	function lgl_render_faq_meta_box( $post ) {
+	function lgl_render_bundle_offer_meta_box( $post ) {
 		lgl_product_meta_nonce_field();
 
-		$lgl_rows = get_post_meta( $post->ID, '_lgl_faq', true );
+		$lgl_rows = get_post_meta( $post->ID, '_lgl_bundle_offer', true );
 		$lgl_rows = is_array( $lgl_rows ) ? array_values( $lgl_rows ) : array();
 		?>
-		<div class="lgl-repeater" data-repeater data-repeater-name="lgl_faq" data-repeater-allow-empty>
+		<div class="lgl-repeater" data-repeater data-repeater-name="_lgl_bundle_offer" data-repeater-allow-empty>
 			<p class="lgl-repeater__empty" data-repeater-empty <?php echo esc_attr( empty( $lgl_rows ) ? '' : 'hidden' ); ?>>
-				<?php esc_html_e( 'No FAQs yet. Click "Add FAQ" to create one.', 'logelite' ); ?>
+				<?php esc_html_e( 'No bundle tiers yet. Click "Add tier" to create one.', 'logelite' ); ?>
 			</p>
-			<div data-repeater-rows>
+			<div class="lgl-repeater__rows" data-repeater-rows>
 				<?php foreach ( $lgl_rows as $lgl_index => $lgl_row ) : ?>
-					<?php lgl_render_faq_row_fields( (string) $lgl_index, (array) $lgl_row, true ); ?>
+					<?php lgl_render_bundle_offer_row_fields( (string) $lgl_index, (array) $lgl_row ); ?>
 				<?php endforeach; ?>
 			</div>
 			<template data-repeater-template>
-				<?php lgl_render_faq_row_fields( '__i__', array(), false ); ?>
+				<?php lgl_render_bundle_offer_row_fields( '__i__', array() ); ?>
 			</template>
 			<p>
 				<button type="button" class="button button-primary lgl-repeater__add" data-repeater-add>
-					<?php esc_html_e( 'Add FAQ', 'logelite' ); ?>
+					<?php esc_html_e( 'Add tier', 'logelite' ); ?>
 				</button>
 			</p>
 		</div>
@@ -161,14 +127,59 @@ if ( ! function_exists( 'lgl_render_faq_meta_box' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_render_feature_icons_row_fields' ) ) {
+	/**
+	 * Render one feature-icon repeater row: an icon choice + its label
+	 * (e.g. "Free Shipping").
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $index Row index, or the literal '__i__' placeholder.
+	 * @param array  $row   Row values: icon, label.
+	 * @return void
+	 */
+	function lgl_render_feature_icons_row_fields( $index, array $row ) {
+		$row      = wp_parse_args( $row, array( 'icon' => 'shipping', 'label' => '' ) );
+		$field_id = 'lgl-feature-icon-' . sanitize_html_class( $index );
+		?>
+		<div class="lgl-repeater__row" data-repeater-row>
+			<div class="lgl-repeater__row-fields">
+				<label for="<?php echo esc_attr( $field_id . '-icon' ); ?>">
+					<?php esc_html_e( 'Icon', 'logelite' ); ?>
+					<select id="<?php echo esc_attr( $field_id . '-icon' ); ?>" name="_lgl_feature_icons[<?php echo esc_attr( $index ); ?>][icon]">
+						<?php foreach ( lgl_get_icon_choices() as $lgl_key => $lgl_choice_label ) : ?>
+							<option value="<?php echo esc_attr( $lgl_key ); ?>" <?php selected( $row['icon'], $lgl_key ); ?>>
+								<?php echo esc_html( $lgl_choice_label ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</label>
+				<label for="<?php echo esc_attr( $field_id . '-label' ); ?>">
+					<?php esc_html_e( 'Label', 'logelite' ); ?>
+					<input
+						type="text"
+						class="widefat"
+						id="<?php echo esc_attr( $field_id . '-label' ); ?>"
+						name="_lgl_feature_icons[<?php echo esc_attr( $index ); ?>][label]"
+						value="<?php echo esc_attr( $row['label'] ); ?>"
+					/>
+				</label>
+			</div>
+			<div class="lgl-repeater__row-actions">
+				<button type="button" class="button" data-repeater-remove aria-label="<?php esc_attr_e( 'Remove row', 'logelite' ); ?>">&times;</button>
+			</div>
+		</div>
+		<?php
+	}
+}
+
 if ( ! function_exists( 'lgl_render_feature_icons_meta_box' ) ) {
 	/**
-	 * Render the feature icons meta box: an override checkbox plus the same
-	 * repeater used on the global settings page (lgl_render_settings_page(),
-	 * see inc/settings-page.php). Field name `_lgl_feature_icons[__i__][field]`
-	 * matches the schema lgl_sanitize_feature_icons() expects — that function
-	 * is shared with the global option, so there is exactly one sanitizer for
-	 * both surfaces.
+	 * Render the Feature Icons meta box: a repeater of icon+label rows shown
+	 * under Add to Cart (template-parts/product/feature-icons.php). Falls
+	 * back to a sitewide default (lgl_get_feature_icons()) on the front end
+	 * when a product has none configured — this box only overrides that
+	 * default, it doesn't need to be filled in for every product.
 	 *
 	 * @since 1.0.0
 	 *
@@ -178,17 +189,113 @@ if ( ! function_exists( 'lgl_render_feature_icons_meta_box' ) ) {
 	function lgl_render_feature_icons_meta_box( $post ) {
 		lgl_product_meta_nonce_field();
 
-		$lgl_override = (bool) get_post_meta( $post->ID, '_lgl_feature_icons_override', true );
-		$lgl_rows     = get_post_meta( $post->ID, '_lgl_feature_icons', true );
-		$lgl_rows     = is_array( $lgl_rows ) ? $lgl_rows : array();
+		$lgl_rows = get_post_meta( $post->ID, '_lgl_feature_icons', true );
+		$lgl_rows = is_array( $lgl_rows ) ? array_values( $lgl_rows ) : array();
 		?>
-		<p>
-			<label>
-				<input type="checkbox" name="_lgl_feature_icons_override" value="1" <?php checked( $lgl_override ); ?> />
-				<?php esc_html_e( 'Override the global feature icons for this product', 'logelite' ); ?>
-			</label>
+		<p class="description">
+			<?php esc_html_e( 'Leave empty to use the sitewide default (Free Shipping / Secure Checkout / Easy Returns).', 'logelite' ); ?>
 		</p>
-		<?php lgl_render_feature_icons_repeater( '_lgl_feature_icons', $lgl_rows ); ?>
+		<div class="lgl-repeater" data-repeater data-repeater-name="_lgl_feature_icons" data-repeater-allow-empty>
+			<p class="lgl-repeater__empty" data-repeater-empty <?php echo esc_attr( empty( $lgl_rows ) ? '' : 'hidden' ); ?>>
+				<?php esc_html_e( 'No custom icons — the sitewide default is shown. Click "Add row" to override.', 'logelite' ); ?>
+			</p>
+			<div class="lgl-repeater__rows" data-repeater-rows>
+				<?php foreach ( $lgl_rows as $lgl_index => $lgl_row ) : ?>
+					<?php lgl_render_feature_icons_row_fields( (string) $lgl_index, (array) $lgl_row ); ?>
+				<?php endforeach; ?>
+			</div>
+			<template data-repeater-template>
+				<?php lgl_render_feature_icons_row_fields( '__i__', array() ); ?>
+			</template>
+			<p>
+				<button type="button" class="button button-primary lgl-repeater__add" data-repeater-add>
+					<?php esc_html_e( 'Add row', 'logelite' ); ?>
+				</button>
+			</p>
+		</div>
+		<?php
+	}
+}
+
+if ( ! function_exists( 'lgl_render_product_faq_row_fields' ) ) {
+	/**
+	 * Render one product-FAQ repeater row: a question and its answer.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $index Row index, or the literal '__i__' placeholder.
+	 * @param array  $row   Row values: question, answer.
+	 * @return void
+	 */
+	function lgl_render_product_faq_row_fields( $index, array $row ) {
+		$row      = wp_parse_args( $row, array( 'question' => '', 'answer' => '' ) );
+		$field_id = 'lgl-product-faq-' . sanitize_html_class( $index );
+		?>
+		<div class="lgl-repeater__row" data-repeater-row>
+			<div class="lgl-repeater__row-fields">
+				<label for="<?php echo esc_attr( $field_id . '-question' ); ?>">
+					<?php esc_html_e( 'Question', 'logelite' ); ?>
+					<input
+						type="text"
+						class="widefat"
+						id="<?php echo esc_attr( $field_id . '-question' ); ?>"
+						name="_lgl_product_faqs[<?php echo esc_attr( $index ); ?>][question]"
+						value="<?php echo esc_attr( $row['question'] ); ?>"
+					/>
+				</label>
+				<label for="<?php echo esc_attr( $field_id . '-answer' ); ?>">
+					<?php esc_html_e( 'Answer', 'logelite' ); ?>
+					<textarea
+						class="widefat"
+						rows="3"
+						id="<?php echo esc_attr( $field_id . '-answer' ); ?>"
+						name="_lgl_product_faqs[<?php echo esc_attr( $index ); ?>][answer]"
+					><?php echo esc_textarea( $row['answer'] ); ?></textarea>
+				</label>
+			</div>
+			<div class="lgl-repeater__row-actions">
+				<button type="button" class="button" data-repeater-remove aria-label="<?php esc_attr_e( 'Remove row', 'logelite' ); ?>">&times;</button>
+			</div>
+		</div>
+		<?php
+	}
+}
+
+if ( ! function_exists( 'lgl_render_product_faqs_meta_box' ) ) {
+	/**
+	 * Render the Product FAQs meta box: a repeater of question/answer rows.
+	 * Shown as a collapsible FAQ tab (see inc/woocommerce.php) only when at
+	 * least one row is configured — most products won't have one.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $post Current post object.
+	 * @return void
+	 */
+	function lgl_render_product_faqs_meta_box( $post ) {
+		lgl_product_meta_nonce_field();
+
+		$lgl_rows = get_post_meta( $post->ID, '_lgl_product_faqs', true );
+		$lgl_rows = is_array( $lgl_rows ) ? array_values( $lgl_rows ) : array();
+		?>
+		<div class="lgl-repeater" data-repeater data-repeater-name="_lgl_product_faqs" data-repeater-allow-empty>
+			<p class="lgl-repeater__empty" data-repeater-empty <?php echo esc_attr( empty( $lgl_rows ) ? '' : 'hidden' ); ?>>
+				<?php esc_html_e( 'No FAQs yet. Click "Add question" to create one.', 'logelite' ); ?>
+			</p>
+			<div class="lgl-repeater__rows" data-repeater-rows>
+				<?php foreach ( $lgl_rows as $lgl_index => $lgl_row ) : ?>
+					<?php lgl_render_product_faq_row_fields( (string) $lgl_index, (array) $lgl_row ); ?>
+				<?php endforeach; ?>
+			</div>
+			<template data-repeater-template>
+				<?php lgl_render_product_faq_row_fields( '__i__', array() ); ?>
+			</template>
+			<p>
+				<button type="button" class="button button-primary lgl-repeater__add" data-repeater-add>
+					<?php esc_html_e( 'Add question', 'logelite' ); ?>
+				</button>
+			</p>
+		</div>
 		<?php
 	}
 }
@@ -197,21 +304,18 @@ if ( ! function_exists( 'lgl_register_product_meta_boxes' ) ) {
 	/**
 	 * Register every product meta box panel.
 	 *
-	 * One registrar for all of them, each scoped to the 'product' screen
-	 * via add_meta_box()'s own $screen argument.
-	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
 	function lgl_register_product_meta_boxes() {
 		add_meta_box(
-			'lgl_product_faq',
-			esc_html__( 'Product FAQs', 'logelite' ),
-			'lgl_render_faq_meta_box',
+			'lgl_product_bundle_offer',
+			esc_html__( 'Bundle Offer', 'logelite' ),
+			'lgl_render_bundle_offer_meta_box',
 			'product',
 			'normal',
-			'high'
+			'default'
 		);
 
 		add_meta_box(
@@ -222,33 +326,123 @@ if ( ! function_exists( 'lgl_register_product_meta_boxes' ) ) {
 			'normal',
 			'default'
 		);
+
+		add_meta_box(
+			'lgl_product_faqs',
+			esc_html__( 'Product FAQs', 'logelite' ),
+			'lgl_render_product_faqs_meta_box',
+			'product',
+			'normal',
+			'default'
+		);
 	}
 }
 add_action( 'add_meta_boxes', 'lgl_register_product_meta_boxes' );
 
-if ( ! function_exists( 'lgl_sanitize_faq_meta' ) ) {
+if ( ! function_exists( 'lgl_sanitize_bundle_offer_meta' ) ) {
 	/**
-	 * Sanitize the _lgl_faq repeater value.
+	 * Sanitize the _lgl_bundle_offer repeater value.
 	 *
-	 * Schema: question (text, via sanitize_text_field()), answer (html, via
-	 * wp_kses_post() — "basic HTML allowed" per the meta box's own note),
-	 * open (bool, via wp_validate_boolean()).
-	 *
-	 * Beyond lgl_sanitize_repeater()'s own schema-driven cleanup:
-	 * - Rows missing a question OR an answer are dropped entirely (a row
-	 *   with only one of the two isn't a usable FAQ).
-	 * - Only one row may have `open` true — the first one found wins, every
-	 *   other `open` is cleared, so the front end never has to decide which
-	 *   of several "default open" rows to honor.
-	 * - Capped at 30 rows (no UI limit, so this is the actual enforcement
-	 *   point), re-indexed with array_values().
+	 * Schema: qty (int), gift (text, via sanitize_text_field()). Rows
+	 * missing either are dropped — a tier with no quantity or no gift
+	 * label isn't usable. Capped at 10 rows (no realistic product needs
+	 * more), re-indexed with array_values().
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param mixed $value Raw value.
 	 * @return array
 	 */
-	function lgl_sanitize_faq_meta( $value ) {
+	function lgl_sanitize_bundle_offer_meta( $value ) {
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+
+		$lgl_rows = lgl_sanitize_repeater(
+			$value,
+			array(
+				'qty'  => 'int',
+				'gift' => 'text',
+			)
+		);
+
+		$lgl_rows = array_values(
+			array_filter(
+				$lgl_rows,
+				function ( $lgl_row ) {
+					return ! empty( $lgl_row['qty'] ) && ! empty( $lgl_row['gift'] );
+				}
+			)
+		);
+
+		return array_slice( $lgl_rows, 0, 10 );
+	}
+}
+
+if ( ! function_exists( 'lgl_sanitize_feature_icons_meta' ) ) {
+	/**
+	 * Sanitize the _lgl_feature_icons repeater value.
+	 *
+	 * Schema: icon (sanitize_key(), then re-validated against
+	 * lgl_get_icon_choices() — an unrecognized/stale key falls back to
+	 * 'shipping' rather than being dropped, since the row's label is still
+	 * meaningful even if its icon choice is out of date), label (text).
+	 * Rows missing a label are dropped. Capped at 6 rows.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $value Raw value.
+	 * @return array
+	 */
+	function lgl_sanitize_feature_icons_meta( $value ) {
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+
+		$lgl_valid_icons = array_keys( lgl_get_icon_choices() );
+
+		$lgl_rows = lgl_sanitize_repeater(
+			$value,
+			array(
+				'icon'  => 'key',
+				'label' => 'text',
+			)
+		);
+
+		$lgl_rows = array_values(
+			array_filter(
+				$lgl_rows,
+				function ( $lgl_row ) {
+					return ! empty( $lgl_row['label'] );
+				}
+			)
+		);
+
+		foreach ( $lgl_rows as &$lgl_row ) {
+			if ( ! in_array( $lgl_row['icon'], $lgl_valid_icons, true ) ) {
+				$lgl_row['icon'] = 'shipping';
+			}
+		}
+		unset( $lgl_row );
+
+		return array_slice( $lgl_rows, 0, 6 );
+	}
+}
+
+if ( ! function_exists( 'lgl_sanitize_product_faqs_meta' ) ) {
+	/**
+	 * Sanitize the _lgl_product_faqs repeater value.
+	 *
+	 * Schema: question (text), answer (rich HTML via wp_kses_post() — an
+	 * FAQ answer reasonably wants basic formatting/links). Rows missing
+	 * either are dropped. Capped at 20 rows.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $value Raw value.
+	 * @return array
+	 */
+	function lgl_sanitize_product_faqs_meta( $value ) {
 		if ( ! is_array( $value ) ) {
 			return array();
 		}
@@ -258,7 +452,6 @@ if ( ! function_exists( 'lgl_sanitize_faq_meta' ) ) {
 			array(
 				'question' => 'text',
 				'answer'   => 'html',
-				'open'     => 'bool',
 			)
 		);
 
@@ -271,32 +464,16 @@ if ( ! function_exists( 'lgl_sanitize_faq_meta' ) ) {
 			)
 		);
 
-		$lgl_default_found = false;
-
-		foreach ( $lgl_rows as $lgl_index => $lgl_row ) {
-			if ( empty( $lgl_row['open'] ) ) {
-				continue;
-			}
-
-			if ( $lgl_default_found ) {
-				$lgl_rows[ $lgl_index ]['open'] = false;
-			} else {
-				$lgl_default_found = true;
-			}
-		}
-
-		return array_slice( $lgl_rows, 0, 30 );
+		return array_slice( $lgl_rows, 0, 20 );
 	}
 }
 
 if ( ! function_exists( 'lgl_register_product_post_meta' ) ) {
 	/**
-	 * Register _lgl_faq and _lgl_feature_icons post meta for validation/
-	 * sanitization safety.
+	 * Register product repeater post meta for validation/sanitization safety.
 	 *
-	 * show_in_rest is false for both: nothing in this theme needs
-	 * Gutenberg/REST access to this data, and skipping it avoids having to
-	 * write and maintain a REST meta schema for two array fields.
+	 * show_in_rest is false: nothing in this theme needs Gutenberg/REST
+	 * access to this data.
 	 *
 	 * @since 1.0.0
 	 *
@@ -305,13 +482,13 @@ if ( ! function_exists( 'lgl_register_product_post_meta' ) ) {
 	function lgl_register_product_post_meta() {
 		register_post_meta(
 			'product',
-			'_lgl_faq',
+			'_lgl_bundle_offer',
 			array(
 				'single'            => true,
 				'type'              => 'array',
 				'show_in_rest'      => false,
 				'auth_callback'     => fn() => current_user_can( 'edit_products' ),
-				'sanitize_callback' => 'lgl_sanitize_faq_meta',
+				'sanitize_callback' => 'lgl_sanitize_bundle_offer_meta',
 			)
 		);
 
@@ -323,55 +500,58 @@ if ( ! function_exists( 'lgl_register_product_post_meta' ) ) {
 				'type'              => 'array',
 				'show_in_rest'      => false,
 				'auth_callback'     => fn() => current_user_can( 'edit_products' ),
-				'sanitize_callback' => 'lgl_sanitize_feature_icons',
+				'sanitize_callback' => 'lgl_sanitize_feature_icons_meta',
+			)
+		);
+
+		register_post_meta(
+			'product',
+			'_lgl_product_faqs',
+			array(
+				'single'            => true,
+				'type'              => 'array',
+				'show_in_rest'      => false,
+				'auth_callback'     => fn() => current_user_can( 'edit_products' ),
+				'sanitize_callback' => 'lgl_sanitize_product_faqs_meta',
 			)
 		);
 	}
 }
 add_action( 'init', 'lgl_register_product_post_meta' );
 
-if ( ! function_exists( 'lgl_save_faq_meta' ) ) {
+if ( ! function_exists( 'lgl_save_bundle_offer_meta' ) ) {
 	/**
-	 * Save the FAQ repeater meta.
+	 * Save the bundle-offer repeater meta.
 	 *
 	 * Stores nothing (deletes any existing meta instead) when the sanitized
-	 * result is empty — either because the box was submitted with zero rows,
-	 * or every submitted row was dropped by lgl_sanitize_faq_meta() for
-	 * missing a question/answer — rather than persisting an empty array.
+	 * result is empty, rather than persisting an empty array.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param int $post_id Post ID.
 	 * @return void
 	 */
-	function lgl_save_faq_meta( $post_id ) {
-		if ( ! isset( $_POST['lgl_faq'] ) || ! is_array( $_POST['lgl_faq'] ) ) {
-			delete_post_meta( $post_id, '_lgl_faq' );
+	function lgl_save_bundle_offer_meta( $post_id ) {
+		if ( ! isset( $_POST['_lgl_bundle_offer'] ) || ! is_array( $_POST['_lgl_bundle_offer'] ) ) {
+			delete_post_meta( $post_id, '_lgl_bundle_offer' );
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- lgl_sanitize_faq_meta() unslashes and sanitizes every field individually.
-		$lgl_rows = lgl_sanitize_faq_meta( $_POST['lgl_faq'] );
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- lgl_sanitize_bundle_offer_meta() unslashes and sanitizes every field individually.
+		$lgl_rows = lgl_sanitize_bundle_offer_meta( $_POST['_lgl_bundle_offer'] );
 
 		if ( empty( $lgl_rows ) ) {
-			delete_post_meta( $post_id, '_lgl_faq' );
+			delete_post_meta( $post_id, '_lgl_bundle_offer' );
 			return;
 		}
 
-		update_post_meta( $post_id, '_lgl_faq', $lgl_rows );
+		update_post_meta( $post_id, '_lgl_bundle_offer', $lgl_rows );
 	}
 }
 
 if ( ! function_exists( 'lgl_save_feature_icons_meta' ) ) {
 	/**
-	 * Save the feature-icons override flag and, when the override is on,
-	 * the repeater rows — using lgl_sanitize_feature_icons() (inc/settings-page.php),
-	 * the same sanitizer the global option uses.
-	 *
-	 * When the override is off, the rows are deleted rather than merely
-	 * ignored: leaving stale rows in postmeta would let a later toggle of
-	 * the checkbox resurrect long-abandoned data instead of falling back
-	 * cleanly to the current global defaults.
+	 * Save the feature-icons repeater meta.
 	 *
 	 * @since 1.0.0
 	 *
@@ -379,17 +559,47 @@ if ( ! function_exists( 'lgl_save_feature_icons_meta' ) ) {
 	 * @return void
 	 */
 	function lgl_save_feature_icons_meta( $post_id ) {
-		$lgl_override = ! empty( $_POST['_lgl_feature_icons_override'] );
-
-		update_post_meta( $post_id, '_lgl_feature_icons_override', $lgl_override ? '1' : '' );
-
-		if ( ! $lgl_override || ! isset( $_POST['_lgl_feature_icons'] ) || ! is_array( $_POST['_lgl_feature_icons'] ) ) {
+		if ( ! isset( $_POST['_lgl_feature_icons'] ) || ! is_array( $_POST['_lgl_feature_icons'] ) ) {
 			delete_post_meta( $post_id, '_lgl_feature_icons' );
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- lgl_sanitize_feature_icons() unslashes and sanitizes every field individually.
-		update_post_meta( $post_id, '_lgl_feature_icons', lgl_sanitize_feature_icons( $_POST['_lgl_feature_icons'] ) );
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- lgl_sanitize_feature_icons_meta() unslashes and sanitizes every field individually.
+		$lgl_rows = lgl_sanitize_feature_icons_meta( $_POST['_lgl_feature_icons'] );
+
+		if ( empty( $lgl_rows ) ) {
+			delete_post_meta( $post_id, '_lgl_feature_icons' );
+			return;
+		}
+
+		update_post_meta( $post_id, '_lgl_feature_icons', $lgl_rows );
+	}
+}
+
+if ( ! function_exists( 'lgl_save_product_faqs_meta' ) ) {
+	/**
+	 * Save the product-FAQs repeater meta.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Post ID.
+	 * @return void
+	 */
+	function lgl_save_product_faqs_meta( $post_id ) {
+		if ( ! isset( $_POST['_lgl_product_faqs'] ) || ! is_array( $_POST['_lgl_product_faqs'] ) ) {
+			delete_post_meta( $post_id, '_lgl_product_faqs' );
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- lgl_sanitize_product_faqs_meta() unslashes and sanitizes every field individually.
+		$lgl_rows = lgl_sanitize_product_faqs_meta( $_POST['_lgl_product_faqs'] );
+
+		if ( empty( $lgl_rows ) ) {
+			delete_post_meta( $post_id, '_lgl_product_faqs' );
+			return;
+		}
+
+		update_post_meta( $post_id, '_lgl_product_faqs', $lgl_rows );
 	}
 }
 
@@ -446,7 +656,7 @@ if ( ! function_exists( 'lgl_save_product_meta' ) ) {
 
 		$lgl_savers = apply_filters(
 			'lgl_product_meta_savers',
-			array( 'lgl_save_faq_meta', 'lgl_save_feature_icons_meta' )
+			array( 'lgl_save_bundle_offer_meta', 'lgl_save_feature_icons_meta', 'lgl_save_product_faqs_meta' )
 		);
 
 		foreach ( (array) $lgl_savers as $lgl_saver ) {

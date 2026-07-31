@@ -120,7 +120,7 @@
 	--lgl-color-warning: #f7b731;
 	--lgl-color-warning-text: #b06b00;
 	--lgl-color-warning-bg: #fff4e5;
-	--lgl-color-info: #1a73e8; /* inferred — see ASSUMPTIONS.md */
+	--lgl-color-sale: #e2574c;
 
 	/* Color — surface */
 	--lgl-surface-page: var(--lgl-neutral-100);

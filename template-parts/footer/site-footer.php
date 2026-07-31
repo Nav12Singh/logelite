@@ -1,6 +1,12 @@
 <?php
 /**
- * Site footer: widget row, newsletter signup, and bottom bar.
+ * Site footer: one 5-column row (brand/address, 3 nav columns, newsletter
+ * signup), then the bottom bar.
+ *
+ * The 3 nav columns (Shop/Account/Support) are widget areas so an admin can
+ * customize them later, but fall back to the design reference's exact
+ * literal link content — same "fallback_cb" pattern as
+ * lgl_primary_nav_fallback() — whenever no widgets are assigned yet.
  *
  * The newsletter form is markup only — no mailing-list integration is
  * wired up yet. See ASSUMPTIONS.md.
@@ -12,29 +18,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! function_exists( 'lgl_get_social_icon_svg' ) ) {
-	/**
-	 * Get a simple inline SVG icon for a known social platform slug.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $slug Platform slug.
-	 * @return string Raw SVG markup, or an empty string for an unknown slug.
-	 */
-	function lgl_get_social_icon_svg( $slug ) {
-		$icons = array(
-			'facebook'  => '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 9h3V5h-3c-2.2 0-4 1.8-4 4v2H8v4h2v6h4v-6h3l1-4h-4V9c0-.6.4-1 1-1z" fill="currentColor"></path></svg>',
-			'instagram' => '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"></rect><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor"></circle></svg>',
-			'twitter'   => '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 4l7.5 9.6L4.3 20H7l5.4-5.8L17 20h3l-7.9-10.1L19.6 4H17l-4.9 5.3L8 4z" fill="currentColor"></path></svg>',
-			'youtube'   => '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6" width="18" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"></rect><path d="M10.5 9.5l5 2.5-5 2.5z" fill="currentColor"></path></svg>',
-		);
+$lgl_footer_columns = lgl_get_footer_columns();
 
-		return isset( $icons[ $slug ] ) ? $icons[ $slug ] : '';
-	}
+$lgl_company = get_theme_mod( 'lgl_footer_company', '' );
+$lgl_address = get_theme_mod( 'lgl_footer_address', '' );
+$lgl_email   = get_theme_mod( 'lgl_footer_email', '' );
+
+if ( '' === $lgl_company ) {
+	$lgl_company = esc_html__( 'Logelite Pvt. Ltd.', 'logelite' );
 }
 
-$lgl_footer_sidebars = array( 'lgl-footer-1', 'lgl-footer-2', 'lgl-footer-3', 'lgl-footer-4' );
-$lgl_active_sidebars = array_filter( $lgl_footer_sidebars, 'is_active_sidebar' );
+if ( '' === $lgl_address ) {
+	$lgl_address = esc_html__( '401 Vijay Nagar, Indore, MP 452010', 'logelite' );
+}
+
+if ( '' === $lgl_email ) {
+	$lgl_email = 'support@logelite.com';
+}
 
 $lgl_payment_icons = '';
 
@@ -43,65 +43,63 @@ if ( lgl_wc_active() && WC()->payment_gateways() ) {
 		$lgl_payment_icons .= $lgl_gateway->get_icon();
 	}
 }
-
-$lgl_social_platforms = array(
-	'facebook'  => array(
-		'label' => esc_html__( 'Facebook', 'logelite' ),
-		'url'   => get_theme_mod( 'lgl_social_facebook', '' ),
-	),
-	'instagram' => array(
-		'label' => esc_html__( 'Instagram', 'logelite' ),
-		'url'   => get_theme_mod( 'lgl_social_instagram', '' ),
-	),
-	'twitter'   => array(
-		'label' => esc_html__( 'X (Twitter)', 'logelite' ),
-		'url'   => get_theme_mod( 'lgl_social_twitter', '' ),
-	),
-	'youtube'   => array(
-		'label' => esc_html__( 'YouTube', 'logelite' ),
-		'url'   => get_theme_mod( 'lgl_social_youtube', '' ),
-	),
-);
-
-$lgl_has_social = false;
-
-foreach ( $lgl_social_platforms as $lgl_platform ) {
-	if ( '' !== $lgl_platform['url'] ) {
-		$lgl_has_social = true;
-		break;
-	}
-}
 ?>
 <footer class="lgl-footer">
-	<?php if ( ! empty( $lgl_active_sidebars ) ) : ?>
-		<div class="lgl-footer__widgets lgl-container">
-			<?php foreach ( $lgl_active_sidebars as $lgl_sidebar_id ) : ?>
-				<div class="lgl-footer__widget-col">
-					<?php dynamic_sidebar( $lgl_sidebar_id ); ?>
-				</div>
-			<?php endforeach; ?>
+	<div class="lgl-footer__row lgl-container">
+		<div class="lgl-footer__brand">
+			<div class="lgl-footer__brand-mark">
+				<?php if ( has_custom_logo() ) : ?>
+					<?php the_custom_logo(); ?>
+				<?php else : ?>
+					<span class="lgl-footer__brand-badge" aria-hidden="true">
+						<?php echo esc_html( mb_substr( get_bloginfo( 'name' ), 0, 1 ) ); ?>
+					</span>
+					<span class="lgl-footer__brand-name"><?php bloginfo( 'name' ); ?></span>
+				<?php endif; ?>
+			</div>
+			<p class="lgl-footer__brand-address">
+				<?php echo esc_html( $lgl_company ); ?><br />
+				<?php echo nl2br( esc_html( $lgl_address ) ); ?><br />
+				<a href="<?php echo esc_url( 'mailto:' . $lgl_email ); ?>"><?php echo esc_html( $lgl_email ); ?></a><br />
+				<strong><?php echo esc_html( lgl_get_hotline_number() ); ?></strong>
+			</p>
 		</div>
-	<?php endif; ?>
 
-	<div class="lgl-footer__newsletter lgl-container">
-		<div class="lgl-footer__newsletter-title"><?php esc_html_e( 'Stay in the loop', 'logelite' ); ?></div>
-		<p class="lgl-footer__newsletter-text">
-			<?php esc_html_e( 'Weekly deals and new arrivals, no spam.', 'logelite' ); ?>
-		</p>
-		<form class="lgl-footer__newsletter-form" aria-label="<?php esc_attr_e( 'Newsletter signup', 'logelite' ); ?>">
-			<label class="lgl-visually-hidden" for="lgl-newsletter-email">
-				<?php esc_html_e( 'Email address', 'logelite' ); ?>
-			</label>
-			<input
-				type="email"
-				id="lgl-newsletter-email"
-				class="lgl-footer__newsletter-input"
-				placeholder="<?php esc_attr_e( 'Email address', 'logelite' ); ?>"
-			/>
-			<button type="submit" class="lgl-footer__newsletter-submit">
-				<?php esc_html_e( 'Join', 'logelite' ); ?>
-			</button>
-		</form>
+		<?php foreach ( $lgl_footer_columns as $lgl_sidebar_id => $lgl_column ) : ?>
+			<div class="lgl-footer__widget-col">
+				<?php if ( ! is_active_sidebar( $lgl_sidebar_id ) ) : ?>
+					<div class="lgl-widget__title"><?php echo esc_html( $lgl_column['title'] ); ?></div>
+					<ul class="lgl-footer__col-list">
+						<?php foreach ( $lgl_column['links'] as $lgl_link ) : ?>
+							<li><a href="<?php echo esc_url( $lgl_link['url'] ); ?>"><?php echo esc_html( $lgl_link['label'] ); ?></a></li>
+						<?php endforeach; ?>
+					</ul>
+				<?php else : ?>
+					<?php dynamic_sidebar( $lgl_sidebar_id ); ?>
+				<?php endif; ?>
+			</div>
+		<?php endforeach; ?>
+
+		<div class="lgl-footer__newsletter">
+			<div class="lgl-footer__newsletter-title"><?php esc_html_e( 'Stay in the loop', 'logelite' ); ?></div>
+			<p class="lgl-footer__newsletter-text">
+				<?php esc_html_e( 'Weekly deals and new arrivals, no spam.', 'logelite' ); ?>
+			</p>
+			<form class="lgl-footer__newsletter-form" aria-label="<?php esc_attr_e( 'Newsletter signup', 'logelite' ); ?>">
+				<label class="lgl-visually-hidden" for="lgl-newsletter-email">
+					<?php esc_html_e( 'Email address', 'logelite' ); ?>
+				</label>
+				<input
+					type="email"
+					id="lgl-newsletter-email"
+					class="lgl-footer__newsletter-input"
+					placeholder="<?php esc_attr_e( 'Email address', 'logelite' ); ?>"
+				/>
+				<button type="submit" class="lgl-footer__newsletter-submit">
+					<?php esc_html_e( 'Join', 'logelite' ); ?>
+				</button>
+			</form>
+		</div>
 	</div>
 
 	<div class="lgl-footer__bottom">
@@ -135,17 +133,12 @@ foreach ( $lgl_social_platforms as $lgl_platform ) {
 
 			<?php if ( '' !== $lgl_payment_icons ) : ?>
 				<div class="lgl-footer__payments"><?php echo wp_kses_post( $lgl_payment_icons ); ?></div>
-			<?php endif; ?>
-
-			<?php if ( $lgl_has_social ) : ?>
-				<div class="lgl-footer__social">
-					<?php foreach ( $lgl_social_platforms as $lgl_key => $lgl_platform ) : ?>
-						<?php if ( '' !== $lgl_platform['url'] ) : ?>
-							<a href="<?php echo esc_url( $lgl_platform['url'] ); ?>" aria-label="<?php echo esc_attr( $lgl_platform['label'] ); ?>">
-								<?php echo lgl_get_social_icon_svg( $lgl_key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static, developer-controlled markup. ?>
-							</a>
-						<?php endif; ?>
-					<?php endforeach; ?>
+			<?php else : ?>
+				<div class="lgl-footer__payments lgl-footer__payments--placeholder" aria-hidden="true">
+					<span></span>
+					<span></span>
+					<span></span>
+					<span></span>
 				</div>
 			<?php endif; ?>
 		</div>

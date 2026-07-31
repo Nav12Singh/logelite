@@ -1,9 +1,8 @@
 /**
  * Sticky header state (IntersectionObserver on a sentinel). No jQuery.
- * The mobile nav toggle and search toggle each own their full open/close
- * behaviour (focus trap, scroll lock, transition-aware close) in
- * assets/js/nav-mobile.js and assets/js/search-overlay.js respectively —
- * see inc/enqueue.php for the localized `lglNavigation` data they share.
+ * The mobile nav toggle owns its full open/close behaviour (focus trap,
+ * scroll lock, transition-aware close) in assets/js/nav-mobile.js — see
+ * inc/enqueue.php for the localized `lglNavigation` data it uses.
  */
 ( function () {
 	'use strict';

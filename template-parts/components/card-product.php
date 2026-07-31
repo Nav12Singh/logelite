@@ -9,6 +9,12 @@
  *   show_badge   bool                 Show the sale/new/out-of-stock badge.
  *   show_rating  bool                 Show the star rating when reviews exist.
  *   show_excerpt bool                 Show the short description.
+ *   show_tag     bool                 Show the Free Shipping/Free Gift/In
+ *                                     Stock pill — only the design
+ *                                     reference's home page card variants
+ *                                     (Deals of the Day, Best Sellers) have
+ *                                     this slot, not the shop/related grid,
+ *                                     so callers for those must pass false.
  *   class        string               Extra class(es) on the card wrapper.
  *
  * @package logelite
@@ -30,6 +36,7 @@ $args = wp_parse_args(
 		'show_badge'   => true,
 		'show_rating'  => true,
 		'show_excerpt' => false,
+		'show_tag'     => true,
 		'class'        => '',
 	)
 );
@@ -53,7 +60,27 @@ if ( $args['show_badge'] ) {
 	if ( ! $lgl_product->is_in_stock() ) {
 		$lgl_badge = esc_html__( 'Out of stock', 'logelite' );
 	} elseif ( $lgl_product->is_on_sale() ) {
-		$lgl_badge = esc_html__( 'Sale', 'logelite' );
+		$lgl_regular = (float) $lgl_product->get_regular_price();
+		$lgl_active  = (float) $lgl_product->get_price();
+
+		if ( $lgl_regular > $lgl_active ) {
+			// html_entity_decode() so esc_html() at the render site doesn't
+			// double-escape wc_price()'s own HTML entities (e.g. &nbsp;)
+			// after wp_strip_all_tags() leaves them as literal text.
+			$lgl_savings = html_entity_decode(
+				wp_strip_all_tags( wc_price( $lgl_regular - $lgl_active ) ),
+				ENT_QUOTES,
+				'UTF-8'
+			);
+
+			$lgl_badge = sprintf(
+				/* translators: %s: amount saved, formatted as currency. */
+				esc_html__( 'Save %s', 'logelite' ),
+				$lgl_savings
+			);
+		} else {
+			$lgl_badge = esc_html__( 'Sale', 'logelite' );
+		}
 	} elseif ( $lgl_product->get_date_created() instanceof WC_DateTime
 		&& ( time() - $lgl_product->get_date_created()->getTimestamp() ) < 14 * DAY_IN_SECONDS
 	) {
@@ -61,8 +88,8 @@ if ( $args['show_badge'] ) {
 	}
 }
 
-$lgl_classes    = trim( 'lgl-card ' . $args['class'] );
-$lgl_categories = wc_get_product_category_list( $lgl_product->get_id() );
+$lgl_classes = trim( 'lgl-card ' . $args['class'] );
+$lgl_tag     = lgl_get_product_tag_label( $lgl_product );
 ?>
 <div class="<?php echo esc_attr( $lgl_classes ); ?>">
 	<a class="lgl-card__link" href="<?php echo esc_url( $lgl_product->get_permalink() ); ?>">
@@ -83,19 +110,19 @@ $lgl_categories = wc_get_product_category_list( $lgl_product->get_id() );
 			<?php endif; ?>
 		</span>
 
-		<?php if ( $lgl_categories ) : ?>
-			<span class="lgl-card__category"><?php echo wp_kses_post( $lgl_categories ); ?></span>
-		<?php endif; ?>
-
-		<span class="lgl-card__title"><?php echo esc_html( $lgl_product->get_name() ); ?></span>
-
 		<?php if ( $args['show_rating'] && $lgl_product->get_rating_count() > 0 ) : ?>
 			<span class="lgl-card__rating">
 				<?php echo wp_kses_post( wc_get_rating_html( $lgl_product->get_average_rating(), $lgl_product->get_rating_count() ) ); ?>
 			</span>
 		<?php endif; ?>
 
+		<span class="lgl-card__title"><?php echo esc_html( $lgl_product->get_name() ); ?></span>
+
 		<span class="lgl-card__price"><?php echo wp_kses_post( $lgl_product->get_price_html() ); ?></span>
+
+		<?php if ( $args['show_tag'] && '' !== $lgl_tag ) : ?>
+			<span class="lgl-card__tag"><?php echo esc_html( $lgl_tag ); ?></span>
+		<?php endif; ?>
 
 		<?php if ( $args['show_excerpt'] && $lgl_product->get_short_description() ) : ?>
 			<span class="lgl-card__excerpt"><?php echo wp_kses_post( $lgl_product->get_short_description() ); ?></span>

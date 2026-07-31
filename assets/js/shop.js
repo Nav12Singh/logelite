@@ -1,7 +1,7 @@
 /**
  * Shop archive behaviours: off-canvas filter drawer (reusing the shared
- * assets/js/a11y.js focus trap), auto-submit-on-change for filter
- * checkboxes, and the grid/list view toggle. No jQuery, no AJAX.
+ * assets/js/a11y.js focus trap) and auto-submit-on-change for filter
+ * checkboxes and the per-page selector. No jQuery, no AJAX.
  */
 ( function () {
 	'use strict';
@@ -157,36 +157,14 @@
 		}
 	}
 
-	// Grid/list view toggle: plain links (?view=grid|list) already work
-	// with no JS. With JS, intercept the click and swap the class
-	// instantly instead of a full reload, syncing the URL via
-	// history.replaceState (no localStorage) so reloading or sharing the
-	// link still lands on the chosen view.
-	var productsEl = document.querySelector( '[data-shop-products]' );
-	var viewToggleLinks = document.querySelectorAll( '[data-view-toggle]' );
+	// "Show N" per-page selector — same auto-submit-on-change progressive
+	// enhancement as the filter checkboxes above; the form still has no JS
+	// dependency (a real GET form either way).
+	var perPageSelect = document.querySelector( '.lgl-shop-per-page__select' );
 
-	viewToggleLinks.forEach( function ( link ) {
-		link.addEventListener( 'click', function ( event ) {
-			if ( ! productsEl ) {
-				return;
-			}
-
-			event.preventDefault();
-
-			var view = link.getAttribute( 'data-view-toggle' );
-
-			productsEl.classList.remove( 'lgl-shop-products--grid', 'lgl-shop-products--list' );
-			productsEl.classList.add( 'lgl-shop-products--' + view );
-
-			viewToggleLinks.forEach( function ( otherLink ) {
-				if ( otherLink === link ) {
-					otherLink.setAttribute( 'aria-current', 'true' );
-				} else {
-					otherLink.removeAttribute( 'aria-current' );
-				}
-			} );
-
-			window.history.replaceState( null, '', link.getAttribute( 'href' ) );
+	if ( perPageSelect && perPageSelect.form ) {
+		perPageSelect.addEventListener( 'change', function () {
+			perPageSelect.form.submit();
 		} );
-	} );
+	}
 } )();

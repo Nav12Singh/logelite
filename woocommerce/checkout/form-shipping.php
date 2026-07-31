@@ -16,29 +16,30 @@
  * @global WC_Checkout $checkout
  */
 
-// Overridden by logelite — reason: adds lgl-checkout-card classes for
-// restyling via assets/css/pages/checkout.css. $checkout->get_checkout_fields()
-// still drives every field. The woocommerce_after_order_notes action below
-// is where T4's gift message / delivery date / time slot fields will
-// attach (see the comment on that line) — no field code is added here,
-// per the scope guard.
+// Overridden by logelite — reason: no own card box anymore for the
+// shipping-address fields — see form-billing.php's comment (both merge
+// into one outer card, form-checkout.php's #customer_details). $checkout->get_checkout_fields()
+// still drives every field. The "Ship to a different address?" checkbox
+// renders last, matching the design reference (its card ends on this
+// checkbox — the reference never demonstrates it checked, so there's no
+// reference markup for the revealed fields' exact position beyond
+// "appears when checked", which is what WooCommerce's own checkout.js
+// already does here unmodified). "Additional information" (order notes)
+// has no reference counterpart either way — rendered as a plain
+// sub-section (border-top separator) inside the same merged card rather
+// than its own nested box, since it's emitted from this same
+// woocommerce_checkout_shipping hook call that #customer_details wraps.
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<div class="woocommerce-shipping-fields lgl-checkout-card">
+<div class="woocommerce-shipping-fields">
 	<?php if ( true === WC()->cart->needs_shipping_address() ) : ?>
-
-		<h3 id="ship-to-different-address">
-			<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
-				<input id="ship-to-different-address-checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" <?php checked( apply_filters( 'woocommerce_ship_to_different_address_checked', 'shipping' === get_option( 'woocommerce_ship_to_destination' ) ? 1 : 0 ), 1 ); ?> type="checkbox" name="ship_to_different_address" value="1" /> <span><?php esc_html_e( 'Ship to a different address?', 'woocommerce' ); ?></span>
-			</label>
-		</h3>
 
 		<div class="shipping_address">
 
 			<?php do_action( 'woocommerce_before_checkout_shipping_form', $checkout ); ?>
 
-			<div class="woocommerce-shipping-fields__field-wrapper">
+			<div class="woocommerce-shipping-fields__field-wrapper lgl-checkout-fields-grid">
 				<?php
 				$fields = $checkout->get_checkout_fields( 'shipping' );
 
@@ -52,9 +53,28 @@ defined( 'ABSPATH' ) || exit;
 
 		</div>
 
+		<?php
+		/*
+		 * id="ship-to-different-address" is load-bearing: WooCommerce's own
+		 * checkout.js selects "#ship-to-different-address input" directly
+		 * (verified in assets/js/frontend/checkout.js) to bind the
+		 * show/hide-on-change behavior for div.shipping_address above. Kept
+		 * as a real <h3> for that reason — CSS only (lgl-ship-to-different-address)
+		 * de-emphasizes it to look like a plain checkbox row, matching the
+		 * design reference, rather than another heading. Rendered AFTER the
+		 * address fields (rather than core's default position before them)
+		 * to match the design reference's card, which ends on this checkbox.
+		 */
+		?>
+		<h3 id="ship-to-different-address" class="lgl-ship-to-different-address">
+			<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
+				<input id="ship-to-different-address-checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" <?php checked( apply_filters( 'woocommerce_ship_to_different_address_checked', 'shipping' === get_option( 'woocommerce_ship_to_destination' ) ? 1 : 0 ), 1 ); ?> type="checkbox" name="ship_to_different_address" value="1" /> <span><?php esc_html_e( 'Ship to a different address?', 'woocommerce' ); ?></span>
+			</label>
+		</h3>
+
 	<?php endif; ?>
 </div>
-<div class="woocommerce-additional-fields lgl-checkout-card">
+<div class="woocommerce-additional-fields lgl-checkout-subsection">
 	<?php do_action( 'woocommerce_before_order_notes', $checkout ); ?>
 
 	<?php if ( apply_filters( 'woocommerce_enable_order_notes_field', 'yes' === get_option( 'woocommerce_enable_order_comments', 'yes' ) ) ) : ?>

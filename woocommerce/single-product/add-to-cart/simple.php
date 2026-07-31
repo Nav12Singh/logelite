@@ -16,9 +16,18 @@
  */
 
 // Overridden by logelite — reason: adds an lgl-add-to-cart class for
-// restyling via assets/css/pages/product.css. woocommerce_quantity_input()
-// (which renders global/quantity-input.php — see that file for the
-// custom -/+ buttons) and every do_action() call are otherwise unchanged.
+// restyling via assets/css/pages/product.css, plus a second "BUY IT NOW"
+// submit button. Both buttons submit the SAME name="add-to-cart" (so
+// WooCommerce's own add-to-cart handler processes either click
+// identically) — a hidden lgl_buy_now field, flipped to "1" by
+// assets/js/product.js only when the Buy It Now button is the one
+// clicked, is what lgl_buy_now_redirect() (inc/woocommerce.php) checks to
+// send the shopper straight to checkout instead of back to this page.
+// Without JS, Buy It Now still adds to cart and redirects normally
+// (same as Add to Cart) — a graceful, still-correct degradation, not a
+// broken button. woocommerce_quantity_input() (which renders
+// global/quantity-input.php — see that file for the custom -/+ buttons)
+// and every other do_action() call are otherwise unchanged.
 
 defined( 'ABSPATH' ) || exit;
 
@@ -51,7 +60,11 @@ if ( $product->is_in_stock() ) : ?>
 		do_action( 'woocommerce_after_add_to_cart_quantity' );
 		?>
 
+		<input type="hidden" name="lgl_buy_now" value="0" data-buy-now-flag />
+
 		<button type="submit" name="add-to-cart" value="<?php echo esc_attr( $product->get_id() ); ?>" class="single_add_to_cart_button button alt<?php echo esc_attr( wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '' ); ?>"><?php echo esc_html( $product->single_add_to_cart_text() ); ?></button>
+
+		<button type="submit" name="add-to-cart" value="<?php echo esc_attr( $product->get_id() ); ?>" class="lgl-buy-now-button" data-buy-now-trigger><?php esc_html_e( 'Buy It Now', 'logelite' ); ?></button>
 
 		<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
 	</form>

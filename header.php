@@ -37,6 +37,7 @@ $lgl_wc_owns_main = lgl_wc_active() && is_woocommerce();
 	<div class="lgl-header__sentinel" data-header-sentinel aria-hidden="true"></div>
 
 	<?php get_template_part( 'template-parts/header/site-header' ); ?>
+	<?php get_template_part( 'template-parts/header/promo-strip' ); ?>
 
 	<?php if ( ! $lgl_wc_owns_main ) : ?>
 	<main id="lgl-main" class="lgl-main"><?php endif; ?>

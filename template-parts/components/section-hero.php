@@ -15,6 +15,10 @@
  *   class          string  Extra class(es) on the section wrapper.
  *   heading_id     string  Optional id on the <h2>, e.g. so a caller's own
  *                          outer <section aria-labelledby="..."> can point at it.
+ *   no_container   bool    Skip the inner .lgl-container wrapper — for
+ *                          callers that already sit inside one (e.g. as a
+ *                          column of a larger grid), so padding/max-width
+ *                          isn't applied twice. Default false.
  *
  * data-animate attributes are placeholders for a later animation pass
  * (T5) — no animation CSS/JS is wired up yet.
@@ -40,6 +44,7 @@ $args = wp_parse_args(
 		'variant'       => 'default',
 		'class'         => '',
 		'heading_id'    => '',
+		'no_container'  => false,
 	)
 );
 
@@ -56,9 +61,11 @@ $lgl_classes = trim(
 
 $lgl_primary_cta   = wp_parse_args( $args['primary_cta'], array( 'label' => '', 'url' => '' ) );
 $lgl_secondary_cta = wp_parse_args( $args['secondary_cta'], array( 'label' => '', 'url' => '' ) );
+
+$lgl_inner_class = $args['no_container'] ? 'lgl-hero__inner' : 'lgl-container lgl-hero__inner';
 ?>
 <section class="<?php echo esc_attr( $lgl_classes ); ?>" data-animate="hero">
-	<div class="lgl-container lgl-hero__inner">
+	<div class="<?php echo esc_attr( $lgl_inner_class ); ?>">
 		<div class="lgl-hero__content" data-animate="hero-content">
 			<?php if ( '' !== $args['eyebrow'] ) : ?>
 				<p class="lgl-hero__eyebrow"><?php echo wp_kses_post( $args['eyebrow'] ); ?></p>

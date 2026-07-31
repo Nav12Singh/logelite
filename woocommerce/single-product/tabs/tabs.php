@@ -63,11 +63,6 @@ if ( ! empty( $product_tabs ) ) : ?>
 		<?php
 		/**
 		 * Hook: woocommerce_product_after_tabs.
-		 *
-		 * TODO (T3): the FAQ feature adds its own entry to the
-		 * woocommerce_product_tabs filter above (a new tab, same
-		 * mechanism as Description/Reviews/Additional information) rather
-		 * than hooking here — this action is left untouched from upstream.
 		 */
 		do_action( 'woocommerce_product_after_tabs' );
 		?>

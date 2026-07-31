@@ -40,6 +40,7 @@
 	font-size: var(--lgl-text-xs);
 	font-weight: var(--lgl-weight-bold);
 	letter-spacing: var(--lgl-tracking-widest);
+	text-transform: uppercase;
 	opacity: 0.85;
 }
 

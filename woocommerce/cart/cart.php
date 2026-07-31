@@ -15,13 +15,16 @@
  * @version 10.8.0
  */
 
-// Overridden by logelite — reason: wraps the existing table and
-// .cart-collaterals in a two-column grid (line items left, sticky totals
-// right — assets/css/pages/checkout.css) and adds lgl-* classes. Every
-// action, filter, and the woocommerce-cart-nonce field are untouched and
-// in their original positions — mobile's card layout (data-title on each
-// <td> + ::before, already present in this markup) is CSS-only, no
-// second markup tree. The -/+ quantity buttons come from
+// Overridden by logelite — reason: adds the "CART / CHECKOUT /
+// CONFIRMATION" step indicator (cart always the active step here — the
+// design reference shows this only on the cart page, not repeated on
+// checkout/thank-you), and wraps the existing table and .cart-collaterals
+// in a two-column grid (line items left, sticky totals right —
+// assets/css/pages/checkout.css) with lgl-* classes. Every action,
+// filter, and the woocommerce-cart-nonce field are untouched and in their
+// original positions — mobile's card layout (data-title on each <td> +
+// ::before, already present in this markup) is CSS-only, no second markup
+// tree. The -/+ quantity buttons come from
 // woocommerce/global/quantity-input.php (shared with the product page,
 // see that file); assets/js/cart.js auto-clicks the existing "Update
 // cart" button on quantity change as a progressive enhancement.
@@ -29,6 +32,23 @@
 defined( 'ABSPATH' ) || exit;
 
 do_action( 'woocommerce_before_cart' ); ?>
+
+<ol class="lgl-cart-steps">
+	<li class="lgl-cart-steps__step is-active">
+		<span class="lgl-cart-steps__number">1</span>
+		<?php esc_html_e( 'Cart', 'logelite' ); ?>
+	</li>
+	<li class="lgl-cart-steps__connector"></li>
+	<li class="lgl-cart-steps__step">
+		<span class="lgl-cart-steps__number">2</span>
+		<?php esc_html_e( 'Checkout', 'logelite' ); ?>
+	</li>
+	<li class="lgl-cart-steps__connector"></li>
+	<li class="lgl-cart-steps__step">
+		<span class="lgl-cart-steps__number">3</span>
+		<?php esc_html_e( 'Confirmation', 'logelite' ); ?>
+	</li>
+</ol>
 
 <div class="lgl-cart-layout">
 	<div class="lgl-cart-layout__items">
@@ -225,8 +245,11 @@ do_action( 'woocommerce_before_cart' ); ?>
 			/**
 			 * Cart collaterals hook.
 			 *
-			 * @hooked woocommerce_cross_sell_display
 			 * @hooked woocommerce_cart_totals - 10
+			 *
+			 * woocommerce_cross_sell_display (core's other default here) is
+			 * removed in lgl_wc_unhook_defaults() (inc/woocommerce.php) — no
+			 * cross-sell row anywhere on the design reference's cart page.
 			 */
 			do_action( 'woocommerce_cart_collaterals' );
 		?>

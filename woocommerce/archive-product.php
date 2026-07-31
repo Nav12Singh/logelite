@@ -16,10 +16,10 @@
  */
 
 // Overridden by logelite — reason: adds a shop hero (page/category title,
-// term description, term banner image, breadcrumbs), a toolbar (result
-// count, active filter chips, orderby, grid/list view toggle), and a
-// sidebar + product grid layout with an off-canvas filter drawer below
-// 992px. Relies on several default hooks being removed in
+// term description, breadcrumbs, status chips), a toolbar (result count,
+// active filter chips, orderby, per-page selector), and a sidebar +
+// product grid layout with an off-canvas filter drawer below 992px. Relies
+// on several default hooks being removed in
 // inc/woocommerce.php::lgl_wc_unhook_defaults() — see that function's
 // docblock for the full list and why.
 
@@ -49,37 +49,43 @@ do_action( 'woocommerce_before_main_content' );
 do_action( 'woocommerce_shop_loop_header' );
 
 $lgl_queried_term = is_product_taxonomy() ? get_queried_object() : null;
-$lgl_banner_id    = ( $lgl_queried_term instanceof WP_Term )
-	? absint( get_term_meta( $lgl_queried_term->term_id, 'thumbnail_id', true ) )
-	: 0;
+
+$lgl_description = '';
+
+if ( $lgl_queried_term instanceof WP_Term ) {
+	$lgl_description = term_description( $lgl_queried_term->term_id, $lgl_queried_term->taxonomy );
+} elseif ( is_shop() ) {
+	// Dynamic, not the reference's literal hardcoded "913 products across 9
+	// categories" — real counts for whatever catalog is actually installed.
+	$lgl_product_counts = (array) wp_count_posts( 'product' );
+	$lgl_product_total  = isset( $lgl_product_counts['publish'] ) ? (int) $lgl_product_counts['publish'] : 0;
+	$lgl_category_count = wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true ) );
+	$lgl_category_total = is_wp_error( $lgl_category_count ) ? 0 : (int) $lgl_category_count;
+
+	$lgl_description = sprintf(
+		/* translators: 1: number of products, 2: number of categories. */
+		esc_html( _n( '%1$s product across %2$s categories — updated daily.', '%1$s products across %2$s categories — updated daily.', $lgl_product_total, 'logelite' ) ),
+		esc_html( number_format_i18n( $lgl_product_total ) ),
+		esc_html( number_format_i18n( $lgl_category_total ) )
+	);
+}
 ?>
-<div class="lgl-shop-hero<?php echo esc_attr( $lgl_banner_id ? ' lgl-shop-hero--has-banner' : '' ); ?>">
-	<?php if ( $lgl_banner_id ) : ?>
-		<div class="lgl-shop-hero__banner">
-			<?php
-			echo wp_kses_post(
-				wp_get_attachment_image(
-					$lgl_banner_id,
-					'lgl-hero',
-					false,
-					array( 'class' => 'lgl-shop-hero__banner-image' )
-				)
-			);
-			?>
-		</div>
-	<?php endif; ?>
+<div class="lgl-container">
+	<?php lgl_breadcrumbs(); ?>
 
-	<div class="lgl-container lgl-shop-hero__inner">
-		<?php lgl_breadcrumbs(); ?>
+	<div class="lgl-shop-hero">
+		<div class="lgl-shop-hero__inner">
+			<h1 class="lgl-shop-hero__title"><?php woocommerce_page_title(); ?></h1>
 
-		<h1 class="lgl-shop-hero__title"><?php woocommerce_page_title(); ?></h1>
-
-		<?php if ( $lgl_queried_term instanceof WP_Term ) : ?>
-			<?php $lgl_description = term_description( $lgl_queried_term->term_id, $lgl_queried_term->taxonomy ); ?>
 			<?php if ( $lgl_description ) : ?>
 				<div class="lgl-shop-hero__description"><?php echo wp_kses_post( $lgl_description ); ?></div>
 			<?php endif; ?>
-		<?php endif; ?>
+		</div>
+
+		<div class="lgl-shop-hero__chips">
+			<span class="lgl-shop-hero__chip lgl-shop-hero__chip--brand"><?php esc_html_e( 'In stock only', 'logelite' ); ?></span>
+			<span class="lgl-shop-hero__chip"><?php esc_html_e( 'Free shipping', 'logelite' ); ?></span>
+		</div>
 	</div>
 </div>
 
@@ -106,34 +112,11 @@ $lgl_banner_id    = ( $lgl_queried_term instanceof WP_Term )
 
 			<div class="lgl-shop-toolbar__controls">
 				<?php woocommerce_catalog_ordering(); ?>
-
-				<?php
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display preference, no data is written.
-				$lgl_requested_view = isset( $_GET['view'] ) ? sanitize_text_field( wp_unslash( $_GET['view'] ) ) : '';
-				$lgl_view           = ( 'list' === $lgl_requested_view ) ? 'list' : 'grid';
-				?>
-				<div class="lgl-view-toggle" role="group" aria-label="<?php esc_attr_e( 'Product view', 'logelite' ); ?>">
-					<a
-						class="lgl-view-toggle__button"
-						href="<?php echo esc_url( add_query_arg( 'view', 'grid' ) ); ?>"
-						data-view-toggle="grid"
-						<?php if ( 'grid' === $lgl_view ) : ?>aria-current="true"<?php endif; ?>
-					>
-						<?php esc_html_e( 'Grid', 'logelite' ); ?>
-					</a>
-					<a
-						class="lgl-view-toggle__button"
-						href="<?php echo esc_url( add_query_arg( 'view', 'list' ) ); ?>"
-						data-view-toggle="list"
-						<?php if ( 'list' === $lgl_view ) : ?>aria-current="true"<?php endif; ?>
-					>
-						<?php esc_html_e( 'List', 'logelite' ); ?>
-					</a>
-				</div>
+				<?php get_template_part( 'template-parts/shop/per-page-select' ); ?>
 			</div>
 		</div>
 
-		<div class="lgl-shop-products lgl-shop-products--<?php echo esc_attr( $lgl_view ); ?>" data-shop-products>
+		<div class="lgl-shop-products" data-shop-products>
 			<?php if ( woocommerce_product_loop() ) : ?>
 
 				<?php

@@ -1,0 +1,65 @@
+/**
+ * Shared "product section" primitives: heading row (+ optional tabs/view-all
+ * link) and a fixed 5-column product grid. Used by the homepage's
+ * "Deals of the Day"/"Best Sellers" sections (template-parts/home/*) and
+ * woocommerce/checkout/thankyou.php's "You might also like" row — pulled
+ * out of assets/css/pages/home.css since the thank-you page doesn't load
+ * that file.
+ *
+ * @package logelite
+ */
+
+.lgl-section {
+	padding-block: var(--lgl-space-12);
+}
+
+.lgl-section__heading {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-2xl);
+	color: var(--lgl-text-primary);
+	text-transform: uppercase;
+}
+
+.lgl-section__header {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-5);
+	margin-bottom: var(--lgl-space-5);
+}
+
+.lgl-section__tabs {
+	display: flex;
+	gap: var(--lgl-space-5);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	color: var(--lgl-text-faint);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-section__view-all {
+	margin-inline-start: auto;
+	font-size: var(--lgl-text-sm);
+	font-weight: var(--lgl-weight-semibold);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-product-grid {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: var(--lgl-space-5);
+}
+
+@media (max-width: 991px) {
+	.lgl-product-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 599px) {
+	.lgl-product-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}

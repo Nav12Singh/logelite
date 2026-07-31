@@ -1,175 +1,74 @@
 /**
- * Delivery estimator: POSTs a pincode to the lgl/v1/delivery REST route and
- * renders the result. See template-parts/product/delivery-estimator.php
- * for the markup contract (data-delivery-estimator / -input / -submit /
- * -result) and for why this isn't a <form> — the estimator lives inside
- * WooCommerce's own add-to-cart <form>, so Enter here must never trigger a
- * native form submit; it's handled as a plain keydown instead.
+ * Delivery/pincode estimator (template-parts/product/delivery-estimator.php).
+ *
+ * Vanilla JS, no jQuery. Enter-key submits via a keydown listener rather
+ * than a real <form> submit — the estimator markup is a plain <div>
+ * nested inside WooCommerce's own add-to-cart <form>, and a nested <form>
+ * would be invalid HTML (see the template's own comment for why).
  *
  * @package logelite
  */
+
 ( function () {
 	'use strict';
 
-	var root = document.querySelector( '[data-delivery-estimator]' );
+	function checkDelivery( root ) {
+		var input = root.querySelector( '[data-lgl-delivery-input]' );
+		var result = root.querySelector( '[data-lgl-delivery-result]' );
+		var pincode = input.value.trim();
 
-	if ( ! root || typeof window.lglDelivery === 'undefined' ) {
-		return;
-	}
+		result.classList.remove( 'lgl-delivery-estimator__result--success', 'lgl-delivery-estimator__result--error' );
 
-	var input = root.querySelector( '[data-delivery-input]' );
-	var button = root.querySelector( '[data-delivery-submit]' );
-	var resultEl = root.querySelector( '[data-delivery-result]' );
-	var strings = window.lglDelivery.i18n || {};
-	var pincodePattern = /^[1-9][0-9]{5}$/;
-	var currentController = null;
-
-	/**
-	 * @param {string} state 'idle' | 'loading' | 'success' | 'error'.
-	 */
-	function setState( state ) {
-		root.setAttribute( 'data-state', state );
-		button.disabled = 'loading' === state;
-		button.setAttribute( 'aria-busy', 'loading' === state ? 'true' : 'false' );
-	}
-
-	function clearResult() {
-		while ( resultEl.firstChild ) {
-			resultEl.removeChild( resultEl.firstChild );
-		}
-	}
-
-	/**
-	 * @param {string} text
-	 * @param {string} [modifierClass]
-	 */
-	function renderMessage( text, modifierClass ) {
-		clearResult();
-
-		var message = document.createElement( 'p' );
-		message.className = 'lgl-delivery-estimator__message' + ( modifierClass ? ' ' + modifierClass : '' );
-		message.textContent = text;
-		resultEl.appendChild( message );
-	}
-
-	/**
-	 * @param {Object} data Parsed JSON response body.
-	 */
-	function renderSuccess( data ) {
-		clearResult();
-
-		var wrapper = document.createElement( 'div' );
-		wrapper.className = 'lgl-delivery-estimator__message lgl-delivery-estimator__message--success';
-
-		var label = document.createElement( 'p' );
-		label.textContent = data.eta_label || '';
-		wrapper.appendChild( label );
-
-		if ( data.eta_date ) {
-			var date = document.createElement( 'p' );
-			date.className = 'lgl-delivery-estimator__eta-date';
-			date.textContent = data.eta_date;
-			wrapper.appendChild( date );
-		}
-
-		var cod = document.createElement( 'p' );
-		cod.className = 'lgl-delivery-estimator__cod';
-		cod.textContent = data.cod ? ( strings.codAvailable || '' ) : ( strings.codUnavailable || '' );
-		wrapper.appendChild( cod );
-
-		resultEl.appendChild( wrapper );
-	}
-
-	/**
-	 * @param {Object} data Parsed JSON response body.
-	 */
-	function renderUnserviceable( data ) {
-		renderMessage( data.eta_label || strings.unserviceable || '', 'lgl-delivery-estimator__message--error' );
-	}
-
-	/**
-	 * @param {number} status HTTP status code, or 0 for a network-level failure.
-	 */
-	function handleError( status ) {
-		var message = strings.genericError || '';
-
-		if ( 400 === status ) {
-			message = strings.invalidPincode || message;
-		} else if ( 429 === status ) {
-			message = strings.rateLimited || message;
-		} else if ( status >= 500 ) {
-			message = strings.serverError || message;
-		}
-
-		renderMessage( message, 'lgl-delivery-estimator__message--error' );
-	}
-
-	function submit() {
-		var pincode = ( input.value || '' ).trim();
-
-		if ( ! pincodePattern.test( pincode ) ) {
-			setState( 'error' );
-			renderMessage( strings.invalidPincode || '', 'lgl-delivery-estimator__message--error' );
+		if ( ! /^[1-9][0-9]{5}$/.test( pincode ) ) {
+			result.textContent = window.lglDelivery.i18n.invalid;
+			result.classList.add( 'lgl-delivery-estimator__result--error' );
 			return;
 		}
 
-		// Abort any still-in-flight request before starting a new one —
-		// covers rapid repeat Enter presses, which aren't blocked by the
-		// button's disabled state the way repeat clicks are.
-		if ( currentController ) {
-			currentController.abort();
-		}
+		result.textContent = window.lglDelivery.i18n.checking;
 
-		currentController = new AbortController();
-		setState( 'loading' );
-		renderMessage( strings.loading || '' );
+		var body = new window.URLSearchParams();
+		body.set( 'action', 'lgl_check_delivery' );
+		body.set( 'nonce', window.lglDelivery.nonce );
+		body.set( 'pincode', pincode );
 
-		fetch( window.lglDelivery.restUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': window.lglDelivery.nonce
-			},
-			body: JSON.stringify( {
-				pincode: pincode,
-				product_id: window.lglDelivery.productId
-			} ),
-			signal: currentController.signal
-		} )
+		window
+			.fetch( window.lglDelivery.ajaxUrl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: body.toString(),
+			} )
 			.then( function ( response ) {
-				if ( ! response.ok ) {
-					var error = new Error( 'lgl-delivery-request-failed' );
-					error.status = response.status;
-					throw error;
-				}
-
 				return response.json();
 			} )
-			.then( function ( data ) {
-				setState( 'success' );
+			.then( function ( response ) {
+				var message = response && response.data && response.data.message ? response.data.message : window.lglDelivery.i18n.invalid;
 
-				if ( data.serviceable ) {
-					renderSuccess( data );
-				} else {
-					renderUnserviceable( data );
-				}
+				result.textContent = message;
+				result.classList.add(
+					response && response.success ? 'lgl-delivery-estimator__result--success' : 'lgl-delivery-estimator__result--error'
+				);
 			} )
-			.catch( function ( error ) {
-				if ( 'AbortError' === error.name ) {
-					return;
-				}
-
-				setState( 'error' );
-				handleError( error.status || 0 );
+			.catch( function () {
+				result.textContent = window.lglDelivery.i18n.error;
+				result.classList.add( 'lgl-delivery-estimator__result--error' );
 			} );
 	}
 
-	button.addEventListener( 'click', submit );
+	document.querySelectorAll( '[data-lgl-delivery-estimator]' ).forEach( function ( root ) {
+		var button = root.querySelector( '[data-lgl-delivery-check]' );
+		var input = root.querySelector( '[data-lgl-delivery-input]' );
 
-	input.addEventListener( 'keydown', function ( event ) {
-		if ( 'Enter' === event.key ) {
-			event.preventDefault();
-			submit();
-		}
+		button.addEventListener( 'click', function () {
+			checkDelivery( root );
+		} );
+
+		input.addEventListener( 'keydown', function ( event ) {
+			if ( 'Enter' === event.key ) {
+				event.preventDefault();
+				checkDelivery( root );
+			}
+		} );
 	} );
 } )();

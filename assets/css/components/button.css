@@ -18,6 +18,15 @@
 	font-weight: var(--lgl-weight-bold);
 	letter-spacing: var(--lgl-tracking-wide);
 	text-align: center;
+	/*
+	 * The reference types every button's label in literal caps ("SHOP THE
+	 * SALE", "ADD TO CART", ...) rather than applying a CSS transform —
+	 * but the actual strings this theme renders come from translatable
+	 * PHP strings and WooCommerce's own core button text (both naturally
+	 * Title Case), so a CSS transform is what actually reproduces that
+	 * look regardless of the source string's case or language.
+	 */
+	text-transform: uppercase;
 	cursor: pointer;
 	transition: background var(--lgl-dur-fast) var(--lgl-ease-out),
 		color var(--lgl-dur-fast) var(--lgl-ease-out),

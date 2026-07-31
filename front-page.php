@@ -16,12 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 get_header();
 
-get_template_part( 'template-parts/home/section-usp' );
-get_template_part( 'template-parts/home/section-hero' );
-get_template_part( 'template-parts/home/section-categories' );
+get_template_part( 'template-parts/home/section-hero-row' );
+get_template_part( 'template-parts/home/section-deals' );
 get_template_part( 'template-parts/home/section-featured' );
-get_template_part( 'template-parts/home/section-testimonials' );
-get_template_part( 'template-parts/home/section-cta' );
-get_template_part( 'template-parts/home/section-newsletter' );
+get_template_part( 'template-parts/home/section-banners' );
 
 get_footer();

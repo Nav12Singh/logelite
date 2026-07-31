@@ -1,7 +1,13 @@
 <?php
 /**
- * Homepage featured products, topped up with best sellers when fewer than
- * $lgl_limit products are manually marked featured.
+ * Homepage "Best Sellers" — a fixed 5-product row ordered by real sales
+ * volume (WooCommerce's own 'popularity' orderby, i.e. total_sales), not
+ * the earlier "featured products topped up with popularity" query. The
+ * "New In / Popular / Top Rated" row beside the heading is static label
+ * text, matching the design reference exactly — its own mockup doesn't
+ * wire these to any real filtering/sorting either (verified by reading
+ * the reference's own script: no onClick on any of the three). See
+ * ASSUMPTIONS.md.
  *
  * @package logelite
  */
@@ -14,41 +20,23 @@ if ( ! lgl_wc_active() ) {
 	return;
 }
 
-$lgl_limit = 8;
+$lgl_limit = 5;
 
 $lgl_products = wc_get_products(
 	array(
-		'featured'   => true,
 		'status'     => 'publish',
 		'visibility' => 'catalog',
 		'limit'      => $lgl_limit,
+		'orderby'    => 'popularity',
+		'order'      => 'DESC',
 	)
 );
-
-if ( count( $lgl_products ) < $lgl_limit ) {
-	$lgl_have_ids = array();
-
-	foreach ( $lgl_products as $lgl_existing ) {
-		$lgl_have_ids[] = $lgl_existing->get_id();
-	}
-
-	$lgl_top_up = wc_get_products(
-		array(
-			'status'     => 'publish',
-			'visibility' => 'catalog',
-			'limit'      => $lgl_limit - count( $lgl_products ),
-			'orderby'    => 'popularity',
-			'order'      => 'DESC',
-			'exclude'    => $lgl_have_ids,
-		)
-	);
-
-	$lgl_products = array_merge( $lgl_products, $lgl_top_up );
-}
 
 if ( empty( $lgl_products ) ) {
 	return;
 }
+
+$lgl_shop_url = lgl_wc_active() ? wc_get_page_permalink( 'shop' ) : home_url( '/' );
 ?>
 <section
 	id="lgl-home-featured"
@@ -57,9 +45,21 @@ if ( empty( $lgl_products ) ) {
 	data-animate="fade-up"
 >
 	<div class="lgl-container">
-		<h2 id="lgl-home-featured-heading" class="lgl-section__heading">
-			<?php esc_html_e( 'Featured Products', 'logelite' ); ?>
-		</h2>
+		<div class="lgl-section__header">
+			<h2 id="lgl-home-featured-heading" class="lgl-section__heading">
+				<?php esc_html_e( 'Best Sellers', 'logelite' ); ?>
+			</h2>
+
+			<ul class="lgl-section__tabs">
+				<li><?php esc_html_e( 'New In', 'logelite' ); ?></li>
+				<li><?php esc_html_e( 'Popular', 'logelite' ); ?></li>
+				<li><?php esc_html_e( 'Top Rated', 'logelite' ); ?></li>
+			</ul>
+
+			<a class="lgl-section__view-all" href="<?php echo esc_url( $lgl_shop_url ); ?>">
+				<?php esc_html_e( 'View all', 'logelite' ); ?> &rarr;
+			</a>
+		</div>
 
 		<div class="lgl-product-grid">
 			<?php

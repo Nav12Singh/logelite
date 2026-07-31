@@ -2,6 +2,8 @@
 
 Custom classic WordPress + WooCommerce storefront theme. Built to the rules in `CLAUDE.md` — no page builders, no FSE, no ACF, no premium plugins.
 
+**Note on the T7 rebuild:** this theme was subsequently rebuilt end-to-end to match `design-reference/Logelite Theme.dc.html` exactly. Several features the T3-era tickets below describe (feature icons, the delivery-estimator REST route, the sticky mobile add-to-cart bar, product FAQ, the reusable carousel, cart cross-sells) had no counterpart in that reference and were removed entirely, rather than kept alongside it. The ticket table further down is left as an accurate historical record of what those tickets actually built — see `ASSUMPTIONS.md`'s "T7" section for the full list of what changed and why.
+
 ## Requirements
 
 - WordPress 6.5+
@@ -10,7 +12,7 @@ Custom classic WordPress + WooCommerce storefront theme. Built to the rules in `
 
 ## Install
 
-1. **Install WordPress and WooCommerce first**, on a host meeting the versions above. Activate WooCommerce before activating this theme — several theme features (product meta boxes, checkout fields, the delivery-estimator REST route) register against WooCommerce hooks/classes on `init`/`after_setup_theme` and expect the plugin to already be loaded.
+1. **Install WordPress and WooCommerce first**, on a host meeting the versions above. Activate WooCommerce before activating this theme — several theme features (product meta boxes, checkout fields) register against WooCommerce hooks/classes on `init`/`after_setup_theme` and expect the plugin to already be loaded.
 2. **Upload the theme.** In wp-admin: *Appearance → Themes → Add New → Upload Theme*, choose `logelite.zip`, then *Install Now → Activate*. (Or unzip into `wp-content/themes/logelite/` directly if you have file access.)
 3. **Import sample data.** ⚠️ Not included in this delivery — see "Known gaps" below. If a `wp_db.sql` is provided separately, import it with either:
    - WP-CLI: `wp db import wp_db.sql`
@@ -22,7 +24,7 @@ Custom classic WordPress + WooCommerce storefront theme. Built to the rules in `
 
 ## Assumptions
 
-Every inferred-rather-than-specified decision made across this project — the Indian-pincode-format assumption, no-holiday-calendar simplification for delivery dates, Settings API chosen over the Customizer for global feature icons, `max-height` chosen over JS footer-collision detection for the sticky checkout aside, and everything else — is logged in **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)**, not duplicated here. That file is the single source of truth; this README intentionally just points to it rather than keeping a second copy that would drift out of sync. It's organized chronologically by ticket (T1 → T6), newest at the bottom, and `grep`-able by ticket number if you're looking for a specific one's reasoning.
+Every inferred-rather-than-specified decision made across this project — the product-card "Free Shipping / Free Gift / In Stock" tag rule, the "Arrives By" delivery-window business rule, `max-height` chosen over JS footer-collision detection for the sticky checkout aside, and everything else — is logged in **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)**, not duplicated here. That file is the single source of truth; this README intentionally just points to it rather than keeping a second copy that would drift out of sync. It's organized chronologically by ticket (T1 → T6), newest at the bottom, and `grep`-able by ticket number if you're looking for a specific one's reasoning.
 
 ## Development
 
@@ -39,7 +41,7 @@ composer run lint:fix   # phpcbf --standard=phpcs.xml.dist
 ## Known gaps (read before demoing)
 
 - **A live front-end bug is currently unresolved.** On the development site this theme was built against, every front-end page (home, shop) returns a blank response, while wp-admin, the REST API, and the RSS feed all work normally — isolating the problem to WordPress's theme-template-loading path specifically. The site's PHP error log also shows a WooCommerce database error (a missing custom table) logged during a recent plugin activation, suggesting an incomplete WooCommerce install may be a contributing factor. Full diagnostic notes are in `ASSUMPTIONS.md`'s T6 entry. **Do not consider this theme demo-ready until this is resolved and a real page load has been confirmed** — everything else in this README describes intent, not a verified end-to-end result.
-- **No `wp_db.sql` is included.** Producing one needs a working WooCommerce database to export from (`wp db export` or `mysqldump`); neither was available. A site with sample products (all four WooCommerce product types), FAQ/feature-icon meta on a few of them, at least two active coupons, and a configured shipping zone needs to be built and exported separately before this theme can be evaluated with realistic data.
+- **No `wp_db.sql` is included.** Producing one needs a working WooCommerce database to export from (`wp db export` or `mysqldump`); neither was available. A site with sample products (all four WooCommerce product types, at least one variable product with a color/memory-style attribute pair to exercise the swatch selector, a Bundle Offer meta box tier on a couple of products, and a `free-shipping`-slugged shipping class on a few others), at least two active coupons, and a configured shipping zone needs to be built and exported separately before this theme can be evaluated with realistic data.
 - **No `/screenshots` directory.** Capturing them needs a working, rendered front end (see the first point) plus a browser — neither was available here.
 - **The theme zip has not been activation-tested end-to-end** (fresh WP + WooCommerce + this theme + sample data, confirmed working) for the same reason: no second WordPress environment was available to test against, and the primary one has the unresolved issue above.
 

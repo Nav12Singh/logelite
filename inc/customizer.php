@@ -23,22 +23,6 @@ if ( ! function_exists( 'lgl_sanitize_checkbox' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lgl_sanitize_faq_placement' ) ) {
-	/**
-	 * Sanitize the lgl_faq_placement select control to a whitelisted value.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param mixed $value Raw value submitted by the control.
-	 * @return string 'tab', 'section', or 'both'.
-	 */
-	function lgl_sanitize_faq_placement( $value ) {
-		$lgl_allowed = array( 'tab', 'section', 'both' );
-
-		return in_array( $value, $lgl_allowed, true ) ? $value : 'section';
-	}
-}
-
 if ( ! function_exists( 'lgl_customize_register_header' ) ) {
 	/**
 	 * Register the header announcement-bar setting and control.
@@ -66,13 +50,55 @@ if ( ! function_exists( 'lgl_customize_register_header' ) ) {
 				'label'   => esc_html__( 'Show header announcement bar', 'logelite' ),
 			)
 		);
+
+		$wp_customize->add_setting(
+			'lgl_hotline_number',
+			array(
+				'default'           => '(+91) 731 4924 322',
+				'sanitize_callback' => 'sanitize_text_field',
+				'transport'         => 'refresh',
+			)
+		);
+
+		$wp_customize->add_control(
+			'lgl_hotline_number',
+			array(
+				'type'    => 'text',
+				'section' => 'title_tagline',
+				'label'   => esc_html__( 'Customer service phone number', 'logelite' ),
+			)
+		);
+
+		$wp_customize->add_section(
+			'lgl_promo_strip',
+			array(
+				'title'    => esc_html__( 'Promo strip', 'logelite' ),
+				'priority' => 155,
+			)
+		);
+
+		$lgl_usp_fields = array();
+
+		for ( $lgl_i = 1; $lgl_i <= 3; $lgl_i++ ) {
+			$lgl_usp_fields[ "lgl_usp_{$lgl_i}_label" ] = array(
+				sprintf(
+					/* translators: %d: item number. */
+					esc_html__( 'Item %d label', 'logelite' ),
+					$lgl_i
+				),
+				'sanitize_text_field',
+			);
+		}
+
+		lgl_customize_add_text_fields( $wp_customize, 'lgl_promo_strip', $lgl_usp_fields );
 	}
 }
 
 if ( ! function_exists( 'lgl_customize_register_search' ) ) {
 	/**
-	 * Register the "Search" section: restrict-to-products setting and the
-	 * popular-searches list used by template-parts/header/search-overlay.php.
+	 * Register the "Search" section: restrict-to-products setting, used
+	 * against any search request site-wide (including the promo-strip's
+	 * inline search form, template-parts/header/promo-strip.php).
 	 *
 	 * @since 1.0.0
 	 *
@@ -106,31 +132,12 @@ if ( ! function_exists( 'lgl_customize_register_search' ) ) {
 				'description' => esc_html__( "When enabled, searches that don't already target a specific content type only return products.", 'logelite' ),
 			)
 		);
-
-		$wp_customize->add_setting(
-			'lgl_popular_searches',
-			array(
-				'default'           => '',
-				'sanitize_callback' => 'sanitize_text_field',
-				'transport'         => 'refresh',
-			)
-		);
-
-		$wp_customize->add_control(
-			'lgl_popular_searches',
-			array(
-				'type'        => 'text',
-				'section'     => 'lgl_search',
-				'label'       => esc_html__( 'Popular searches', 'logelite' ),
-				'description' => esc_html__( 'Comma-separated list of terms shown as quick links in the search overlay.', 'logelite' ),
-			)
-		);
 	}
 }
 
 if ( ! function_exists( 'lgl_customize_register_footer' ) ) {
 	/**
-	 * Register the "Footer" section: social profile links used by
+	 * Register the "Footer" section: brand/address block fields used by
 	 * template-parts/footer/site-footer.php.
 	 *
 	 * @since 1.0.0
@@ -147,19 +154,20 @@ if ( ! function_exists( 'lgl_customize_register_footer' ) ) {
 			)
 		);
 
-		$lgl_social_fields = array(
-			'lgl_social_facebook'  => esc_html__( 'Facebook URL', 'logelite' ),
-			'lgl_social_instagram' => esc_html__( 'Instagram URL', 'logelite' ),
-			'lgl_social_twitter'   => esc_html__( 'X (Twitter) URL', 'logelite' ),
-			'lgl_social_youtube'   => esc_html__( 'YouTube URL', 'logelite' ),
+		$lgl_brand_fields = array(
+			'lgl_footer_company' => array( esc_html__( 'Company name', 'logelite' ), 'sanitize_text_field' ),
+			'lgl_footer_address' => array( esc_html__( 'Postal address', 'logelite' ), 'sanitize_textarea_field' ),
+			'lgl_footer_email'   => array( esc_html__( 'Support email', 'logelite' ), 'sanitize_email' ),
 		);
 
-		foreach ( $lgl_social_fields as $lgl_setting_id => $lgl_label ) {
+		foreach ( $lgl_brand_fields as $lgl_setting_id => $lgl_field ) {
+			list( $lgl_label, $lgl_sanitize ) = $lgl_field;
+
 			$wp_customize->add_setting(
 				$lgl_setting_id,
 				array(
 					'default'           => '',
-					'sanitize_callback' => 'esc_url_raw',
+					'sanitize_callback' => $lgl_sanitize,
 					'transport'         => 'refresh',
 				)
 			);
@@ -167,7 +175,7 @@ if ( ! function_exists( 'lgl_customize_register_footer' ) ) {
 			$wp_customize->add_control(
 				$lgl_setting_id,
 				array(
-					'type'    => 'url',
+					'type'    => ( 'lgl_footer_address' === $lgl_setting_id ) ? 'textarea' : 'text',
 					'section' => 'lgl_footer',
 					'label'   => $lgl_label,
 				)
@@ -199,7 +207,7 @@ if ( ! function_exists( 'lgl_customize_register_shop' ) ) {
 		$wp_customize->add_setting(
 			'lgl_shop_columns',
 			array(
-				'default'           => 3,
+				'default'           => 4,
 				'sanitize_callback' => 'absint',
 				'transport'         => 'refresh',
 			)
@@ -221,7 +229,7 @@ if ( ! function_exists( 'lgl_customize_register_shop' ) ) {
 		$wp_customize->add_setting(
 			'lgl_shop_per_page',
 			array(
-				'default'           => 12,
+				'default'           => 10,
 				'sanitize_callback' => 'absint',
 				'transport'         => 'refresh',
 			)
@@ -244,8 +252,8 @@ if ( ! function_exists( 'lgl_customize_register_shop' ) ) {
 
 if ( ! function_exists( 'lgl_customize_register_product' ) ) {
 	/**
-	 * Register the single product page section: FAQ placement and the
-	 * related-products carousel size.
+	 * Register the single product page section: ships-from location and
+	 * related-products count/columns.
 	 *
 	 * @since 1.0.0
 	 *
@@ -262,26 +270,20 @@ if ( ! function_exists( 'lgl_customize_register_product' ) ) {
 		);
 
 		$wp_customize->add_setting(
-			'lgl_faq_placement',
+			'lgl_ships_from_location',
 			array(
-				'default'           => 'section',
-				'sanitize_callback' => 'lgl_sanitize_faq_placement',
+				'default'           => 'Indore, IN',
+				'sanitize_callback' => 'sanitize_text_field',
 				'transport'         => 'refresh',
 			)
 		);
 
 		$wp_customize->add_control(
-			'lgl_faq_placement',
+			'lgl_ships_from_location',
 			array(
-				'type'        => 'select',
-				'section'     => 'lgl_product',
-				'label'       => esc_html__( 'FAQ placement', 'logelite' ),
-				'description' => esc_html__( 'Where product FAQs appear. Only shown when a product has at least one FAQ.', 'logelite' ),
-				'choices'     => array(
-					'tab'     => esc_html__( 'WooCommerce tab only', 'logelite' ),
-					'section' => esc_html__( 'Inline section only (below the summary)', 'logelite' ),
-					'both'    => esc_html__( 'Both', 'logelite' ),
-				),
+				'type'    => 'text',
+				'section' => 'lgl_product',
+				'label'   => esc_html__( 'Ships-from location (buy box)', 'logelite' ),
 			)
 		);
 
@@ -310,7 +312,7 @@ if ( ! function_exists( 'lgl_customize_register_product' ) ) {
 		$wp_customize->add_setting(
 			'lgl_related_products_columns',
 			array(
-				'default'           => 4,
+				'default'           => 5,
 				'sanitize_callback' => 'absint',
 				'transport'         => 'refresh',
 			)
@@ -321,7 +323,7 @@ if ( ! function_exists( 'lgl_customize_register_product' ) ) {
 			array(
 				'type'        => 'number',
 				'section'     => 'lgl_product',
-				'label'       => esc_html__( 'Related products carousel columns (desktop)', 'logelite' ),
+				'label'       => esc_html__( 'Related products columns (desktop)', 'logelite' ),
 				'input_attrs' => array(
 					'min' => 2,
 					'max' => 6,
@@ -384,13 +386,16 @@ if ( ! function_exists( 'lgl_customize_add_image_field' ) ) {
 	 * @param string               $id           Setting id.
 	 * @param string               $section      Section id.
 	 * @param string               $label        Control label.
+	 * @param string               $default      Optional default image URL,
+	 *                                            shown until an admin uploads
+	 *                                            a real one. Default ''.
 	 * @return void
 	 */
-	function lgl_customize_add_image_field( $wp_customize, $id, $section, $label ) {
+	function lgl_customize_add_image_field( $wp_customize, $id, $section, $label, $default = '' ) {
 		$wp_customize->add_setting(
 			$id,
 			array(
-				'default'           => '',
+				'default'           => $default,
 				'sanitize_callback' => 'esc_url_raw',
 				'transport'         => 'refresh',
 			)
@@ -442,7 +447,13 @@ if ( ! function_exists( 'lgl_customize_register_homepage_hero' ) ) {
 			)
 		);
 
-		lgl_customize_add_image_field( $wp_customize, 'lgl_home_hero_image', 'lgl_home_hero', esc_html__( 'Image', 'logelite' ) );
+		lgl_customize_add_image_field(
+			$wp_customize,
+			'lgl_home_hero_image',
+			'lgl_home_hero',
+			esc_html__( 'Image', 'logelite' ),
+			get_theme_file_uri( 'assets/img/placeholders/hero-teal.png' )
+		);
 	}
 }
 
@@ -486,42 +497,6 @@ if ( ! function_exists( 'lgl_customize_register_homepage_categories' ) ) {
 				),
 			)
 		);
-	}
-}
-
-if ( ! function_exists( 'lgl_customize_register_homepage_usp' ) ) {
-	/**
-	 * Register the "Trust strip" homepage section (3 fixed items), used by
-	 * template-parts/home/section-usp.php.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param WP_Customize_Manager $wp_customize Customizer manager instance.
-	 * @return void
-	 */
-	function lgl_customize_register_homepage_usp( $wp_customize ) {
-		$wp_customize->add_section(
-			'lgl_home_usp',
-			array(
-				'title' => esc_html__( 'Trust strip', 'logelite' ),
-				'panel' => 'lgl_homepage',
-			)
-		);
-
-		$lgl_fields = array();
-
-		for ( $lgl_i = 1; $lgl_i <= 3; $lgl_i++ ) {
-			$lgl_fields[ "lgl_usp_{$lgl_i}_label" ] = array(
-				sprintf(
-					/* translators: %d: item number. */
-					esc_html__( 'Item %d label', 'logelite' ),
-					$lgl_i
-				),
-				'sanitize_text_field',
-			);
-		}
-
-		lgl_customize_add_text_fields( $wp_customize, 'lgl_home_usp', $lgl_fields );
 	}
 }
 
@@ -574,100 +549,13 @@ if ( ! function_exists( 'lgl_customize_register_homepage_cta' ) ) {
 			)
 		);
 
-		lgl_customize_add_image_field( $wp_customize, 'lgl_home_cta_image', 'lgl_home_cta', esc_html__( 'Image', 'logelite' ) );
-	}
-}
-
-if ( ! function_exists( 'lgl_customize_register_testimonial_fields' ) ) {
-	/**
-	 * Register one numbered testimonial's settings+controls.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param WP_Customize_Manager $wp_customize Customizer manager instance.
-	 * @param int                  $index        Testimonial number (1-based).
-	 * @return void
-	 */
-	function lgl_customize_register_testimonial_fields( $wp_customize, $index ) {
-		lgl_customize_add_text_fields(
-			$wp_customize,
-			'lgl_home_testimonials',
-			array(
-				"lgl_testimonial_{$index}_quote"  => array(
-					/* translators: %d: testimonial number. */
-					sprintf( esc_html__( 'Testimonial %d quote', 'logelite' ), $index ),
-					'wp_kses_post',
-				),
-				"lgl_testimonial_{$index}_author" => array(
-					/* translators: %d: testimonial number. */
-					sprintf( esc_html__( 'Testimonial %d author', 'logelite' ), $index ),
-					'sanitize_text_field',
-				),
-				"lgl_testimonial_{$index}_role"   => array(
-					/* translators: %d: testimonial number. */
-					sprintf( esc_html__( 'Testimonial %d role', 'logelite' ), $index ),
-					'sanitize_text_field',
-				),
-			)
-		);
-
 		lgl_customize_add_image_field(
 			$wp_customize,
-			"lgl_testimonial_{$index}_avatar",
-			'lgl_home_testimonials',
-			/* translators: %d: testimonial number. */
-			sprintf( esc_html__( 'Testimonial %d avatar', 'logelite' ), $index )
+			'lgl_home_cta_image',
+			'lgl_home_cta',
+			esc_html__( 'Image', 'logelite' ),
+			get_theme_file_uri( 'assets/img/placeholders/hero-dark.png' )
 		);
-
-		$lgl_rating_id = "lgl_testimonial_{$index}_rating";
-
-		$wp_customize->add_setting(
-			$lgl_rating_id,
-			array(
-				'default'           => 5,
-				'sanitize_callback' => 'absint',
-				'transport'         => 'refresh',
-			)
-		);
-
-		$wp_customize->add_control(
-			$lgl_rating_id,
-			array(
-				'type'        => 'number',
-				'section'     => 'lgl_home_testimonials',
-				/* translators: %d: testimonial number. */
-				'label'       => sprintf( esc_html__( 'Testimonial %d rating (1-5)', 'logelite' ), $index ),
-				'input_attrs' => array(
-					'min' => 1,
-					'max' => 5,
-				),
-			)
-		);
-	}
-}
-
-if ( ! function_exists( 'lgl_customize_register_homepage_testimonials' ) ) {
-	/**
-	 * Register the "Testimonials" homepage section: 3 fixed repeating
-	 * groups, used by template-parts/home/section-testimonials.php.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param WP_Customize_Manager $wp_customize Customizer manager instance.
-	 * @return void
-	 */
-	function lgl_customize_register_homepage_testimonials( $wp_customize ) {
-		$wp_customize->add_section(
-			'lgl_home_testimonials',
-			array(
-				'title' => esc_html__( 'Testimonials', 'logelite' ),
-				'panel' => 'lgl_homepage',
-			)
-		);
-
-		for ( $lgl_i = 1; $lgl_i <= 3; $lgl_i++ ) {
-			lgl_customize_register_testimonial_fields( $wp_customize, $lgl_i );
-		}
 	}
 }
 
@@ -691,9 +579,7 @@ if ( ! function_exists( 'lgl_customize_register_homepage' ) ) {
 
 		lgl_customize_register_homepage_hero( $wp_customize );
 		lgl_customize_register_homepage_categories( $wp_customize );
-		lgl_customize_register_homepage_usp( $wp_customize );
 		lgl_customize_register_homepage_cta( $wp_customize );
-		lgl_customize_register_homepage_testimonials( $wp_customize );
 	}
 }
 

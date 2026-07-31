@@ -17,14 +17,16 @@
  * @var WC_Order $order
  */
 
-// Overridden by logelite — reason: adds lgl-* classes to the existing
-// order overview, a custom lgl_thankyou_delivery_details hook (now wired
-// to lgl_render_thankyou_checkout_meta(), inc/checkout-fields.php, for the
-// T4.1 gift message / delivery date / delivery slot fields), and a "next
-// steps" card (track order / continue shopping via lgl_button()). Every
-// action (including the woocommerce_thankyou_{payment_method} and
-// woocommerce_thankyou hooks plugins rely on for e.g. analytics/tracking
-// pixels) fires exactly as upstream.
+// Overridden by logelite — reason: full rebuild to match the design
+// reference — a teal success banner (now checkout/order-received.php,
+// also overridden), a 4-column bordered order-info grid (adds "Arrives
+// By", see lgl_get_estimated_delivery_range(), inc/helpers.php), a
+// two-column body (order details + line-item thumbnails / shipping +
+// payment recap boxes), and a "You might also like" product row. Every
+// action WooCommerce/plugins rely on (woocommerce_before_thankyou,
+// woocommerce_thankyou_{payment_method}, woocommerce_thankyou, and the
+// T4.1 lgl_thankyou_delivery_details hook — see inc/checkout-fields.php)
+// still fires exactly as before, just relocated within the new layout.
 
 defined( 'ABSPATH' ) || exit;
 ?>
@@ -52,80 +54,206 @@ defined( 'ABSPATH' ) || exit;
 
 			<?php wc_get_template( 'checkout/order-received.php', array( 'order' => $order ) ); ?>
 
-			<ul class="woocommerce-order-overview woocommerce-thankyou-order-details order_details lgl-order-overview">
-
-				<li class="woocommerce-order-overview__order order">
-					<?php esc_html_e( 'Order number:', 'woocommerce' ); ?>
-					<strong><?php echo $order->get_order_number(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong>
-				</li>
-
-				<li class="woocommerce-order-overview__date date">
-					<?php esc_html_e( 'Date:', 'woocommerce' ); ?>
-					<strong><?php echo wc_format_datetime( $order->get_date_created() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong>
-				</li>
-
-				<?php if ( is_user_logged_in() && $order->get_user_id() === get_current_user_id() && $order->get_billing_email() ) : ?>
-					<li class="woocommerce-order-overview__email email">
-						<?php esc_html_e( 'Email:', 'woocommerce' ); ?>
-						<strong><?php echo $order->get_billing_email(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong>
-					</li>
-				<?php endif; ?>
-
-				<li class="woocommerce-order-overview__total total">
-					<?php esc_html_e( 'Total:', 'woocommerce' ); ?>
-					<strong><?php echo $order->get_formatted_order_total(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong>
-				</li>
-
-				<?php if ( $order->get_payment_method_title() ) : ?>
-					<li class="woocommerce-order-overview__payment-method method">
-						<?php esc_html_e( 'Payment method:', 'woocommerce' ); ?>
-						<strong><?php echo wp_kses_post( $order->get_payment_method_title() ); ?></strong>
-					</li>
-				<?php endif; ?>
-
-			</ul>
-
-			<?php
-			/**
-			 * Hook: lgl_thankyou_delivery_details.
-			 *
-			 * @hooked lgl_render_thankyou_checkout_meta - 10 (inc/checkout-fields.php;
-			 *         renders the gift message / delivery date / delivery
-			 *         slot fields via template-parts/checkout/order-custom-fields.php,
-			 *         reading from the order meta T4.1's checkout fields save)
-			 */
-			do_action( 'lgl_thankyou_delivery_details', $order );
-
-			/**
-			 * Next steps card — not part of WooCommerce's default template.
-			 */
-			?>
-			<div class="lgl-next-steps">
-				<h2 class="lgl-next-steps__title"><?php esc_html_e( 'What happens next?', 'logelite' ); ?></h2>
-				<p class="lgl-next-steps__text">
-					<?php esc_html_e( "We're preparing your order and will email you as soon as it ships.", 'logelite' ); ?>
-				</p>
-				<div class="lgl-next-steps__actions">
-					<?php
-					if ( is_user_logged_in() ) {
-						lgl_button(
-							array(
-								'label' => esc_html__( 'Track my order', 'logelite' ),
-								'url'   => wc_get_page_permalink( 'myaccount' ),
-							)
-						);
-					}
-
-					lgl_button(
-						array(
-							'label'   => esc_html__( 'Continue shopping', 'logelite' ),
-							'url'     => lgl_wc_active() ? wc_get_page_permalink( 'shop' ) : home_url( '/' ),
-							'variant' => 'secondary',
-						)
-					);
-					?>
+			<div class="lgl-order-info-grid">
+				<div class="lgl-order-info-grid__cell">
+					<div class="lgl-order-info-grid__label"><?php esc_html_e( 'Order Number', 'logelite' ); ?></div>
+					<div class="lgl-order-info-grid__value">
+						#<?php echo $order->get_order_number(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+				</div>
+				<div class="lgl-order-info-grid__cell">
+					<div class="lgl-order-info-grid__label"><?php esc_html_e( 'Date', 'logelite' ); ?></div>
+					<div class="lgl-order-info-grid__value">
+						<?php echo wc_format_datetime( $order->get_date_created() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+				</div>
+				<div class="lgl-order-info-grid__cell">
+					<div class="lgl-order-info-grid__label"><?php esc_html_e( 'Total', 'logelite' ); ?></div>
+					<div class="lgl-order-info-grid__value lgl-order-info-grid__value--brand">
+						<?php echo $order->get_formatted_order_total(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+				</div>
+				<div class="lgl-order-info-grid__cell">
+					<div class="lgl-order-info-grid__label"><?php esc_html_e( 'Arrives By', 'logelite' ); ?></div>
+					<div class="lgl-order-info-grid__value">
+						<?php echo esc_html( lgl_get_estimated_delivery_range( $order ) ); ?>
+					</div>
 				</div>
 			</div>
+
+			<div class="lgl-order-body">
+				<div class="lgl-order-body__details">
+					<h2 class="lgl-order-body__heading"><?php esc_html_e( 'Order details', 'logelite' ); ?></h2>
+
+					<div class="lgl-order-line-items">
+						<?php foreach ( $order->get_items() as $lgl_item ) : ?>
+							<?php
+							if ( ! $lgl_item instanceof WC_Order_Item_Product ) {
+								continue;
+							}
+
+							$lgl_product = $lgl_item->get_product();
+							?>
+							<div class="lgl-order-line-item">
+								<span class="lgl-order-line-item__thumb">
+									<?php
+									if ( $lgl_product instanceof WC_Product ) {
+										echo wp_kses_post( $lgl_product->get_image( 'lgl-card' ) );
+									}
+									?>
+								</span>
+								<div class="lgl-order-line-item__body">
+									<div class="lgl-order-line-item__name"><?php echo esc_html( $lgl_item->get_name() ); ?></div>
+									<div class="lgl-order-line-item__meta">
+										<?php if ( $lgl_product instanceof WC_Product && $lgl_product->get_sku() ) : ?>
+											<?php
+											printf(
+												/* translators: 1: product SKU, 2: quantity ordered. */
+												esc_html__( 'SKU %1$s · Qty %2$s', 'logelite' ),
+												esc_html( $lgl_product->get_sku() ),
+												esc_html( $lgl_item->get_quantity() )
+											);
+											?>
+										<?php else : ?>
+											<?php
+											printf(
+												/* translators: %s: quantity ordered. */
+												esc_html__( 'Qty %s', 'logelite' ),
+												esc_html( $lgl_item->get_quantity() )
+											);
+											?>
+										<?php endif; ?>
+									</div>
+								</div>
+								<strong class="lgl-order-line-item__total">
+									<?php echo wp_kses_post( $order->get_formatted_line_subtotal( $lgl_item ) ); ?>
+								</strong>
+							</div>
+						<?php endforeach; ?>
+					</div>
+
+					<div class="lgl-order-body__actions">
+						<?php if ( is_user_logged_in() ) : ?>
+							<?php
+							lgl_button(
+								array(
+									'label' => esc_html__( 'Track my order', 'logelite' ),
+									'url'   => wc_get_page_permalink( 'myaccount' ),
+								)
+							);
+							?>
+						<?php endif; ?>
+						<?php
+						lgl_button(
+							array(
+								'label'   => esc_html__( 'Continue shopping', 'logelite' ),
+								'url'     => lgl_wc_active() ? wc_get_page_permalink( 'shop' ) : home_url( '/' ),
+								'variant' => 'secondary',
+							)
+						);
+						?>
+					</div>
+				</div>
+
+				<div class="lgl-order-body__aside">
+					<div class="lgl-order-recap-box">
+						<div class="lgl-order-recap-box__title"><?php esc_html_e( 'Shipping address', 'logelite' ); ?></div>
+						<?php
+						$lgl_address = $order->has_shipping_address() ? $order->get_formatted_shipping_address() : $order->get_formatted_billing_address();
+
+						if ( $lgl_address ) {
+							echo wp_kses_post( $lgl_address );
+						}
+						?>
+					</div>
+
+					<?php
+					/**
+					 * Hook: lgl_thankyou_delivery_details.
+					 *
+					 * @hooked lgl_render_thankyou_checkout_meta - 10 (inc/checkout-fields.php;
+					 *         renders the gift message / delivery date / delivery
+					 *         slot fields via template-parts/checkout/order-custom-fields.php,
+					 *         reading from the order meta T4.1's checkout fields save)
+					 */
+					do_action( 'lgl_thankyou_delivery_details', $order );
+					?>
+
+					<div class="lgl-order-recap-box">
+						<div class="lgl-order-recap-box__title"><?php esc_html_e( 'Payment', 'logelite' ); ?></div>
+						<?php if ( $order->get_payment_method_title() ) : ?>
+							<p><?php echo wp_kses_post( $order->get_payment_method_title() ); ?></p>
+						<?php endif; ?>
+						<p>
+							<?php
+							printf(
+								/* translators: %s: order total, formatted. */
+								esc_html__( 'Billed %s', 'logelite' ),
+								wp_kses_post( $order->get_formatted_order_total() )
+							);
+							?>
+						</p>
+						<?php if ( $order->is_paid() ) : ?>
+							<p class="lgl-order-recap-box__confirmed"><?php esc_html_e( 'Payment confirmed', 'logelite' ); ?></p>
+						<?php endif; ?>
+					</div>
+				</div>
+			</div>
+
+			<?php
+			$lgl_upsell_ids = array();
+
+			foreach ( $order->get_items() as $lgl_item ) {
+				if ( $lgl_item instanceof WC_Order_Item_Product ) {
+					$lgl_upsell_ids[] = $lgl_item->get_product_id();
+				}
+			}
+
+			$lgl_upsell_products = wc_get_products(
+				array(
+					'status'     => 'publish',
+					'visibility' => 'catalog',
+					'limit'      => 5,
+					'orderby'    => 'popularity',
+					'order'      => 'DESC',
+					'exclude'    => $lgl_upsell_ids,
+				)
+			);
+
+			if ( ! empty( $lgl_upsell_products ) ) :
+				?>
+				<div class="lgl-section__header">
+					<h2 class="lgl-section__heading"><?php esc_html_e( 'You might also like', 'logelite' ); ?></h2>
+				</div>
+				<div class="lgl-product-grid">
+					<?php
+					global $product;
+					$lgl_original_product = $product;
+
+					foreach ( $lgl_upsell_products as $lgl_loop_product ) {
+						if ( ! $lgl_loop_product instanceof WC_Product ) {
+							continue;
+						}
+
+						$lgl_post_object = get_post( $lgl_loop_product->get_id() );
+
+						if ( ! $lgl_post_object instanceof WP_Post ) {
+							continue;
+						}
+
+						setup_postdata( $lgl_post_object );
+						wc_setup_product_data( $lgl_post_object );
+
+						lgl_product_card( array( 'product' => $lgl_loop_product ) );
+					}
+
+					$product = $lgl_original_product;
+					wp_reset_postdata();
+					?>
+				</div>
+				<?php
+			endif;
+			?>
 
 		<?php endif; ?>
 

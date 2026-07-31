@@ -1,7 +1,7 @@
 /**
- * Shared accessibility helpers. Currently: a focus trap used by both
- * assets/js/nav-mobile.js and assets/js/search-overlay.js, so the
- * Tab/Shift+Tab cycling logic exists in exactly one place. No jQuery.
+ * Shared accessibility helpers. Currently: a focus trap used by
+ * assets/js/nav-mobile.js and the shop filter drawer (assets/js/shop.js),
+ * so the Tab/Shift+Tab cycling logic exists in exactly one place. No jQuery.
  */
 window.LGLA11y = window.LGLA11y || {};
 

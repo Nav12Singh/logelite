@@ -126,11 +126,7 @@
 	color: var(--lgl-text-inverse);
 	font-size: var(--lgl-text-xs);
 	font-weight: var(--lgl-weight-bold);
-}
-
-.lgl-card__category {
-	color: var(--lgl-text-faint);
-	font-size: var(--lgl-text-xs);
+	text-transform: uppercase;
 }
 
 .lgl-card__title {
@@ -144,7 +140,18 @@
 	font-size: var(--lgl-text-xs);
 }
 
+/*
+ * display: flex + row-reverse: WC_Product::get_price_html() always
+ * outputs <del>(regular)</del> <ins>(active)</ins> in that DOM order, but
+ * the reference reads active-price-first, struck-through-price-second on
+ * every card variant (shop, deals, best sellers) — row-reverse flips the
+ * visual order without touching WooCommerce's own markup/DOM order.
+ */
 .lgl-card__price {
+	display: flex;
+	align-items: baseline;
+	flex-direction: row-reverse;
+	gap: var(--lgl-space-2);
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-lg);
@@ -152,17 +159,34 @@
 }
 
 /* WC_Product::get_price_html() wraps the struck-through price in <del>
- * and the active price in <ins> when a product is on sale. */
+ * and the active price in <ins> when a product is on sale.
+ *
+ * No color override on <ins> here — the reference's shop/best-sellers
+ * cards show the active price in plain text, same color as everything
+ * else; only the Deals of the Day card reddens it (see
+ * .lgl-deals__item .lgl-card__price ins in pages/home.css). */
 .lgl-card__price del {
-	margin-inline-end: var(--lgl-space-2);
 	color: var(--lgl-text-faint);
 	font-weight: var(--lgl-weight-regular);
+	font-size: var(--lgl-text-sm);
 	text-decoration: line-through;
 }
 
 .lgl-card__price ins {
-	color: var(--lgl-color-error);
 	text-decoration: none;
+}
+
+.lgl-card__tag {
+	display: inline-block;
+	align-self: flex-start;
+	padding: var(--lgl-space-1) var(--lgl-space-2);
+	border-radius: var(--lgl-radius-sm);
+	background: var(--lgl-color-success-bg);
+	color: var(--lgl-color-success);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
 }
 
 .lgl-card__excerpt {
@@ -172,4 +196,40 @@
 
 .lgl-card__actions {
 	padding: 0 var(--lgl-space-4) var(--lgl-space-4);
+}
+
+/*
+ * WooCommerce's own core CSS styles a.button/button.button with a filled
+ * lavender-gray background (background-color:#e9e6ed) by default — this
+ * theme never overrode it for the card's add-to-cart button specifically,
+ * so it was rendering with that default look instead of the reference's
+ * plain white/bordered button that only fills brand-teal on hover.
+ * `.lgl-card .lgl-card__actions .button` (3 classes) is deliberately not
+ * using `:where()` so it outweighs WooCommerce's own selector.
+ */
+.lgl-card .lgl-card__actions .button {
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: var(--lgl-space-3) 0;
+	border: 1.5px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-surface-default);
+	color: var(--lgl-text-primary);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-align: center;
+	text-transform: uppercase;
+	transition: background var(--lgl-dur-fast) var(--lgl-ease-standard),
+		border-color var(--lgl-dur-fast) var(--lgl-ease-standard),
+		color var(--lgl-dur-fast) var(--lgl-ease-standard);
+}
+
+.lgl-card .lgl-card__actions .button:hover,
+.lgl-card .lgl-card__actions .button:focus-visible {
+	background: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
 }

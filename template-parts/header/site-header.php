@@ -16,6 +16,20 @@ if ( lgl_wc_active() ) {
 }
 
 $lgl_cart_url = lgl_wc_active() ? wc_get_cart_url() : home_url( '/' );
+
+/*
+ * "WELCOME / LOG IN or REGISTER" two-line block from the design reference.
+ * When a customer is already logged in, the second line becomes their
+ * display name (a real, conventional swap — the reference mockup has no
+ * logged-in state to reproduce literally, so this follows the standard
+ * e-commerce pattern rather than always showing "log in" to a signed-in
+ * shopper). See ASSUMPTIONS.md.
+ */
+$lgl_welcome_action = esc_html__( 'Log in / Register', 'logelite' );
+
+if ( is_user_logged_in() ) {
+	$lgl_welcome_action = wp_get_current_user()->display_name;
+}
 ?>
 <header id="lgl-header" class="lgl-header" data-sticky>
 
@@ -60,37 +74,49 @@ $lgl_cart_url = lgl_wc_active() ? wc_get_cart_url() : home_url( '/' );
 			<?php get_template_part( 'template-parts/header/nav-primary' ); ?>
 
 			<div class="lgl-header__actions">
-				<button
-					type="button"
-					class="lgl-header__search-toggle"
-					data-search-toggle
-					aria-expanded="false"
-					aria-controls="lgl-search-overlay"
-					aria-label="<?php esc_attr_e( 'Toggle search', 'logelite' ); ?>"
-				>
-					<svg class="lgl-header__search-icon" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
-						<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
-						<line x1="12.5" y1="12.5" x2="17" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+				<a class="lgl-header__wishlist" href="<?php echo esc_url( $lgl_account_url ); ?>" aria-label="<?php esc_attr_e( 'Wishlist', 'logelite' ); ?>">
+					<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+						<path d="M12 20.5s-7.5-4.6-10-9.3C.5 8 1.8 4.7 4.9 3.8c2-.6 4 .2 5.1 2 .3.5.6 1 .8 1.5.2.2.4.4.6-.4.5-.9 1.1-1.4 3.1-2 3.1-.9 4.4 2.4 3.9 5.4-1 4.7-8.5 9.3-8.5 9.3z" fill="none" stroke="currentColor" stroke-width="1.5"></path>
 					</svg>
-				</button>
+				</a>
+
+				<?php
+				/*
+				 * Second decorative header icon from the design reference — a
+				 * plain sun/radial glyph with no onClick in the mockup's own
+				 * script either, same as the wishlist icon beside it. No clear
+				 * semantic (not paired with any labeled feature elsewhere in
+				 * the reference), so left purely visual rather than invented.
+				 * See ASSUMPTIONS.md.
+				 */
+				?>
+				<span class="lgl-header__icon-secondary" aria-hidden="true">
+					<svg width="16" height="16" viewBox="0 0 24 24" focusable="false">
+						<circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+						<g stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+							<line x1="12" y1="2" x2="12" y2="4.5"></line>
+							<line x1="12" y1="19.5" x2="12" y2="22"></line>
+							<line x1="2" y1="12" x2="4.5" y2="12"></line>
+							<line x1="19.5" y1="12" x2="22" y2="12"></line>
+							<line x1="4.9" y1="4.9" x2="6.6" y2="6.6"></line>
+							<line x1="17.4" y1="17.4" x2="19.1" y2="19.1"></line>
+							<line x1="4.9" y1="19.1" x2="6.6" y2="17.4"></line>
+							<line x1="17.4" y1="6.6" x2="19.1" y2="4.9"></line>
+						</g>
+					</svg>
+				</span>
 
 				<a class="lgl-header__account" href="<?php echo esc_url( $lgl_account_url ); ?>">
-					<?php esc_html_e( 'Account', 'logelite' ); ?>
+					<span class="lgl-header__account-label"><?php esc_html_e( 'Welcome', 'logelite' ); ?></span>
+					<span class="lgl-header__account-action"><?php echo esc_html( $lgl_welcome_action ); ?></span>
 				</a>
 
 				<a class="lgl-header__cart" href="<?php echo esc_url( $lgl_cart_url ); ?>">
-					<svg class="lgl-header__cart-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-						<path d="M6 6h15l-1.5 9h-12z" fill="none" stroke="currentColor" stroke-width="1.5"></path>
-						<circle cx="9" cy="20" r="1.5" fill="currentColor"></circle>
-						<circle cx="18" cy="20" r="1.5" fill="currentColor"></circle>
-					</svg>
 					<?php get_template_part( 'template-parts/header/cart-link' ); ?>
 				</a>
 			</div>
 		</div>
 	</div>
-
-	<?php get_template_part( 'template-parts/header/search-overlay' ); ?>
 
 	<?php get_template_part( 'template-parts/header/nav-mobile' ); ?>
 </header>
