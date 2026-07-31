@@ -18,9 +18,15 @@
 .lgl-hero__inner {
 	display: grid;
 	grid-template-columns: 1.1fr 0.9fr;
-	align-items: center;
+	/* align-items intentionally left at grid's default `stretch` (not
+	   `center`) — the design reference's own hero row has no align-items
+	   override either, so both columns share the row's full height (set via
+	   min-height below) rather than each sizing to its own content. This is
+	   what makes the right-hand media/placeholder panel read as one solid
+	   block spanning the hero's full height instead of a shorter box
+	   floating in the middle of it. */
 	gap: var(--lgl-space-8);
-	padding-block: var(--lgl-space-12);
+	min-height: 21.25rem; /* 340px in the reference. */
 }
 
 .lgl-hero--align-center .lgl-hero__inner {
@@ -30,9 +36,20 @@
 }
 
 .lgl-hero__content {
+	/*
+	 * Padding intentionally lives here, on the text column alone, NOT on
+	 * `.lgl-hero__inner` — the reference gives its left ("text") column its
+	 * own `padding:52px 44px` and its right ("media") column none at all, so
+	 * the stripe/placeholder panel sits flush against the card's top/right/
+	 * bottom edges. Padding on the shared grid container would inset BOTH
+	 * columns equally, leaving a visible band of bare background around the
+	 * media panel that the reference doesn't have.
+	 */
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	gap: var(--lgl-space-4);
+	padding: var(--lgl-space-12) var(--lgl-space-10);
 }
 
 .lgl-hero__eyebrow {
@@ -78,7 +95,69 @@
 .lgl-hero__image {
 	display: block;
 	width: 100%;
-	height: auto;
+	height: 100%;
+	object-fit: cover;
+}
+
+/*
+ * Placeholder panel shown in place of `.lgl-hero__media`'s <img> when no
+ * real marketing image has been set yet (see section-hero.php's
+ * `media_placeholder_label` arg) — a diagonal two-tone stripe with a
+ * centered monospace label, reproducing design-reference's own literal
+ * placeholder technique (a CSS pattern + real text node, not a raster
+ * stand-in) rather than a baked-in placeholder image.
+ */
+.lgl-hero__media--placeholder {
+	display: grid;
+	place-items: center;
+	background: repeating-linear-gradient(
+		45deg,
+		#0b8b7d,
+		#0b8b7d 10px,
+		#0d9587 10px,
+		#0d9587 20px
+	);
+}
+
+.lgl-hero--dark .lgl-hero__media--placeholder {
+	background: repeating-linear-gradient(
+		45deg,
+		#1c2126,
+		#1c2126 10px,
+		#232a2f 10px,
+		#232a2f 20px
+	);
+}
+
+.lgl-hero__media-placeholder-label {
+	font: 11px ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+	letter-spacing: var(--lgl-tracking-wide);
+	color: #cbece7;
+}
+
+.lgl-hero--dark .lgl-hero__media-placeholder-label {
+	color: var(--lgl-text-subtle);
+}
+
+/*
+ * design-reference is a fixed-width desktop mockup with no narrower layout
+ * to derive from — this stack is this theme's own responsive extrapolation
+ * (CLAUDE.md's 375/768/1024/1440 requirement), not a literal reference
+ * value. Below this width the 1.1fr/0.9fr split has too little room for
+ * both the text column and a full-height media panel, so the row's
+ * `min-height` (sized for the two-column desktop layout) is dropped in
+ * favor of a smaller fixed height on the media panel alone.
+ */
+@media (max-width: 767px) {
+	.lgl-hero__inner {
+		grid-template-columns: 1fr;
+		min-height: 0;
+	}
+
+	.lgl-hero__media,
+	.lgl-hero__media--placeholder {
+		min-height: 220px;
+	}
 }
 
 /*

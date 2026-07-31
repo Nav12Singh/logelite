@@ -78,6 +78,18 @@
 	background: var(--lgl-color-brand-subtle);
 }
 
+/*
+ * Sub-category rows (section-shop-by-category.php): no swatch of their own
+ * — indented instead, so the name lines up where a parent row's name
+ * starts (after the swatch + its gap), making the parent/child hierarchy
+ * readable at a glance rather than one flat list.
+ */
+.lgl-category-sidebar__link--child {
+	padding-inline-start: calc(26px + var(--lgl-space-3) + var(--lgl-space-2));
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-xs);
+}
+
 .lgl-category-sidebar__name {
 	flex: 1;
 	min-width: 0;
@@ -274,8 +286,15 @@
 
 .lgl-home-banners__cta .lgl-hero__inner {
 	grid-template-columns: 1fr 1fr;
-	padding-block: var(--lgl-space-8);
 	min-height: 220px;
+}
+
+/* Same reason as the home hero's own `.lgl-hero__content` rule
+   (components/hero.css): padding belongs on the text column alone, so the
+   "watch lifestyle shot" placeholder sits flush against the banner's edges
+   instead of leaving a bare-background band around it. */
+.lgl-home-banners__cta .lgl-hero__content {
+	padding: var(--lgl-space-8);
 }
 
 .lgl-home-banners__cta .lgl-hero__title {

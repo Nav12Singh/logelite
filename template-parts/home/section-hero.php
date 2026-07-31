@@ -68,20 +68,21 @@ if ( '' === $lgl_cta2_url ) {
 
 lgl_hero(
 	array(
-		'eyebrow'       => $lgl_eyebrow,
-		'title'         => $lgl_title,
-		'text'          => $lgl_text,
-		'image'         => get_theme_mod( 'lgl_home_hero_image', '' ),
-		'image_alt'     => wp_strip_all_tags( $lgl_title ),
-		'primary_cta'   => array(
+		'eyebrow'                 => $lgl_eyebrow,
+		'title'                   => $lgl_title,
+		'text'                    => $lgl_text,
+		'image'                   => get_theme_mod( 'lgl_home_hero_image', '' ),
+		'image_alt'               => wp_strip_all_tags( $lgl_title ),
+		'media_placeholder_label' => esc_html__( 'hero product shot', 'logelite' ),
+		'primary_cta'             => array(
 			'label' => $lgl_cta_label,
 			'url'   => $lgl_cta_url,
 		),
-		'secondary_cta' => array(
+		'secondary_cta'           => array(
 			'label' => $lgl_cta2_label,
 			'url'   => $lgl_cta2_url,
 		),
-		'heading_id'    => 'lgl-home-hero-heading',
-		'no_container'  => true,
+		'heading_id'              => 'lgl-home-hero-heading',
+		'no_container'            => true,
 	)
 );

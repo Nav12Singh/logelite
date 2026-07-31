@@ -37,41 +37,6 @@ if ( ! function_exists( 'lgl_declare_wc_template_support' ) ) {
 }
 add_action( 'after_setup_theme', 'lgl_declare_wc_template_support', 20 );
 
-if ( ! function_exists( 'lgl_dedupe_shop_loop_item_hooks' ) ) {
-	/**
-	 * Remove the default WooCommerce callbacks that would otherwise fire a
-	 * second time alongside lgl_product_card()'s own markup.
-	 *
-	 * woocommerce/content-product.php still fires
-	 * woocommerce_before_shop_loop_item and woocommerce_after_shop_loop_item_title
-	 * (kept for third-party plugin compatibility — see that file's own
-	 * override-reason comment) but never removed WooCommerce's own default
-	 * callbacks on those exact hooks, which is a real bug, not a hygiene
-	 * nitpick:
-	 * - woocommerce_template_loop_product_link_open (on the "before" hook)
-	 *   opens a second, un-closed `<a>` — its paired _link_close callback
-	 *   lives on woocommerce_after_shop_loop_item, which this theme's
-	 *   content-product.php never fires, so that anchor is never closed at
-	 *   all, an invalid-HTML nested-anchor situation around every card.
-	 * - woocommerce_template_loop_price / _rating (on the "after title"
-	 *   hook, which IS fired) render a second, unstyled price/rating right
-	 *   after lgl_product_card()'s own already-rendered price/rating.
-	 *
-	 * This runs everywhere content-product.php is used (shop loop, related
-	 * products, upsells) since it's one shared template.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function lgl_dedupe_shop_loop_item_hooks() {
-		remove_action( 'woocommerce_before_shop_loop_item', 'woocommerce_template_loop_product_link_open', 10 );
-		remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10 );
-		remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_rating', 5 );
-	}
-}
-add_action( 'init', 'lgl_dedupe_shop_loop_item_hooks' );
-
 if ( ! function_exists( 'lgl_wc_wrapper_start' ) ) {
 	/**
 	 * Open the <main> wrapper around WooCommerce shop/product templates.
@@ -197,25 +162,6 @@ if ( ! function_exists( 'lgl_breadcrumb_defaults' ) ) {
 }
 add_filter( 'woocommerce_breadcrumb_defaults', 'lgl_breadcrumb_defaults' );
 
-if ( ! function_exists( 'lgl_placeholder_img_src' ) ) {
-	/**
-	 * Replace WooCommerce's default gray placeholder icon with an on-brand
-	 * one — a diagonal two-tone stripe reproducing the design reference's
-	 * own "product shot" placeholder pattern (a real generated image file,
-	 * not a CSS trick, since wc_placeholder_img_src() is used in contexts
-	 * that need an actual <img src>, e.g. cart/order emails).
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $src Default placeholder image URL.
-	 * @return string
-	 */
-	function lgl_placeholder_img_src( $src ) {
-		return get_theme_file_uri( 'assets/img/placeholders/product.png' );
-	}
-}
-add_filter( 'woocommerce_placeholder_img_src', 'lgl_placeholder_img_src' );
-
 if ( ! function_exists( 'lgl_reorder_single_product_summary' ) ) {
 	/**
 	 * Re-declare the woocommerce_single_product_summary hook stack, WITHOUT
@@ -316,88 +262,6 @@ if ( ! function_exists( 'lgl_buy_now_redirect' ) ) {
 	}
 }
 add_filter( 'woocommerce_add_to_cart_redirect', 'lgl_buy_now_redirect' );
-
-if ( ! function_exists( 'lgl_render_sticky_cart' ) ) {
-	/**
-	 * Render template-parts/product/sticky-cart.php.
-	 *
-	 * Hooked on woocommerce_after_single_product (fires once, at the very
-	 * end of the product template) rather than anywhere inside
-	 * content-single-product.php's layout grid — the bar is
-	 * `position: fixed`, so its position in the DOM doesn't affect where it
-	 * appears on screen, and rendering it last keeps it out of the way of
-	 * the real add-to-cart <form> (see the template's own docblock for why
-	 * that separation matters).
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function lgl_render_sticky_cart() {
-		get_template_part( 'template-parts/product/sticky-cart' );
-	}
-}
-add_action( 'woocommerce_after_single_product', 'lgl_render_sticky_cart' );
-
-if ( ! function_exists( 'lgl_add_faq_product_tab' ) ) {
-	/**
-	 * Add a "FAQ" tab to the single product tabs, via WooCommerce's own
-	 * woocommerce_product_tabs filter (tabs.php's callback-per-tab
-	 * mechanism is untouched — see that file's own override-reason
-	 * comment). Only added when the current product has at least one FAQ
-	 * configured (lgl_get_product_faqs(), inc/meta-boxes.php's "Product
-	 * FAQs" meta box) — most products won't have any, and an always-present
-	 * empty tab would be worse than no tab at all.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $tabs Existing tabs.
-	 * @return array
-	 */
-	function lgl_add_faq_product_tab( $tabs ) {
-		global $product;
-
-		if ( ! $product instanceof WC_Product || ! lgl_get_product_faqs( $product->get_id() ) ) {
-			return $tabs;
-		}
-
-		$tabs['lgl_faq'] = array(
-			'title'    => esc_html__( 'FAQ', 'logelite' ),
-			'priority' => 30,
-			'callback' => 'lgl_render_faq_product_tab',
-		);
-
-		return $tabs;
-	}
-}
-add_filter( 'woocommerce_product_tabs', 'lgl_add_faq_product_tab' );
-
-if ( ! function_exists( 'lgl_render_faq_product_tab' ) ) {
-	/**
-	 * Render the FAQ tab's panel content: one <details>/<summary> per
-	 * question, per CLAUDE.md's accordion accessibility rule (native
-	 * disclosure semantics, no custom ARIA state to maintain by hand).
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	function lgl_render_faq_product_tab() {
-		global $product;
-		?>
-		<ul class="lgl-product-faq">
-			<?php foreach ( lgl_get_product_faqs( $product->get_id() ) as $lgl_faq ) : ?>
-				<li class="lgl-product-faq__item">
-					<details class="lgl-product-faq__details">
-						<summary class="lgl-product-faq__question"><?php echo esc_html( $lgl_faq['question'] ); ?></summary>
-						<div class="lgl-product-faq__answer"><?php echo wp_kses_post( wpautop( $lgl_faq['answer'] ) ); ?></div>
-					</details>
-				</li>
-			<?php endforeach; ?>
-		</ul>
-		<?php
-	}
-}
 
 if ( ! function_exists( 'lgl_loop_columns' ) ) {
 	/**

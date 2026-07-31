@@ -3,22 +3,30 @@
  * Hero section component.
  *
  * Args:
- *   eyebrow        string  Small overline text above the title.
- *   title          string  Required. HTML allowed (wp_kses_post).
- *   text           string  Supporting copy. HTML allowed (wp_kses_post).
- *   image          string  Image URL.
- *   image_alt      string  Image alt text.
- *   primary_cta    array   [ 'label' => string, 'url' => string ].
- *   secondary_cta  array   [ 'label' => string, 'url' => string ].
- *   align          string  'left'|'center'. Default 'left'.
- *   variant        string  Free-form modifier, e.g. 'default'|'dark'.
- *   class          string  Extra class(es) on the section wrapper.
- *   heading_id     string  Optional id on the <h2>, e.g. so a caller's own
- *                          outer <section aria-labelledby="..."> can point at it.
- *   no_container   bool    Skip the inner .lgl-container wrapper — for
- *                          callers that already sit inside one (e.g. as a
- *                          column of a larger grid), so padding/max-width
- *                          isn't applied twice. Default false.
+ *   eyebrow                  string  Small overline text above the title.
+ *   title                    string  Required. HTML allowed (wp_kses_post).
+ *   text                     string  Supporting copy. HTML allowed (wp_kses_post).
+ *   image                    string  Image URL.
+ *   image_alt                string  Image alt text.
+ *   primary_cta              array   [ 'label' => string, 'url' => string ].
+ *   secondary_cta            array   [ 'label' => string, 'url' => string ].
+ *   media_placeholder_label  string  Text shown over a diagonal-stripe
+ *                            placeholder panel when `image` is empty —
+ *                            matches design-reference's own "hero product
+ *                            shot"/"watch lifestyle shot" mockup convention
+ *                            (a real text node over a CSS pattern, not a
+ *                            raster stand-in). Ignored once a real `image`
+ *                            is set.
+ *   align                    string  'left'|'center'. Default 'left'.
+ *   variant                  string  Free-form modifier, e.g. 'default'|'dark'.
+ *   class                    string  Extra class(es) on the section wrapper.
+ *   heading_id               string  Optional id on the <h2>, e.g. so a
+ *                            caller's own outer <section aria-labelledby="...">
+ *                            can point at it.
+ *   no_container             bool    Skip the inner .lgl-container wrapper —
+ *                            for callers that already sit inside one (e.g.
+ *                            as a column of a larger grid), so padding/max-
+ *                            width isn't applied twice. Default false.
  *
  * data-animate attributes are placeholders for a later animation pass
  * (T5) — no animation CSS/JS is wired up yet.
@@ -33,18 +41,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 $args = wp_parse_args(
 	$args,
 	array(
-		'eyebrow'       => '',
-		'title'         => '',
-		'text'          => '',
-		'image'         => '',
-		'image_alt'     => '',
-		'primary_cta'   => array(),
-		'secondary_cta' => array(),
-		'align'         => 'left',
-		'variant'       => 'default',
-		'class'         => '',
-		'heading_id'    => '',
-		'no_container'  => false,
+		'eyebrow'                 => '',
+		'title'                   => '',
+		'text'                    => '',
+		'image'                   => '',
+		'image_alt'               => '',
+		'primary_cta'             => array(),
+		'secondary_cta'           => array(),
+		'media_placeholder_label' => '',
+		'align'                   => 'left',
+		'variant'                 => 'default',
+		'class'                   => '',
+		'heading_id'              => '',
+		'no_container'            => false,
 	)
 );
 
@@ -115,6 +124,10 @@ $lgl_inner_class = $args['no_container'] ? 'lgl-hero__inner' : 'lgl-container lg
 					alt="<?php echo esc_attr( $args['image_alt'] ); ?>"
 					loading="lazy"
 				/>
+			</div>
+		<?php elseif ( '' !== $args['media_placeholder_label'] ) : ?>
+			<div class="lgl-hero__media lgl-hero__media--placeholder" data-animate="hero-media" aria-hidden="true">
+				<span class="lgl-hero__media-placeholder-label"><?php echo esc_html( $args['media_placeholder_label'] ); ?></span>
 			</div>
 		<?php endif; ?>
 	</div>

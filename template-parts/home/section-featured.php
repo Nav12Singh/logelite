@@ -1,6 +1,6 @@
 <?php
 /**
- * Homepage "Best Sellers" — a fixed 5-product row ordered by real sales
+ * Homepage "Best Sellers" — a fixed 10-product grid (2 rows of 5) ordered by real sales
  * volume (WooCommerce's own 'popularity' orderby, i.e. total_sales), not
  * the earlier "featured products topped up with popularity" query. The
  * "New In / Popular / Top Rated" row beside the heading is static label
@@ -20,7 +20,7 @@ if ( ! lgl_wc_active() ) {
 	return;
 }
 
-$lgl_limit = 5;
+$lgl_limit = 10;
 
 $lgl_products = wc_get_products(
 	array(

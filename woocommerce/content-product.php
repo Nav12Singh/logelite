@@ -47,13 +47,15 @@ if ( ! is_a( $product, WC_Product::class ) || ! $product->is_visible() ) {
 	 */
 	do_action( 'woocommerce_before_shop_loop_item' );
 
-	// show_tag: false — the design reference's shop/related grid card has no
-	// Free Shipping/Free Gift/In Stock pill slot at all (only the home
-	// page's Deals of the Day and Best Sellers card variants do).
+	// show_tag: true (component default) — the user asked for one
+	// consistent card design sitewide, tag pill included, superseding this
+	// theme's earlier reference-literal choice to omit it here (design
+	// reference's own shop/related grid card has no pill; see
+	// ASSUMPTIONS.md Phase 21 for that now-superseded reasoning, and Phase
+	// 32 for this change).
 	lgl_product_card(
 		array(
-			'product'  => $product,
-			'show_tag' => false,
+			'product' => $product,
 		)
 	);
 

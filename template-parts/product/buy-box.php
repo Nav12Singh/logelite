@@ -2,11 +2,14 @@
 /**
  * Single product "buy box": total price, stock/ships-from, quantity +
  * add-to-cart/buy-now (via the product type's own add-to-cart template —
- * for variable products that includes the color/memory swatches, see
- * woocommerce/single-product/add-to-cart/variable.php), a delivery/pincode
- * estimator, a feature-icons row (Free Shipping/Secure Checkout/Easy
- * Returns by default, admin-editable per product), wishlist/compare, a
- * payment-icon trust strip, and a separate "Quick order" phone box.
+ * for variable products, the real hidden variation <select> elements live
+ * there, woocommerce/single-product/add-to-cart/variable.php, but the
+ * visible color/memory swatch tiles render separately in the summary
+ * column, see template-parts/product/variation-swatches.php), a
+ * delivery/pincode estimator, a feature-icons row (Free Shipping/Secure
+ * Checkout/Easy Returns by default, admin-editable per product),
+ * wishlist/compare, a payment-icon trust strip, and a separate "Quick
+ * order" phone box.
  *
  * price and add-to-cart are called directly here rather than left on the
  * woocommerce_single_product_summary hook (removed from it in

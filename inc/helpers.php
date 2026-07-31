@@ -477,6 +477,190 @@ if ( ! function_exists( 'lgl_get_product_faqs' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_get_product_badge_label' ) ) {
+	/**
+	 * Resolve a product's status badge text (Out of stock / Save %s / Sale /
+	 * New), shared by the product card component
+	 * (template-parts/components/card-product.php) and the single product
+	 * gallery's sale-flash override (woocommerce/single-product/sale-flash.php)
+	 * so the two never drift out of sync on this rule.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WC_Product $product Product.
+	 * @return string Translated badge label, or '' if none applies.
+	 */
+	function lgl_get_product_badge_label( WC_Product $product ) {
+		if ( ! $product->is_in_stock() ) {
+			return esc_html__( 'Out of stock', 'logelite' );
+		}
+
+		if ( $product->is_on_sale() ) {
+			$lgl_regular = (float) $product->get_regular_price();
+			$lgl_active  = (float) $product->get_price();
+
+			if ( $lgl_regular > $lgl_active ) {
+				// html_entity_decode() so esc_html() at the render site
+				// doesn't double-escape wc_price()'s own HTML entities
+				// (e.g. &nbsp;) after wp_strip_all_tags() leaves them as
+				// literal text.
+				$lgl_savings = html_entity_decode(
+					wp_strip_all_tags( wc_price( $lgl_regular - $lgl_active ) ),
+					ENT_QUOTES,
+					'UTF-8'
+				);
+
+				return sprintf(
+					/* translators: %s: amount saved, formatted as currency. */
+					esc_html__( 'Save %s', 'logelite' ),
+					$lgl_savings
+				);
+			}
+
+			return esc_html__( 'Sale', 'logelite' );
+		}
+
+		if ( $product->get_date_created() instanceof WC_DateTime
+			&& ( time() - $product->get_date_created()->getTimestamp() ) < 14 * DAY_IN_SECONDS
+		) {
+			return esc_html__( 'New', 'logelite' );
+		}
+
+		return '';
+	}
+}
+
+if ( ! function_exists( 'lgl_get_product_media_html' ) ) {
+	/**
+	 * Get a product's image markup for a card — or, when it has no real
+	 * photo, a diagonal-stripe placeholder with a "product shot" label
+	 * instead of falling through to WooCommerce's own image placeholder.
+	 *
+	 * WC_Product::get_image() always renders *something*: a real attached
+	 * photo, or (via the woocommerce_placeholder_img_src filter this theme
+	 * registers) assets/img/placeholders/product.png — a flat stripe with
+	 * no text baked in. design-reference's own card placeholder isn't a
+	 * raster image at all; it's a CSS repeating-linear-gradient() plus a
+	 * real "product shot" text node (design-reference/Logelite Theme.dc.html,
+	 * every card variant: Deals of the Day, Best Sellers, shop grid, related
+	 * products). Shared by the product card component
+	 * (template-parts/components/card-product.php) and the homepage Deals of
+	 * the Day section (template-parts/home/section-deals.php, which renders
+	 * its own card markup rather than reusing that component) so neither one
+	 * silently shows a blank stripe for products with no photo yet.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WC_Product $product   Product.
+	 * @param string     $size      Registered image size. Default 'lgl-card'.
+	 * @param array      $img_attrs Extra <img> attributes (class, loading, ...).
+	 * @return string Escaped HTML, ready to echo directly.
+	 */
+	function lgl_get_product_media_html( WC_Product $product, $size = 'lgl-card', $img_attrs = array() ) {
+		if ( $product->get_image_id() > 0 ) {
+			return wp_kses_post( $product->get_image( $size, $img_attrs ) );
+		}
+
+		return sprintf(
+			'<span class="lgl-card__media-placeholder" aria-hidden="true"><span class="lgl-card__media-placeholder-label">%s</span></span>',
+			esc_html__( 'product shot', 'logelite' )
+		);
+	}
+}
+
+if ( ! function_exists( 'lgl_get_product_rating_html' ) ) {
+	/**
+	 * Get a product's star-rating row for a card: star glyphs + a visible
+	 * "(count)" when it has reviews, or a neutral "No reviews yet" state
+	 * otherwise.
+	 *
+	 * Deliberately does NOT use wc_get_rating_html() — WooCommerce core's
+	 * own `.star-rating span` CSS (assets/css/woocommerce.scss, unmodified
+	 * by this theme) visually clips that markup's review-count text out of
+	 * view (`overflow:hidden` + `padding-top:1.5em`) on purpose, keeping it
+	 * screen-reader-only; it was never going to show a visible "(152)" no
+	 * matter how `.lgl-card__rating` itself was styled. design-reference
+	 * always shows the count in parens right next to the stars on every
+	 * card (`design-reference/Logelite Theme.dc.html`'s `★★★★☆ {{p.rating}}`
+	 * pattern), so this renders plain Unicode star glyphs this theme fully
+	 * controls instead, with the count as real visible text and the WC
+	 * sentence reproduced only for screen readers via `.lgl-visually-hidden`.
+	 * Shared by the product card component
+	 * (template-parts/components/card-product.php) and the homepage Deals
+	 * of the Day section (template-parts/home/section-deals.php) so both
+	 * render identically.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WC_Product $product Product.
+	 * @return string Escaped HTML, ready to echo directly.
+	 */
+	function lgl_get_product_rating_html( WC_Product $product ) {
+		$lgl_count = $product->get_rating_count();
+
+		if ( $lgl_count > 0 ) {
+			$lgl_average = (float) $product->get_average_rating();
+			$lgl_filled  = (int) round( $lgl_average );
+			$lgl_stars   = str_repeat( '&#9733;', $lgl_filled ) . str_repeat( '&#9734;', 5 - $lgl_filled );
+
+			return sprintf(
+				'<span class="lgl-card__rating-stars" aria-hidden="true">%1$s</span> <span class="lgl-card__rating-count" aria-hidden="true">(%2$s)</span><span class="lgl-visually-hidden">%3$s</span>',
+				$lgl_stars,
+				esc_html( number_format_i18n( $lgl_count ) ),
+				esc_html(
+					sprintf(
+						/* translators: 1: average rating out of 5, 2: number of reviews. */
+						_n( 'Rated %1$s out of 5 based on %2$s review', 'Rated %1$s out of 5 based on %2$s reviews', $lgl_count, 'logelite' ),
+						$lgl_average,
+						number_format_i18n( $lgl_count )
+					)
+				)
+			);
+		}
+
+		return sprintf(
+			'<span class="lgl-card__rating-stars" aria-hidden="true">%s</span> %s',
+			str_repeat( '&#9734;', 5 ),
+			esc_html__( 'No reviews yet', 'logelite' )
+		);
+	}
+}
+
+if ( ! function_exists( 'lgl_get_product_summary_tags' ) ) {
+	/**
+	 * Get the Free Shipping / Free Gift pill row shown in the single
+	 * product summary column, below the short-description bullet list
+	 * (template-parts/product/summary-tags.php). Unlike
+	 * lgl_get_product_tag_label() (one mutually-exclusive tag per shop
+	 * card), the design reference shows both of these simultaneously here
+	 * when both are true — so this returns a list, not a single string.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WC_Product $product Product.
+	 * @return array[] Each row: array( 'label' => string, 'variant' => 'shipping'|'gift' ).
+	 */
+	function lgl_get_product_summary_tags( WC_Product $product ) {
+		$lgl_tags = array();
+
+		if ( 'free-shipping' === $product->get_shipping_class() ) {
+			$lgl_tags[] = array(
+				'label'   => esc_html__( 'Free Shipping', 'logelite' ),
+				'variant' => 'shipping',
+			);
+		}
+
+		if ( lgl_get_bundle_offer_tiers( $product->get_id() ) ) {
+			$lgl_tags[] = array(
+				'label'   => esc_html__( 'Free Gift', 'logelite' ),
+				'variant' => 'gift',
+			);
+		}
+
+		return apply_filters( 'lgl_product_summary_tags', $lgl_tags, $product );
+	}
+}
+
 if ( ! function_exists( 'lgl_get_checkout_meta_display' ) ) {
 	/**
 	 * Resolve an order's T4.1 checkout-field meta into a display-ready list.

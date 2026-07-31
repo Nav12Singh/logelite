@@ -18,7 +18,7 @@ if ( ! lgl_wc_active() ) {
 	return;
 }
 
-$lgl_count = absint( get_theme_mod( 'lgl_home_categories_count', 4 ) );
+$lgl_count = absint( get_theme_mod( 'lgl_home_categories_count', 9 ) );
 
 $lgl_terms = get_terms(
 	array(

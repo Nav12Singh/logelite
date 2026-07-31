@@ -15,15 +15,20 @@
  * @version 10.9.0
  */
 
-// Overridden by logelite — reason: adds clickable swatch tiles for each
+// Overridden by logelite — reason: the visible swatch tiles for each
 // variation attribute (matching the design reference's COLOR/MEMORY SIZE
-// selectors), in addition to — not instead of — the real
-// wc_dropdown_variation_attribute_options() <select> core's own
-// wc-add-to-cart-variation.js reads price/stock/gallery updates from.
-// That select is visually hidden (.lgl-visually-hidden), never removed or
-// restructured, so core's variation JS keeps working completely
-// untouched. assets/js/product.js pairs each swatch group with its real
-// select by id and forwards clicks as a native `change` event on it.
+// selectors) are NOT rendered here — the reference puts them in the
+// summary column, not the buy box this form renders inside of (see
+// template-parts/product/variation-swatches.php, hooked separately on
+// woocommerce_single_product_summary; inc/woocommerce.php). This file
+// keeps only what actually needs to live inside this <form>: the real,
+// visually-hidden wc_dropdown_variation_attribute_options() <select>
+// elements core's own wc-add-to-cart-variation.js reads price/stock/
+// gallery updates from, and the quantity/Add to Cart controls. Never
+// removed or restructured, so core's variation JS keeps working completely
+// untouched — assets/js/product.js pairs each swatch group (rendered
+// elsewhere) with its real select here by id and forwards clicks as a
+// native `change` event on it, which is what core's own JS listens for.
 //
 // No combination-aware disabling of invalid swatch pairs (e.g. greying
 // out a color unavailable in the currently-selected memory size) is
@@ -54,64 +59,6 @@ do_action( 'woocommerce_before_add_to_cart_form' ); ?>
 	<?php if ( empty( $available_variations ) && false !== $available_variations ) : ?>
 		<p class="stock out-of-stock"><?php echo esc_html( apply_filters( 'woocommerce_out_of_stock_message', __( 'This product is currently out of stock and unavailable.', 'woocommerce' ) ) ); ?></p>
 	<?php else : ?>
-
-		<?php foreach ( $attributes as $lgl_attribute_name => $lgl_options ) : ?>
-			<?php
-			$lgl_select_id = sanitize_title( $lgl_attribute_name );
-			$lgl_selected  = $product->get_variation_default_attribute( $lgl_attribute_name );
-
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display preference (which swatch shows pre-selected), no data is written; matches core's own wc_dropdown_variation_attribute_options() precedent for reading this same key.
-			if ( isset( $_REQUEST[ 'attribute_' . $lgl_select_id ] ) ) {
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- wc_clean() unslashes and sanitizes.
-				$lgl_selected = wc_clean( wp_unslash( $_REQUEST[ 'attribute_' . $lgl_select_id ] ) );
-			}
-
-			$lgl_terms = array();
-
-			if ( taxonomy_exists( $lgl_attribute_name ) ) {
-				$lgl_all_terms = wc_get_product_terms( $product->get_id(), $lgl_attribute_name, array( 'fields' => 'all' ) );
-				$lgl_terms     = array_values(
-					array_filter(
-						$lgl_all_terms,
-						function ( $lgl_term ) use ( $lgl_options ) {
-							return in_array( $lgl_term->slug, $lgl_options, true );
-						}
-					)
-				);
-			}
-			?>
-			<div class="lgl-swatch-group">
-				<div class="lgl-swatch-group__label">
-					<?php echo esc_html( wc_attribute_label( $lgl_attribute_name ) ); ?>:
-					<span class="lgl-swatch-group__value"><?php echo esc_html( $lgl_selected ? $lgl_selected : '' ); ?></span>
-				</div>
-				<div class="lgl-swatch-tiles" data-swatch-group="<?php echo esc_attr( $lgl_select_id ); ?>">
-					<?php if ( ! empty( $lgl_terms ) ) : ?>
-						<?php foreach ( $lgl_terms as $lgl_term ) : ?>
-							<button
-								type="button"
-								class="lgl-swatch-tile"
-								data-swatch-value="<?php echo esc_attr( $lgl_term->slug ); ?>"
-								aria-pressed="<?php echo esc_attr( $lgl_term->slug === $lgl_selected ? 'true' : 'false' ); ?>"
-							>
-								<?php echo esc_html( $lgl_term->name ); ?>
-							</button>
-						<?php endforeach; ?>
-					<?php else : ?>
-						<?php foreach ( $lgl_options as $lgl_option ) : ?>
-							<button
-								type="button"
-								class="lgl-swatch-tile"
-								data-swatch-value="<?php echo esc_attr( $lgl_option ); ?>"
-								aria-pressed="<?php echo esc_attr( $lgl_option === $lgl_selected ? 'true' : 'false' ); ?>"
-							>
-								<?php echo esc_html( $lgl_option ); ?>
-							</button>
-						<?php endforeach; ?>
-					<?php endif; ?>
-				</div>
-			</div>
-		<?php endforeach; ?>
 
 		<table class="variations lgl-visually-hidden" cellspacing="0" role="presentation">
 			<tbody>

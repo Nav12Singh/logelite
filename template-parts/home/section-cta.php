@@ -60,18 +60,19 @@ if ( '' === $lgl_cta_url ) {
 
 lgl_hero(
 	array(
-		'eyebrow'      => $lgl_eyebrow,
-		'title'        => $lgl_title,
-		'text'         => $lgl_text,
-		'image'        => get_theme_mod( 'lgl_home_cta_image', '' ),
-		'image_alt'    => wp_strip_all_tags( $lgl_title ),
-		'primary_cta'  => array(
+		'eyebrow'                 => $lgl_eyebrow,
+		'title'                   => $lgl_title,
+		'text'                    => $lgl_text,
+		'image'                   => get_theme_mod( 'lgl_home_cta_image', '' ),
+		'image_alt'               => wp_strip_all_tags( $lgl_title ),
+		'media_placeholder_label' => esc_html__( 'watch lifestyle shot', 'logelite' ),
+		'primary_cta'             => array(
 			'label' => $lgl_cta_label,
 			'url'   => $lgl_cta_url,
 		),
-		'variant'      => 'dark',
-		'heading_id'   => 'lgl-home-cta-heading',
-		'no_container' => true,
-		'class'        => 'lgl-home-banners__cta',
+		'variant'                 => 'dark',
+		'heading_id'              => 'lgl-home-cta-heading',
+		'no_container'            => true,
+		'class'                   => 'lgl-home-banners__cta',
 	)
 );

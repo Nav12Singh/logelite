@@ -17,6 +17,10 @@
 	gap: var(--lgl-space-8);
 	align-items: start;
 	margin-top: var(--lgl-space-6);
+	padding: var(--lgl-space-8);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-surface-default);
 }
 
 .lgl-product-gallery-col {
@@ -35,6 +39,22 @@
 	min-width: 0;
 }
 
+/* Gallery badge (woocommerce/single-product/sale-flash.php) — solid black,
+ * not the shop card's green; see that file's own override-reason comment. */
+.lgl-product-gallery__badge {
+	position: absolute;
+	top: var(--lgl-space-3);
+	left: var(--lgl-space-3);
+	z-index: 1;
+	padding: var(--lgl-space-1) var(--lgl-space-2);
+	border-radius: var(--lgl-radius-sm);
+	background: var(--lgl-surface-inverse);
+	color: var(--lgl-text-inverse);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	text-transform: uppercase;
+}
+
 /*
  * Verified against the installed WooCommerce's own JS
  * (assets/js/frontend/single-product.js + flexslider) rather than guessed:
@@ -45,15 +65,19 @@
  * classes targeted below, not guessed ones. Neither flexslider nor
  * PhotoSwipe is reconfigured or replaced; this only repositions/resizes
  * their existing output.
+ *
+ * column, not row-reverse: the reference stacks the main image on top and
+ * a 4-across thumbnail row below it, not a thumbnail rail beside it. Plain
+ * DOM order already puts .flex-viewport before .flex-control-thumbs, so a
+ * column direction alone (no reverse) puts the image on top.
  */
 .lgl-product-gallery .woocommerce-product-gallery__wrapper {
 	display: flex;
-	flex-direction: row-reverse;
+	flex-direction: column;
 	gap: var(--lgl-space-3);
 }
 
 .lgl-product-gallery .flex-viewport {
-	flex: 1;
 	min-width: 0;
 	border-radius: var(--lgl-radius-lg);
 	overflow: hidden;
@@ -93,17 +117,31 @@
 }
 
 .lgl-product-gallery .flex-control-nav.flex-control-thumbs {
-	display: flex;
-	flex-direction: column;
-	flex: 0 0 72px;
-	gap: var(--lgl-space-2);
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--lgl-space-3);
 	list-style: none;
-	max-height: 100%;
-	overflow-y: auto;
 }
 
 .lgl-product-gallery .flex-control-thumbs li {
+	/*
+	 * Same missing-min-width grid blowout as .lgl-product-gallery-col and
+	 * the shop grid's li.product (see those rules' own comments) — a third
+	 * occurrence of the identical bug. flexslider's own thumbnail-nav JS
+	 * (jquery.flexslider.js's controlNav.setupThumbs) sets a real
+	 * width/height HTML attribute on each thumbnail <img> from its natural
+	 * size the moment it loads (`this.width = this.naturalWidth`), which
+	 * this grid item's automatic minimum size then reads — if that natural
+	 * size is anything other than tiny, the grid crushes every thumbnail
+	 * column down trying to satisfy all 4 competing minimums at once,
+	 * rendering as barely-visible slivers instead of a clean 4-up row.
+	 * float: none neutralizes WooCommerce's own competing
+	 * `.flex-control-thumbs li { float: left; width: 25% }` the same way
+	 * the shop-grid fix did.
+	 */
+	float: none;
 	width: 100%;
+	min-width: 0;
 }
 
 .lgl-product-gallery .flex-control-thumbs img {
@@ -111,7 +149,7 @@
 	width: 100%;
 	aspect-ratio: 1 / 1;
 	object-fit: cover;
-	border-radius: var(--lgl-radius-sm);
+	border-radius: var(--lgl-radius-md);
 	border: 1.5px solid var(--lgl-border-default);
 	cursor: pointer;
 }
@@ -141,6 +179,35 @@
 	gap: var(--lgl-space-2);
 	color: var(--lgl-text-faint);
 	font-size: var(--lgl-text-sm);
+}
+
+/* Free Shipping / Free Gift pill row (template-parts/product/summary-tags.php) */
+
+.lgl-product-summary-tags {
+	display: flex;
+	gap: var(--lgl-space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.lgl-product-summary-tags__item {
+	padding: var(--lgl-space-2) var(--lgl-space-3);
+	border-radius: var(--lgl-radius-sm);
+	font-size: var(--lgl-text-xs);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
+}
+
+.lgl-product-summary-tags__item--shipping {
+	background: var(--lgl-color-success-bg);
+	color: var(--lgl-color-success);
+}
+
+.lgl-product-summary-tags__item--gift {
+	background: var(--lgl-color-error-bg);
+	color: var(--lgl-color-error);
 }
 
 /*
@@ -543,7 +610,11 @@
 /* Tabs (desktop) / accordion (< 768px) */
 
 .lgl-product-tabs {
-	margin-top: var(--lgl-space-12);
+	margin-top: var(--lgl-space-6);
+	padding: var(--lgl-space-7) var(--lgl-space-8);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	background: var(--lgl-surface-default);
 }
 
 .lgl-product-tabs ul.tabs {
@@ -646,8 +717,23 @@
 	display: none;
 }
 
-.lgl-related-grid > * {
+/*
+ * Same unscoped WooCommerce core rule the shop grid fix (pages/shop.css)
+ * dealt with, a separate occurrence here: `woocommerce-layout.css` has a
+ * BARE `li.product{...}` rule (no `ul.products` ancestor required at all)
+ * setting `margin: 0 3.8% 2.992em 0` — real, uncontested extra spacing
+ * around each card on top of this row's own `gap`, since nothing here had
+ * reset it (the shop-grid fix only covers `.lgl-shop-products`'s own
+ * container, a different one). `flex-basis` (via the `flex` shorthand)
+ * already wins over that rule's conflicting `width: 22.05%` per the
+ * flexbox spec — an item's own non-auto flex-basis always overrides
+ * `width` for sizing — so only `margin` needed resetting here. Targeting
+ * `li.product` directly (not `> *`) for the specificity (2 classes + 1
+ * type) to actually outweigh WooCommerce's (1 class + 1 type).
+ */
+.lgl-related-grid > li.product {
 	flex: 0 0 240px;
+	margin: 0;
 	scroll-snap-align: start;
 }
 
@@ -693,7 +779,7 @@
 		position: static;
 	}
 
-	.lgl-related-grid > * {
+	.lgl-related-grid > li.product {
 		flex-basis: 200px;
 	}
 }

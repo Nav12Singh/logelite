@@ -116,6 +116,32 @@
 	transform: scale(1.06);
 }
 
+/*
+ * Shown instead of .lgl-card__image when a product has no real photo yet
+ * (see lgl_get_product_media_html(), inc/helpers.php) — a diagonal stripe
+ * + "product shot" label, matching design-reference's own literal
+ * placeholder technique exactly (a CSS pattern with a real text node, not
+ * a raster stand-in).
+ */
+.lgl-card__media-placeholder {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	background: repeating-linear-gradient(
+		45deg,
+		#f2f5f6,
+		#f2f5f6 8px,
+		#e8edee 8px,
+		#e8edee 16px
+	);
+}
+
+.lgl-card__media-placeholder-label {
+	font: 10.5px ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+	color: #8d999c;
+}
+
 .lgl-card__badge {
 	position: absolute;
 	top: var(--lgl-space-2);
@@ -138,6 +164,21 @@
 .lgl-card__rating {
 	color: var(--lgl-text-faint);
 	font-size: var(--lgl-text-xs);
+}
+
+/*
+ * Plain Unicode star glyphs (lgl_get_product_rating_html(), inc/helpers.php)
+ * — used for both the real-rating and "no reviews yet" states, in place of
+ * WooCommerce's own .star-rating (its review-count text is CSS-clipped to
+ * screen-reader-only by WC core, which is exactly the visible "(152)" bug
+ * this replaced; see that function's docblock).
+ */
+.lgl-card__rating-stars {
+	letter-spacing: 0.05em;
+}
+
+.lgl-card__rating-count {
+	margin-inline-start: var(--lgl-space-1);
 }
 
 /*

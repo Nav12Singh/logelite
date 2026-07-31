@@ -111,13 +111,12 @@ foreach ( $lgl_products as $lgl_deal_product ) {
 						<a class="lgl-card__link" href="<?php echo esc_url( $lgl_deal_product->get_permalink() ); ?>">
 							<span class="lgl-card__media">
 								<?php
-								echo wp_kses_post(
-									$lgl_deal_product->get_image(
-										'lgl-card',
-										array(
-											'class'   => 'lgl-card__image',
-											'loading' => 'lazy',
-										)
+								echo lgl_get_product_media_html( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped inside lgl_get_product_media_html().
+									$lgl_deal_product,
+									'lgl-card',
+									array(
+										'class'   => 'lgl-card__image',
+										'loading' => 'lazy',
 									)
 								);
 
@@ -138,11 +137,9 @@ foreach ( $lgl_products as $lgl_deal_product ) {
 								<?php endif; ?>
 							</span>
 
-							<?php if ( $lgl_deal_product->get_rating_count() > 0 ) : ?>
-								<span class="lgl-card__rating">
-									<?php echo wp_kses_post( wc_get_rating_html( $lgl_deal_product->get_average_rating(), $lgl_deal_product->get_rating_count() ) ); ?>
-								</span>
-							<?php endif; ?>
+							<span class="lgl-card__rating">
+								<?php echo lgl_get_product_rating_html( $lgl_deal_product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped inside lgl_get_product_rating_html(). ?>
+							</span>
 
 							<span class="lgl-card__title"><?php echo esc_html( $lgl_deal_product->get_name() ); ?></span>
 

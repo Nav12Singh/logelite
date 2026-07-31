@@ -479,7 +479,7 @@ if ( ! function_exists( 'lgl_customize_register_homepage_categories' ) ) {
 		$wp_customize->add_setting(
 			'lgl_home_categories_count',
 			array(
-				'default'           => 4,
+				'default'           => 9,
 				'sanitize_callback' => 'absint',
 				'transport'         => 'refresh',
 			)
