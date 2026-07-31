@@ -30,6 +30,17 @@ $lgl_welcome_action = esc_html__( 'Log in / Register', 'logelite' );
 if ( is_user_logged_in() ) {
 	$lgl_welcome_action = wp_get_current_user()->display_name;
 }
+
+/*
+ * Text logo lockup (avatar initial + wordmark + tagline) from the design
+ * reference, used whenever no custom logo image is set — mirrors the
+ * reference's "L / LOGELITE / TECH STORE" mark for whatever site name and
+ * tagline are actually configured, rather than hardcoding those strings.
+ * See ASSUMPTIONS.md.
+ */
+$lgl_site_name  = get_bloginfo( 'name' );
+$lgl_tagline    = get_bloginfo( 'description', 'display' );
+$lgl_site_title_tag = is_front_page() ? 'h1' : 'p';
 ?>
 <header id="lgl-header" class="lgl-header" data-sticky>
 
@@ -56,18 +67,20 @@ if ( is_user_logged_in() ) {
 			<div class="lgl-header__logo">
 				<?php if ( has_custom_logo() ) : ?>
 					<?php the_custom_logo(); ?>
-				<?php elseif ( is_front_page() ) : ?>
-					<h1 class="lgl-header__site-title">
-						<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">
-							<?php bloginfo( 'name' ); ?>
-						</a>
-					</h1>
 				<?php else : ?>
-					<p class="lgl-header__site-title">
-						<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">
-							<?php bloginfo( 'name' ); ?>
-						</a>
-					</p>
+					<a class="lgl-header__logo-link" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">
+						<span class="lgl-header__logo-badge" aria-hidden="true">
+							<?php echo esc_html( mb_substr( $lgl_site_name, 0, 1 ) ); ?>
+						</span>
+						<span class="lgl-header__logo-text">
+							<<?php echo tag_escape( $lgl_site_title_tag ); ?> class="lgl-header__site-title">
+								<?php echo esc_html( $lgl_site_name ); ?>
+							</<?php echo tag_escape( $lgl_site_title_tag ); ?>>
+							<?php if ( '' !== $lgl_tagline ) : ?>
+								<span class="lgl-header__logo-tagline"><?php echo esc_html( $lgl_tagline ); ?></span>
+							<?php endif; ?>
+						</span>
+					</a>
 				<?php endif; ?>
 			</div>
 

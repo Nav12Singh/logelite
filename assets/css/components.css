@@ -125,10 +125,48 @@
 	line-height: var(--lgl-leading-tight);
 }
 
-.lgl-header__site-title a {
+.lgl-header__logo-link {
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-3);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-header__logo-badge {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: var(--lgl-radius-full);
+	background: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+	text-transform: uppercase;
+}
+
+.lgl-header__logo-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.lgl-header__site-title {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
 	color: var(--lgl-text-primary);
+}
+
+.lgl-header__logo-tagline {
+	font-size: var(--lgl-text-xs);
+	letter-spacing: var(--lgl-tracking-wider);
+	text-transform: uppercase;
+	color: var(--lgl-text-faint);
 }
 
 .lgl-header__nav {
@@ -145,6 +183,7 @@
 	font-weight: var(--lgl-weight-semibold);
 	font-size: var(--lgl-text-sm);
 	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
 }
 
 .lgl-nav__list a {
@@ -242,6 +281,8 @@
 	flex-direction: column;
 	line-height: var(--lgl-leading-snug);
 	color: var(--lgl-text-primary);
+	padding-inline-start: var(--lgl-space-4);
+	border-left: 1px solid var(--lgl-border-default);
 }
 
 .lgl-header__account-label {
@@ -296,5 +337,32 @@
 
 	#lgl-mobile-nav {
 		display: none;
+	}
+}
+
+/*
+ * Between 992-1279px the full row (uppercase 6-item nav + wordmark + wishlist
+ * / secondary icon + welcome block + cart) no longer fits at the same gaps
+ * used from 1280px up, wrapping "MY ACCOUNT" and "Log in / Register" onto a
+ * second line — tighten gaps and stop nav/account text from wrapping instead
+ * of shrinking type size.
+ */
+@media (min-width: 992px) and (max-width: 1279px) {
+	.lgl-header__inner {
+		gap: var(--lgl-space-4);
+	}
+
+	.lgl-nav__list {
+		gap: var(--lgl-space-4);
+	}
+
+	.lgl-header__actions {
+		gap: var(--lgl-space-3);
+	}
+
+	.lgl-nav__list a,
+	.lgl-header__site-title,
+	.lgl-header__account-action {
+		white-space: nowrap;
 	}
 }
