@@ -1,0 +1,71 @@
+/**
+ * Theme-token overrides layered on top of the vendored flatpickr core
+ * stylesheet (assets/css/vendor/flatpickr.min.css). Only the selected/today
+ * accent colors, radius, and font are touched — flatpickr's own layout CSS
+ * is left alone.
+ *
+ * @package logelite
+ */
+
+.flatpickr-calendar {
+	/*
+	 * flatpickr's own core CSS sets no z-index at all on the calendar,
+	 * relying purely on DOM order (it's appended directly to <body>) to
+	 * paint on top. This theme has several explicitly z-indexed positioned
+	 * elements (sticky header, sticky checkout sidebar, off-canvas nav/
+	 * search overlay — tokens up to var(--lgl-z-toast), 50) that can win
+	 * the stacking order against an un-indexed element and sit visually
+	 * over the calendar, making its day cells look clickable while actually
+	 * intercepting the click. Explicitly set above this theme's own
+	 * highest token so the calendar always wins.
+	 */
+	z-index: 60;
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+	box-shadow: var(--lgl-shadow-md);
+	font-family: var(--lgl-font-body);
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month {
+	color: var(--lgl-text-primary);
+}
+
+.flatpickr-weekday {
+	color: var(--lgl-text-faint);
+}
+
+.flatpickr-day {
+	border-radius: var(--lgl-radius-sm);
+	color: var(--lgl-text-primary);
+}
+
+.flatpickr-day.today {
+	border-color: var(--lgl-color-brand);
+}
+
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+	background: var(--lgl-color-brand-subtle);
+	border-color: var(--lgl-color-brand-subtle);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+	background: var(--lgl-color-brand);
+	border-color: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+}
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+	color: var(--lgl-text-faint);
+}
+
+/*
+ * The one real <input> flatpickr attaches to (no altInput — see
+ * assets/js/checkout-delivery-date.js's docblock for why) already gets its
+ * base rounded/border/focus styling from .wc-block-components-text-input
+ * input in checkout-blocks.css; nothing extra is needed here.
+ */

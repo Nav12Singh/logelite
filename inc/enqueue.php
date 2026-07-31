@@ -182,17 +182,24 @@ if ( ! function_exists( 'lgl_enqueue_conditional_styles' ) ) {
 
 		if ( is_checkout() ) {
 			wp_enqueue_style(
-				'lgl-checkout-layout',
-				get_theme_file_uri( 'assets/css/components/checkout.css' ),
+				'lgl-checkout-blocks-layout',
+				get_theme_file_uri( 'assets/css/components/checkout-blocks.css' ),
 				array( 'lgl-checkout' ),
-				lgl_asset_version( 'assets/css/components/checkout.css' )
+				lgl_asset_version( 'assets/css/components/checkout-blocks.css' )
 			);
 
 			wp_enqueue_style(
-				'lgl-checkout-coupon',
-				get_theme_file_uri( 'assets/css/components/checkout-coupon.css' ),
-				array( 'lgl-checkout' ),
-				lgl_asset_version( 'assets/css/components/checkout-coupon.css' )
+				'lgl-flatpickr',
+				get_theme_file_uri( 'assets/css/vendor/flatpickr.min.css' ),
+				array(),
+				lgl_asset_version( 'assets/css/vendor/flatpickr.min.css' )
+			);
+
+			wp_enqueue_style(
+				'lgl-flatpickr-theme',
+				get_theme_file_uri( 'assets/css/components/flatpickr-theme.css' ),
+				array( 'lgl-flatpickr' ),
+				lgl_asset_version( 'assets/css/components/flatpickr-theme.css' )
 			);
 		}
 
@@ -371,6 +378,39 @@ if ( ! function_exists( 'lgl_enqueue_conditional_scripts' ) ) {
 				true
 			);
 			wp_script_add_data( 'lgl-cart', 'strategy', 'defer' );
+		}
+
+		if ( is_checkout() ) {
+			// Self-hosted per CLAUDE.md §8 — no CDN. A plain, dependency-free
+			// vendor library (no jQuery), needed because the Additional
+			// Checkout Fields API has no native date field type; see
+			// assets/js/checkout-delivery-date.js for how it's attached.
+			wp_enqueue_script(
+				'lgl-flatpickr',
+				get_theme_file_uri( 'assets/js/vendor/flatpickr.min.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/vendor/flatpickr.min.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-flatpickr', 'strategy', 'defer' );
+
+			wp_enqueue_script(
+				'lgl-checkout-delivery-date',
+				get_theme_file_uri( 'assets/js/checkout-delivery-date.js' ),
+				array( 'lgl-flatpickr' ),
+				lgl_asset_version( 'assets/js/checkout-delivery-date.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-checkout-delivery-date', 'strategy', 'defer' );
+
+			wp_enqueue_script(
+				'lgl-checkout-sidebar-actions',
+				get_theme_file_uri( 'assets/js/checkout-sidebar-actions.js' ),
+				array(),
+				lgl_asset_version( 'assets/js/checkout-sidebar-actions.js' ),
+				true
+			);
+			wp_script_add_data( 'lgl-checkout-sidebar-actions', 'strategy', 'defer' );
 		}
 	}
 }

@@ -5,8 +5,10 @@
  * WooCommerce's shop/cart/checkout/my-account pages are all regular
  * WordPress pages under the hood, but WooCommerce's own template
  * hierarchy (woocommerce/archive-product.php, woocommerce/cart/cart.php,
- * woocommerce/checkout/form-checkout.php, etc.) takes over rendering
- * their content before this file's page-content loop would apply.
+ * etc.) takes over rendering their content before this file's
+ * page-content loop would apply. The Checkout page specifically renders
+ * via the WooCommerce Checkout block (wp:woocommerce/checkout in its
+ * post_content), not a woocommerce/checkout/*.php template override.
  *
  * @package logelite
  */

@@ -1,0 +1,245 @@
+/**
+ * Two-column checkout layout — WooCommerce Checkout block.
+ *
+ * Targets the block's own compiled class names (verified against the
+ * installed WooCommerce version's assets/client/blocks/checkout.css), not
+ * theme-authored markup — the block checkout renders its own DOM via the
+ * Store API/React, so there is no template file to attach classes to here.
+ *
+ * IMPORTANT: the two-column split is NOT built here from scratch. WooCommerce
+ * already ships a working flex layout: .wc-block-components-sidebar-layout
+ * (display:flex) contains .wc-block-components-main (width:65%) and
+ * .wc-block-components-sidebar (width:35%) as its actual flex children, and
+ * collapses to one column itself via an @container query at <=699px
+ * (.wp-block-woocommerce-checkout has container-type:inline-size). An
+ * earlier version of this file put `display:grid` on the OUTER wrapper
+ * (.wc-block-checkout, the same element as .wp-block-woocommerce-checkout)
+ * — but that wrapper has only ONE direct child (.wc-block-components-
+ * sidebar-layout), so a 2-track grid there just gave that one child the
+ * first track and left the second empty: narrow columns + a large blank
+ * gap. Fixed by leaving WC's own flex mechanism alone and only overriding
+ * its breakpoint (this task's ≥1024px spec vs. WC's own 699px) and the
+ * mobile stacking order, on the exact classes WC itself uses.
+ *
+ * .wc-block-checkout__main / __sidebar are additional classes WooCommerce
+ * puts on those same two flex children specifically for checkout (shared
+ * with .wc-block-components-main/-sidebar, which Cart also uses) — used
+ * below for the order toggle and sticky-sidebar tweaks.
+ *
+ * @package logelite
+ */
+
+:root {
+	/*
+	 * Mobile/tablet (<1024px) order-summary placement. -1 = above the form
+	 * (default, so the customer sees what they're paying before filling
+	 * anything in); 1 = below the form. Single toggle point — flip this one
+	 * value rather than rewriting the media query below.
+	 */
+	--lgl-checkout-mobile-summary-order: -1;
+}
+
+.wc-block-checkout__main,
+.wc-block-checkout__sidebar {
+	min-width: 0;
+}
+
+@media (max-width: 1023.98px) {
+	/*
+	 * Force single-column below this task's 1024px breakpoint — WC's own
+	 * container query only collapses at <=699px container width, which
+	 * would otherwise leave two (increasingly cramped) columns between
+	 * 700-1023px. The extra .wc-block-checkout ancestor on each selector
+	 * bumps specificity above WC's own bare-class rules so this wins
+	 * regardless of stylesheet load order.
+	 */
+	.wc-block-checkout .wc-block-components-sidebar-layout {
+		flex-direction: column;
+	}
+
+	.wc-block-checkout .wc-block-components-main,
+	.wc-block-checkout .wc-block-components-sidebar {
+		width: 100%;
+		padding-left: 0;
+		padding-right: 0;
+	}
+
+	.wc-block-checkout .wc-block-checkout__sidebar {
+		order: var(--lgl-checkout-mobile-summary-order);
+	}
+
+	.wc-block-checkout .wc-block-checkout__main {
+		order: calc(var(--lgl-checkout-mobile-summary-order) * -1);
+	}
+}
+
+.wc-block-checkout__sidebar {
+	/* Overrides WC's own unconditional `top: 24px` with this theme's header
+	 * offset — still only takes visual effect once WC's own JS decides
+	 * sticky is appropriate and adds .is-sticky (see rule below); this
+	 * theme doesn't force position:sticky itself. */
+	top: var(--lgl-header-offset);
+}
+
+.wc-block-checkout__sidebar.is-sticky {
+	/*
+	 * Capped with max-height + its own scrollbar rather than letting it
+	 * grow to full content height — the sidebar's content (order summary +
+	 * coupon + totals + place-order) varies with cart contents and can't be
+	 * measured against the footer without a scroll listener, so a fixed
+	 * budget sidesteps needing one.
+	 */
+	max-height: calc(100vh - var(--lgl-header-offset) - var(--lgl-space-8));
+	overflow-y: auto;
+}
+
+/*
+ * Terms text + Place Order button, relocated into the sidebar (right after
+ * the totals) by assets/js/checkout-sidebar-actions.js — WooCommerce's block
+ * Checkout hardcodes these as children of the main form, so the theme moves
+ * the actual DOM nodes here after render rather than via block content.
+ * They keep their normal wc-block-checkout__terms/__actions styling; this
+ * only adds the top spacing they'd otherwise get from preceding form steps.
+ */
+.wc-block-components-sidebar > .wp-block-woocommerce-checkout-terms-block {
+	margin-top: var(--lgl-space-4);
+}
+
+.wc-block-components-sidebar > .wp-block-woocommerce-checkout-actions-block {
+	margin-top: var(--lgl-space-3);
+}
+
+/* ============================ Section cards ============================ */
+
+.wc-block-components-checkout-step {
+	padding: var(--lgl-space-6);
+	margin-bottom: var(--lgl-space-4);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.wc-block-components-checkout-step__title {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	font-size: var(--lgl-text-md);
+	color: var(--lgl-text-primary);
+}
+
+.wc-block-components-checkout-step__description {
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-sm);
+}
+
+/* ================================ Inputs ================================ */
+
+.wc-block-components-text-input input,
+.wc-block-components-select-input select,
+.wc-block-components-combobox input {
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-md);
+	font-family: var(--lgl-font-body);
+	font-size: var(--lgl-text-sm);
+}
+
+.wc-block-components-text-input input:focus-visible,
+.wc-block-components-select-input select:focus-visible,
+.wc-block-components-combobox input:focus-visible,
+.wc-block-components-checkbox__input:focus-visible + .wc-block-components-checkbox__mark {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 1px;
+	border-color: var(--lgl-color-brand);
+}
+
+.wc-block-components-checkbox__mark {
+	border-radius: var(--lgl-radius-sm);
+}
+
+.wc-block-components-radio-control__input:checked + .wc-block-components-radio-control__label-group,
+.wc-block-components-radio-control--highlight-checked .wc-block-components-radio-control__option-checked {
+	color: var(--lgl-color-brand-strong);
+}
+
+/* =============================== Coupon ================================= */
+
+.wc-block-components-totals-coupon {
+	margin-bottom: var(--lgl-space-4);
+}
+
+.wc-block-components-totals-coupon__form {
+	padding: var(--lgl-space-4);
+	background: var(--lgl-surface-sunken);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.wc-block-components-totals-coupon__input input {
+	border-radius: var(--lgl-radius-md);
+}
+
+.wc-block-components-totals-coupon__button {
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-brand);
+	color: var(--lgl-text-inverse);
+	font-weight: var(--lgl-weight-semibold);
+}
+
+.wc-block-components-totals-coupon__button:hover {
+	background: var(--lgl-color-brand-strong);
+}
+
+.wc-block-components-totals-coupon__button:focus-visible {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 2px;
+}
+
+/* ========================== Order summary/totals ========================= */
+
+.wc-block-components-order-summary {
+	padding: var(--lgl-space-6);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+	border-radius: var(--lgl-radius-lg);
+}
+
+.wc-block-components-totals-item__label {
+	color: var(--lgl-text-secondary);
+}
+
+.wc-block-components-totals-footer-item .wc-block-components-totals-item__label,
+.wc-block-components-totals-footer-item .wc-block-components-totals-item__value {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+	color: var(--lgl-color-brand);
+}
+
+/* ============================= Place order =============================== */
+
+.wc-block-components-checkout-place-order-button {
+	width: 100%;
+	padding-block: var(--lgl-space-4);
+	border: 0;
+	border-radius: var(--lgl-radius-md);
+	background: var(--lgl-color-accent);
+	color: var(--lgl-text-inverse);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	letter-spacing: var(--lgl-tracking-wide);
+}
+
+.wc-block-components-checkout-place-order-button:hover {
+	background: color-mix(in srgb, var(--lgl-color-accent) 88%, black);
+}
+
+.wc-block-components-checkout-place-order-button:focus-visible {
+	outline: 2px solid var(--lgl-color-brand);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wc-block-components-checkout-place-order-button,
+	.wc-block-components-totals-coupon__button {
+		transition: none;
+	}
+}

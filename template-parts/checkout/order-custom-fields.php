@@ -1,10 +1,12 @@
 <?php
 /**
- * Gift message / delivery date / delivery slot, on the thank-you page.
+ * Delivery date / time slot / gift message — shared display partial for the
+ * thank-you page AND the My Account "View Order" page.
  *
- * Rendered by lgl_render_thankyou_checkout_meta() (inc/checkout-fields.php)
- * on the lgl_thankyou_delivery_details hook. $args['rows'] is already
- * built by lgl_get_checkout_meta_display() (inc/helpers.php) — both
+ * Rendered by lgl_render_thankyou_checkout_meta() (lgl_thankyou_delivery_details
+ * hook) and lgl_render_myaccount_checkout_meta() (woocommerce_order_details_
+ * after_order_table hook), both in inc/checkout-fields.php. $args['rows'] is
+ * already built by lgl_get_checkout_meta_display() (inc/helpers.php) — both
  * 'label' and 'value' are already esc_html()'d there. Nothing here
  * re-escapes them; doing so would double-escape entities.
  *

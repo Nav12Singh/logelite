@@ -663,13 +663,20 @@ if ( ! function_exists( 'lgl_get_product_summary_tags' ) ) {
 
 if ( ! function_exists( 'lgl_get_checkout_meta_display' ) ) {
 	/**
-	 * Resolve an order's T4.1 checkout-field meta into a display-ready list.
+	 * Resolve an order's checkout-field meta into a display-ready list.
 	 *
-	 * The ONLY place this formatting logic lives — the admin order screen,
-	 * customer emails, and the thank-you page (inc/checkout-fields.php) all
-	 * call this one function rather than each re-reading/re-formatting the
-	 * same three meta keys independently, which is exactly how those three
-	 * views drift out of sync with each other over time.
+	 * The ONLY place this formatting logic lives — customer emails and the
+	 * thank-you page (inc/checkout-fields.php) both call this one function
+	 * rather than each re-reading/re-formatting the same three meta keys
+	 * independently, which is exactly how those views drift out of sync
+	 * with each other over time. (The admin order screen doesn't need this
+	 * formatter — WooCommerce's own CheckoutFieldsAdmin service renders
+	 * these fields there automatically.)
+	 *
+	 * Meta keys use the "_wc_other/{field id}" prefix WooCommerce's Blocks
+	 * Additional Checkout Fields API persists registered "order"-location
+	 * fields under (see inc/checkout-fields.php's field registrations) —
+	 * not a bespoke "_lgl_*" key.
 	 *
 	 * Both 'label' and 'value' in each returned row are already escaped for
 	 * HTML output (esc_html()) — callers must NOT re-escape them. The one
@@ -691,38 +698,38 @@ if ( ! function_exists( 'lgl_get_checkout_meta_display' ) ) {
 	function lgl_get_checkout_meta_display( WC_Order $order ) {
 		$lgl_rows = array();
 
-		$lgl_gift_message = $order->get_meta( '_lgl_gift_message' );
-
-		if ( '' !== $lgl_gift_message ) {
-			$lgl_rows[] = array(
-				'label' => esc_html__( 'Gift message', 'logelite' ),
-				'value' => esc_html( $lgl_gift_message ),
-			);
-		}
-
-		$lgl_delivery_date = $order->get_meta( '_lgl_delivery_date' );
+		$lgl_delivery_date = $order->get_meta( '_wc_other/logelite/delivery-date' );
 
 		if ( '' !== $lgl_delivery_date ) {
 			$lgl_timestamp = strtotime( $lgl_delivery_date );
 
 			$lgl_rows[] = array(
-				'label' => esc_html__( 'Preferred delivery date', 'logelite' ),
+				'label' => esc_html__( 'Delivery date', 'logelite' ),
 				'value' => esc_html( $lgl_timestamp ? wp_date( get_option( 'date_format' ), $lgl_timestamp ) : $lgl_delivery_date ),
 			);
 		}
 
-		$lgl_delivery_slot = $order->get_meta( '_lgl_delivery_slot' );
+		$lgl_delivery_slot = $order->get_meta( '_wc_other/logelite/delivery-slot' );
 
 		if ( '' !== $lgl_delivery_slot ) {
 			$lgl_slots = lgl_get_delivery_slots();
 
 			$lgl_rows[] = array(
-				'label' => esc_html__( 'Preferred delivery slot', 'logelite' ),
+				'label' => esc_html__( 'Delivery time slot', 'logelite' ),
 				// Resolved to the human label ('9 AM - 12 PM'), not the raw
-				// key ('09-12'). Falls back to the raw key only if it's no
+				// key ('9-12'). Falls back to the raw key only if it's no
 				// longer in the whitelist (e.g. a slot removed after the
 				// order was placed) — better than showing nothing at all.
 				'value' => esc_html( isset( $lgl_slots[ $lgl_delivery_slot ] ) ? $lgl_slots[ $lgl_delivery_slot ] : $lgl_delivery_slot ),
+			);
+		}
+
+		$lgl_gift_message = $order->get_meta( '_wc_other/logelite/gift-message' );
+
+		if ( '' !== $lgl_gift_message ) {
+			$lgl_rows[] = array(
+				'label' => esc_html__( 'Gift message', 'logelite' ),
+				'value' => esc_html( $lgl_gift_message ),
 			);
 		}
 
