@@ -3,9 +3,13 @@
  * Shop sidebar filters: categories (links), price range, attributes,
  * on-sale/in-stock toggles.
  *
- * No AJAX — a plain GET form (progressively enhanced with auto-submit on
- * checkbox change, see assets/js/shop.js). Collapses into an off-canvas
- * drawer below 992px, reusing the assets/js/a11y.js focus trap.
+ * No AJAX — a plain GET form, auto-submitted on every control's change
+ * (checkboxes, the price range slider/inputs — see assets/js/shop.js) since
+ * the design reference has no "Apply filters" button anywhere. With JS
+ * disabled, none of these controls submit on their own and there is no
+ * fallback submit button — a deliberate, discussed trade-off in favor of
+ * matching the reference exactly. Collapses into an off-canvas drawer below
+ * 992px, reusing the assets/js/a11y.js focus trap.
  *
  * Query-var format verified against WooCommerce core
  * (includes/class-wc-query.php):
@@ -296,10 +300,6 @@ foreach ( $lgl_attribute_taxonomies as $lgl_attribute ) {
 					</div>
 				</div>
 			<?php endforeach; ?>
-
-			<button type="submit" class="lgl-filter-form__submit">
-				<?php esc_html_e( 'Apply filters', 'logelite' ); ?>
-			</button>
 		</form>
 
 		<div class="lgl-filter-clearance">

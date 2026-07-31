@@ -144,13 +144,22 @@
 			backdrop.addEventListener( 'click', close );
 		}
 
-		// Auto-submit on checkbox change — a progressive enhancement; the
-		// form still has a real submit button for when JS is unavailable.
+		// Auto-submit on checkbox change, and on price-range commit — a
+		// progressive enhancement now covering every filter control, so the
+		// form no longer needs a submit button at all (per the design
+		// reference, which has no "Apply filters" button anywhere).
+		// input[type="range"] matches here on its native `change` event
+		// (fires once, on release — not the continuous `input` event
+		// price-slider.js itself listens to for the live drag/fill update),
+		// so dragging the price slider submits once you let go, not on
+		// every pixel of movement. .lgl-filter-price__input matches the
+		// same two inputs by their number-input identity, for someone who
+		// types a price directly instead of dragging.
 		var form = sidebar.querySelector( '.lgl-filter-form' );
 
 		if ( form ) {
 			form.addEventListener( 'change', function ( event ) {
-				if ( event.target.matches( 'input[type="checkbox"]' ) ) {
+				if ( event.target.matches( 'input[type="checkbox"], input[type="range"], .lgl-filter-price__input' ) ) {
 					form.submit();
 				}
 			} );

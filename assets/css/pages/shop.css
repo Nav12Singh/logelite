@@ -291,19 +291,6 @@
 	letter-spacing: var(--lgl-tracking-wide);
 }
 
-.lgl-filter-form__submit {
-	width: 100%;
-	padding-block: var(--lgl-space-3);
-	border: 0;
-	border-radius: var(--lgl-radius-md);
-	background: var(--lgl-color-brand);
-	color: var(--lgl-text-inverse);
-	font-family: var(--lgl-font-heading);
-	font-weight: var(--lgl-weight-bold);
-	font-size: var(--lgl-text-xs);
-	letter-spacing: var(--lgl-tracking-wide);
-}
-
 /* Toolbar */
 
 .lgl-shop-toolbar {
