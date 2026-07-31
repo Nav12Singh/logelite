@@ -21,12 +21,17 @@
 // reference — a teal success banner (now checkout/order-received.php,
 // also overridden), a 4-column bordered order-info grid (adds "Arrives
 // By", see lgl_get_estimated_delivery_range(), inc/helpers.php), a
-// two-column body (order details + line-item thumbnails / shipping +
-// payment recap boxes), and a "You might also like" product row. Every
-// action WooCommerce/plugins rely on (woocommerce_before_thankyou,
-// woocommerce_thankyou_{payment_method}, woocommerce_thankyou, and the
-// T4.1 lgl_thankyou_delivery_details hook — see inc/checkout-fields.php)
-// still fires exactly as before, just relocated within the new layout.
+// two-column body (order details + line-item thumbnails / an icon-titled
+// order summary + shipping + delivery + payment recap-box stack), and a
+// "You might also like" product row. Every action WooCommerce/plugins
+// rely on (woocommerce_before_thankyou, woocommerce_thankyou_
+// {payment_method}, woocommerce_thankyou, and the T4.1
+// lgl_thankyou_delivery_details hook — see inc/checkout-fields.php)
+// still fires exactly once, just relocated within the new layout — see
+// each do_action() call's own comment for where and why. Core's
+// woocommerce_order_details_table listener on woocommerce_thankyou is
+// removed in inc/woocommerce.php: it rendered its own full unstyled
+// order table a second time below everything here.
 
 defined( 'ABSPATH' ) || exit;
 ?>
@@ -49,6 +54,19 @@ defined( 'ABSPATH' ) || exit;
 					<a href="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>" class="button pay"><?php esc_html_e( 'My account', 'woocommerce' ); ?></a>
 				<?php endif; ?>
 			</p>
+
+			<?php
+			/**
+			 * Fired here (core also fires it for failed orders, outside its
+			 * own if/else — see templates/checkout/thankyou.php) rather than
+			 * once at the bottom for both branches, because the success
+			 * branch below now fires this same action itself, buffered,
+			 * inside the Payment recap box (see its own comment) — a single
+			 * bottom-of-template call would have fired it a second time on
+			 * every successful order.
+			 */
+			do_action( 'woocommerce_thankyou_' . $order->get_payment_method(), $order->get_id() );
+			?>
 
 		<?php else : ?>
 
@@ -146,9 +164,14 @@ defined( 'ABSPATH' ) || exit;
 						<?php
 						lgl_button(
 							array(
+								// 'ghost' (dark text/border on a light surface), not
+								// 'secondary' (white-on-transparent, meant for the
+								// teal banner) — this button sits on the plain
+								// white order body, where 'secondary' renders
+								// white-on-white and is effectively invisible.
 								'label'   => esc_html__( 'Continue shopping', 'logelite' ),
 								'url'     => lgl_wc_active() ? wc_get_page_permalink( 'shop' ) : home_url( '/' ),
-								'variant' => 'secondary',
+								'variant' => 'ghost',
 							)
 						);
 						?>
@@ -157,7 +180,39 @@ defined( 'ABSPATH' ) || exit;
 
 				<div class="lgl-order-body__aside">
 					<div class="lgl-order-recap-box">
-						<div class="lgl-order-recap-box__title"><?php esc_html_e( 'Shipping address', 'logelite' ); ?></div>
+						<div class="lgl-order-recap-box__title">
+							<?php echo lgl_get_recap_icon_svg( 'receipt' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed, trusted SVG from lgl_get_recap_icon_svg(). ?>
+							<?php esc_html_e( 'Order summary', 'logelite' ); ?>
+						</div>
+						<dl class="lgl-order-summary">
+							<?php foreach ( $order->get_order_item_totals() as $lgl_totals_key => $lgl_totals_row ) : ?>
+								<div class="lgl-order-summary__row<?php echo ( 'order_total' === $lgl_totals_key ) ? ' lgl-order-summary__row--total' : ''; ?>">
+									<dt><?php echo esc_html( $lgl_totals_row['label'] ); ?></dt>
+									<dd><?php echo wp_kses_post( $lgl_totals_row['value'] ); ?></dd>
+								</div>
+							<?php endforeach; ?>
+						</dl>
+					</div>
+				</div>
+
+				<?php
+				/*
+				 * Shipping address / Delivery details / Payment — a row of
+				 * equal-width cards parallel to each other, spanning the
+				 * full body width (grid-column: 1 / -1 in checkout.css),
+				 * rather than stacked one-after-another in the narrow
+				 * .lgl-order-body__aside column above. Order summary stays
+				 * in the aside since it's read together with the line
+				 * items to its left; these three are self-contained facts
+				 * that read better side by side.
+				 */
+				?>
+				<div class="lgl-order-recap-row">
+					<div class="lgl-order-recap-box">
+						<div class="lgl-order-recap-box__title">
+							<?php echo lgl_get_feature_icon_svg( 'shipping' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed, trusted SVG from lgl_get_feature_icon_svg(). ?>
+							<?php esc_html_e( 'Shipping address', 'logelite' ); ?>
+						</div>
 						<?php
 						$lgl_address = $order->has_shipping_address() ? $order->get_formatted_shipping_address() : $order->get_formatted_billing_address();
 
@@ -175,12 +230,34 @@ defined( 'ABSPATH' ) || exit;
 					 *         renders the gift message / delivery date / delivery
 					 *         slot fields via template-parts/checkout/order-custom-fields.php,
 					 *         reading from the order meta T4.1's checkout fields save)
+					 *
+					 * Buffered (rather than echoed straight into the layout, as
+					 * this hook used to be) so the "Delivery details" recap box
+					 * below — title, icon, border — only renders when the hook
+					 * actually produced rows; lgl_render_thankyou_checkout_meta()
+					 * returns silently when the order has no delivery meta, and
+					 * an empty bordered box would look like a rendering bug.
 					 */
+					ob_start();
 					do_action( 'lgl_thankyou_delivery_details', $order );
-					?>
+					$lgl_delivery_markup = trim( ob_get_clean() );
+
+					if ( '' !== $lgl_delivery_markup ) :
+						?>
+						<div class="lgl-order-recap-box">
+							<div class="lgl-order-recap-box__title">
+								<?php echo lgl_get_recap_icon_svg( 'calendar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed, trusted SVG from lgl_get_recap_icon_svg(). ?>
+								<?php esc_html_e( 'Delivery details', 'logelite' ); ?>
+							</div>
+							<?php echo $lgl_delivery_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- template-parts/checkout/order-custom-fields.php's own labels/values are already esc_html()'d by lgl_get_checkout_meta_display(). ?>
+						</div>
+					<?php endif; ?>
 
 					<div class="lgl-order-recap-box">
-						<div class="lgl-order-recap-box__title"><?php esc_html_e( 'Payment', 'logelite' ); ?></div>
+						<div class="lgl-order-recap-box__title">
+							<?php echo lgl_get_recap_icon_svg( 'card' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed, trusted SVG from lgl_get_recap_icon_svg(). ?>
+							<?php esc_html_e( 'Payment', 'logelite' ); ?>
+						</div>
 						<?php if ( $order->get_payment_method_title() ) : ?>
 							<p><?php echo wp_kses_post( $order->get_payment_method_title() ); ?></p>
 						<?php endif; ?>
@@ -195,6 +272,29 @@ defined( 'ABSPATH' ) || exit;
 						</p>
 						<?php if ( $order->is_paid() ) : ?>
 							<p class="lgl-order-recap-box__confirmed"><?php esc_html_e( 'Payment confirmed', 'logelite' ); ?></p>
+						<?php endif; ?>
+						<?php
+						/**
+						 * Gateway-specific thank-you notice (e.g. WC_Gateway_COD's
+						 * "Pay with cash upon delivery" instructions text).
+						 *
+						 * Moved here, into the Payment recap box it's actually
+						 * about, from its old spot — a bare, unstyled paragraph
+						 * dropped after the "You might also like" product grid
+						 * with no visual relationship to the payment info above
+						 * it. Still the same core action, buffered instead of
+						 * echoed inline so the wrapper below only renders when a
+						 * gateway actually outputs something (most don't).
+						 */
+						ob_start();
+						do_action( 'woocommerce_thankyou_' . $order->get_payment_method(), $order->get_id() );
+						$lgl_gateway_notice = trim( ob_get_clean() );
+
+						if ( '' !== $lgl_gateway_notice ) :
+							?>
+							<div class="lgl-order-recap-box__notice">
+								<?php echo wp_kses_post( $lgl_gateway_notice ); ?>
+							</div>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -257,8 +357,18 @@ defined( 'ABSPATH' ) || exit;
 
 		<?php endif; ?>
 
-		<?php do_action( 'woocommerce_thankyou_' . $order->get_payment_method(), $order->get_id() ); ?>
-		<?php do_action( 'woocommerce_thankyou', $order->get_id() ); ?>
+		<?php
+		/**
+		 * woocommerce_thankyou_{payment_method} already fired above, inside
+		 * the Payment recap box (see its own comment) — not fired again
+		 * here. woocommerce_thankyou itself still fires here for
+		 * third-party plugin compatibility; core's own
+		 * woocommerce_order_details_table listener on it is removed in
+		 * inc/woocommerce.php (see lgl_wc_unhook_defaults()) since this
+		 * template already renders its own styled equivalent above.
+		 */
+		do_action( 'woocommerce_thankyou', $order->get_id() );
+		?>
 
 	<?php else : ?>
 

@@ -361,6 +361,24 @@
 	gap: var(--lgl-space-4);
 }
 
+/*
+ * Shipping address / Delivery details / Payment — parallel cards in one
+ * row spanning the full body width, not stacked in the narrow aside
+ * column above. `grid-column: 1 / -1` claims both of .lgl-order-body's
+ * tracks regardless of viewport (it's a 2-column grid down to 767px,
+ * 1-column below that — spanning "1 to last" works either way).
+ * `repeat(auto-fit, minmax(220px, 1fr))` keeps the 2-4 cards (Delivery
+ * details only renders when the order has delivery meta) equal-width and
+ * lets them wrap to fewer columns once 220px per card no longer fits,
+ * rather than needing a separate mobile breakpoint rule.
+ */
+.lgl-order-recap-row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: var(--lgl-space-4);
+}
+
 .lgl-order-recap-box {
 	padding: var(--lgl-space-5);
 	background: var(--lgl-surface-sunken);
@@ -372,11 +390,19 @@
 }
 
 .lgl-order-recap-box__title {
-	margin-bottom: var(--lgl-space-2);
+	display: flex;
+	align-items: center;
+	gap: var(--lgl-space-2);
+	margin-bottom: var(--lgl-space-3);
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-md);
 	color: var(--lgl-text-primary);
+}
+
+.lgl-order-recap-box__title svg {
+	flex: 0 0 auto;
+	color: var(--lgl-color-brand);
 }
 
 .lgl-order-recap-box p {
@@ -386,6 +412,63 @@
 .lgl-order-recap-box__confirmed {
 	color: var(--lgl-color-success);
 	font-weight: var(--lgl-weight-semibold);
+}
+
+.lgl-order-recap-box__notice {
+	margin-top: var(--lgl-space-3);
+	padding-top: var(--lgl-space-3);
+	border-top: 1px solid var(--lgl-border-subtle);
+	color: var(--lgl-text-muted);
+	font-size: var(--lgl-text-xs);
+	line-height: var(--lgl-leading-relaxed);
+}
+
+.lgl-order-recap-box__notice p:last-child {
+	margin-bottom: 0;
+}
+
+/* Order summary totals (first aside box) */
+
+.lgl-order-summary {
+	margin: 0;
+}
+
+.lgl-order-summary__row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--lgl-space-3);
+	padding-block: var(--lgl-space-2);
+	border-bottom: 1px solid var(--lgl-border-subtle);
+}
+
+.lgl-order-summary__row dt {
+	color: var(--lgl-text-muted);
+}
+
+.lgl-order-summary__row dd {
+	margin: 0;
+	font-weight: var(--lgl-weight-semibold);
+	color: var(--lgl-text-primary);
+	text-align: right;
+}
+
+.lgl-order-summary__row--total {
+	padding-top: var(--lgl-space-3);
+	border-bottom: 0;
+}
+
+.lgl-order-summary__row--total dt {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-bold);
+	color: var(--lgl-text-primary);
+}
+
+.lgl-order-summary__row--total dd {
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-lg);
+	color: var(--lgl-color-brand);
 }
 
 @media (max-width: 767px) {

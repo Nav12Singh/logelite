@@ -350,6 +350,29 @@ if ( ! function_exists( 'lgl_get_feature_icon_svg' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lgl_get_recap_icon_svg' ) ) {
+	/**
+	 * Get a simple inline SVG glyph for a thank-you page recap-box title
+	 * (order summary, delivery details, payment) — distinct from
+	 * lgl_get_feature_icon_svg(), which serves the product "Feature Icons"
+	 * meta box, a different, per-product configurable set.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $key One of 'receipt', 'calendar', 'card'.
+	 * @return string Raw SVG markup, or the 'receipt' glyph for an unknown key.
+	 */
+	function lgl_get_recap_icon_svg( $key ) {
+		$lgl_icons = array(
+			'receipt'  => '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 3h14v18l-2.5-1.6L14 21l-2-1.6L10 21l-2.5-1.6L5 21z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>',
+			'calendar' => '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>',
+			'card'     => '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="5.5" width="19" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.6"></path><path d="M6 14.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>',
+		);
+
+		return isset( $lgl_icons[ $key ] ) ? $lgl_icons[ $key ] : $lgl_icons['receipt'];
+	}
+}
+
 if ( ! function_exists( 'lgl_get_feature_icons' ) ) {
 	/**
 	 * Get a product's configured feature icons (shown under Add to Cart),

@@ -132,6 +132,15 @@ if ( ! function_exists( 'lgl_wc_unhook_defaults' ) ) {
 	 *   for (visible as a stray underlined price/rating line below each
 	 *   shop-grid card, sitting inside the unclosed `<a>` above — hence the
 	 *   link-blue/underlined look).
+	 * - `woocommerce_order_details_table` (priority 10 on
+	 *   woocommerce_thankyou) is removed because
+	 *   woocommerce/checkout/thankyou.php fires woocommerce_thankyou itself
+	 *   at the end (deliberately, for third-party compatibility, see that
+	 *   file's own comment), and left alone this renders core's entire
+	 *   unstyled order/order-details.php table (product list, totals,
+	 *   billing address, "Additional information") a second time directly
+	 *   below our own styled line-items / recap-box layout, which already
+	 *   covers every field it would show.
 	 *
 	 * @since 1.0.0
 	 *
@@ -153,6 +162,7 @@ if ( ! function_exists( 'lgl_wc_unhook_defaults' ) ) {
 		remove_action( 'woocommerce_before_shop_loop_item', 'woocommerce_template_loop_product_link_open', 10 );
 		remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10 );
 		remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_rating', 5 );
+		remove_action( 'woocommerce_thankyou', 'woocommerce_order_details_table', 10 );
 
 		add_action( 'woocommerce_before_main_content', 'lgl_wc_wrapper_start', 10 );
 		add_action( 'woocommerce_after_main_content', 'lgl_wc_wrapper_end', 10 );
