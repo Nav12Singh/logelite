@@ -104,6 +104,10 @@
 	list-style: none;
 }
 
+ul.lgl-filter-categories {
+    padding: 0 0 0 10px;
+}
+
 .lgl-filter-categories ul {
 	padding-left: var(--lgl-space-4);
 }
@@ -328,11 +332,27 @@
 	margin-left: auto;
 }
 
+form.woocommerce-ordering.lgl-shop-orderby {
+    margin: 0;
+}
+
 .lgl-shop-orderby,
 .lgl-shop-per-page {
 	display: flex;
 	align-items: center;
 	gap: var(--lgl-space-2);
+	/*
+	 * WooCommerce core's own woocommerce.scss puts `margin: 0 0 1em` on
+	 * `.woocommerce-ordering` (a class this theme's orderby.php form keeps
+	 * for compatibility, alongside .lgl-shop-orderby) — that stray bottom
+	 * margin is what was pushing the orderby control off-center from the
+	 * per-page select beside it, since both sit in the same
+	 * `.lgl-shop-toolbar__controls` flex row under `align-items: center`
+	 * (a taller margin box centers to a visually higher position). Reset
+	 * here, on both selectors, rather than only the one that needed it, so
+	 * neither is exposed to a WC/browser default margin again later.
+	 */
+	margin: 0;
 }
 
 .lgl-shop-orderby__select,
@@ -343,6 +363,30 @@
 	border-radius: var(--lgl-radius-md);
 	font-size: var(--lgl-text-sm);
 	font-weight: var(--lgl-weight-semibold);
+	/* Support for text-overflow on a closed <select> varies by browser,
+	   but costs nothing where it isn't honored — a graceful degrade for
+	   whichever orderby option ends up selected, now that the box below
+	   is sized to the short label, not the longest option in the list. */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/*
+ * A native <select> with no explicit width auto-sizes to its widest
+ * *option*, not just the currently visible selection — this one's option
+ * list includes "Sort by price: high to low" (woocommerce_catalog_ordering()
+ * pulls WooCommerce core's own full label set), so the closed control was
+ * rendering that wide even while showing the much shorter "Default sorting".
+ * Fixed widths below size each to its own visible text instead, matching
+ * the reference's compact "Popularity ▾" / "Show 10 ▾" pill look.
+ */
+.lgl-shop-orderby__select {
+	width: 10.5rem;
+}
+
+.lgl-shop-per-page__select {
+	width: 6.5rem;
 }
 
 /* Active filter chips */
@@ -467,6 +511,10 @@
 	list-style: none;
 }
 
+#lgl-main .lgl-shop-pagination ul.page-numbers,#lgl-main .lgl-shop-pagination .page-numbers li {
+    border: none;
+}
+
 .lgl-shop-pagination .page-numbers {
 	display: inline-flex;
 	align-items: center;
@@ -481,10 +529,21 @@
 	font-weight: var(--lgl-weight-semibold);
 }
 
-.lgl-shop-pagination .page-numbers.current {
-	background: var(--lgl-color-brand);
-	border-color: var(--lgl-color-brand);
-	color: var(--lgl-text-inverse);
+#lgl-main .lgl-shop-pagination .page-numbers .page-numbers {
+    line-height: 100%;
+    height: 40px;
+    aspect-ratio: 1;
+    background: #fff;
+    display: inline-flex;
+    margin: 0 5px;
+    align-items: center;
+    justify-content: center;
+}
+
+#lgl-main .lgl-shop-pagination .page-numbers .page-numbers.current {
+    background: var(--lgl-color-brand);
+    border-color: var(--lgl-color-brand);
+    color: var(--lgl-text-inverse);
 }
 
 .lgl-shop-pagination a.page-numbers:hover,
@@ -496,6 +555,16 @@
 /* < 992px: sidebar becomes an off-canvas drawer */
 
 @media (max-width: 991px) {
+
+	.lgl-shop-products :where(ul.products.columns-4) {
+		grid-template-columns: 1fr;
+	}
+
+	#lgl-main .lgl-shop-products ul.products > li.product {
+		width: 100%;
+		margin: 0;
+	}
+
 	.lgl-shop-layout {
 		grid-template-columns: 1fr;
 	}
@@ -555,4 +624,8 @@
 		background: none;
 		color: var(--lgl-text-primary);
 	}
+
+	.lgl-shop-toolbar__controls {
+    flex-wrap: wrap;
+}
 }

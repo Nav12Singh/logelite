@@ -95,6 +95,10 @@ table {
 	padding-inline: var(--lgl-space-6);
 }
 
+.lgl-container>.lgl-container {
+    padding: 0;
+}
+
 /* Applied to <body> by JS while a modal/off-canvas panel is open. */
 .lgl-scroll-locked {
 	overflow: hidden;

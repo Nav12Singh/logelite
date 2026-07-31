@@ -79,6 +79,14 @@ if ( WC()->payment_gateways() ) {
 			<div class="lgl-buy-box__payment-icons">
 				<?php echo wp_kses_post( $lgl_payment_icons ); ?>
 			</div>
+		<?php else : ?>
+			<?php /* Same "always show 4 placeholder boxes" fallback as the footer's own payment-icon row (site-footer.php) — matches the reference's own literal 4 plain boxes rather than leaving a bare row when no gateway provides an icon. */ ?>
+			<div class="lgl-buy-box__payment-icons lgl-buy-box__payment-icons--placeholder" aria-hidden="true">
+				<span></span>
+				<span></span>
+				<span></span>
+				<span></span>
+			</div>
 		<?php endif; ?>
 	</div>
 </div>

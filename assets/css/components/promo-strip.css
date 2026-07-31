@@ -144,4 +144,17 @@
 	.lgl-promo-strip__usp {
 		display: none;
 	}
+
+	.lgl-promo-strip__inner {
+	height: unset;
+}
+
+.lgl-promo-strip__search {
+	height: auto;
+	flex-wrap: wrap;
+}
+
+.lgl-promo-strip {
+    margin: 20px 0;
+}
 }

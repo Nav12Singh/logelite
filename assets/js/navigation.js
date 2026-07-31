@@ -4,25 +4,29 @@
  * scroll lock, transition-aware close) in assets/js/nav-mobile.js — see
  * inc/enqueue.php for the localized `lglNavigation` data it uses.
  */
-( function () {
-	'use strict';
+(function () {
+    'use strict';
 
-	var header = document.querySelector( '[data-sticky]' );
-	var sentinel = document.querySelector( '[data-header-sentinel]' );
-
-	if ( header && sentinel && 'IntersectionObserver' in window ) {
-		var stickyObserver = new IntersectionObserver(
-			function ( entries ) {
-				entries.forEach( function ( entry ) {
-					header.classList.toggle( 'is-scrolled', ! entry.isIntersecting );
-				} );
-			},
-			{ threshold: 0 }
-		);
-
-		stickyObserver.observe( sentinel );
-	}
-} )();
+    var header = document.querySelector('[data-sticky]');
+    
+    if (header) {
+        var stickyOffset = 50;
+        var isSticky = false;
+        
+        function handleScroll() {
+            if (window.scrollY >= stickyOffset && !isSticky) {
+                header.classList.add('is-scrolled');
+                isSticky = true;
+            }
+            // Never remove the class
+        }
+        
+        // Initial check
+        handleScroll();
+        
+        window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+})();
 
 /**
  * Mega-menu keyboard layer for the primary nav (LGL_Mega_Walker output).

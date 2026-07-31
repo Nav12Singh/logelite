@@ -111,6 +111,27 @@ if ( ! function_exists( 'lgl_wc_unhook_defaults' ) ) {
 	 *   is removed because the design reference's cart page has no
 	 *   cross-sell row at all (just line items, coupon, and totals) —
 	 *   leaving it hooked would render one anyway.
+	 * - `woocommerce_template_loop_product_link_open` (priority 10 on
+	 *   woocommerce_before_shop_loop_item) is removed because
+	 *   woocommerce/content-product.php replaces the whole default
+	 *   shop-loop-item hook stack with one lgl_product_card() call, but
+	 *   still fires woocommerce_before_shop_loop_item itself (deliberately,
+	 *   for third-party plugin compatibility — see that file's own
+	 *   comment). Left alone, this opens an `<a href="...">` around the
+	 *   whole card with no matching close (its pair,
+	 *   woocommerce_template_loop_product_link_close, is on
+	 *   woocommerce_after_shop_loop_item, which this theme's template never
+	 *   fires) — invalid nested-anchor HTML around lgl_product_card()'s own
+	 *   real link.
+	 * - `woocommerce_template_loop_price` (priority 10) and
+	 *   `woocommerce_template_loop_rating` (priority 5), both on
+	 *   woocommerce_after_shop_loop_item_title — content-product.php fires
+	 *   that hook too (same compatibility reason), so left alone these
+	 *   render WooCommerce's own unstyled price and rating a second time
+	 *   directly below every card lgl_product_card() already rendered one
+	 *   for (visible as a stray underlined price/rating line below each
+	 *   shop-grid card, sitting inside the unclosed `<a>` above — hence the
+	 *   link-blue/underlined look).
 	 *
 	 * @since 1.0.0
 	 *
@@ -129,6 +150,9 @@ if ( ! function_exists( 'lgl_wc_unhook_defaults' ) ) {
 		remove_action( 'woocommerce_before_shop_loop', 'woocommerce_catalog_ordering', 30 );
 		remove_action( 'woocommerce_sidebar', 'woocommerce_get_sidebar', 10 );
 		remove_action( 'woocommerce_cart_collaterals', 'woocommerce_cross_sell_display', 10 );
+		remove_action( 'woocommerce_before_shop_loop_item', 'woocommerce_template_loop_product_link_open', 10 );
+		remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10 );
+		remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_rating', 5 );
 
 		add_action( 'woocommerce_before_main_content', 'lgl_wc_wrapper_start', 10 );
 		add_action( 'woocommerce_after_main_content', 'lgl_wc_wrapper_end', 10 );
@@ -182,6 +206,9 @@ if ( ! function_exists( 'lgl_reorder_single_product_summary' ) ) {
 	 *   10  woocommerce_template_single_title
 	 *   20  woocommerce_template_single_rating
 	 *   40  woocommerce_template_single_excerpt      (short description)
+	 *   45  lgl_render_summary_tags                  (Free Shipping/Free Gift pills)
+	 *   50  lgl_render_variation_swatches            (COLOR/MEMORY SIZE tiles — variable products only)
+	 *   60  lgl_render_bundle_offer
 	 *   80  woocommerce_template_single_meta         (SKU / category / tags)
 	 *   90  woocommerce_template_single_sharing
 	 *   100 WC_Structured_Data::generate_product_data() (via WC()->structured_data;
@@ -216,6 +243,51 @@ if ( ! function_exists( 'lgl_reorder_single_product_summary' ) ) {
 	}
 }
 add_action( 'init', 'lgl_reorder_single_product_summary' );
+
+if ( ! function_exists( 'lgl_render_summary_tags' ) ) {
+	/**
+	 * Render template-parts/product/summary-tags.php (Free Shipping/Free
+	 * Gift pill row).
+	 *
+	 * Priority 45 on woocommerce_single_product_summary — right after the
+	 * short description (40), before the variation swatches (50). This
+	 * hook registration was missing entirely (the template part existed
+	 * but nothing ever called it, despite an earlier phase claiming
+	 * otherwise — see ASSUMPTIONS.md).
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_render_summary_tags() {
+		get_template_part( 'template-parts/product/summary-tags' );
+	}
+}
+add_action( 'woocommerce_single_product_summary', 'lgl_render_summary_tags', 45 );
+
+if ( ! function_exists( 'lgl_render_variation_swatches' ) ) {
+	/**
+	 * Render template-parts/product/variation-swatches.php (COLOR/MEMORY
+	 * SIZE tiles) — a no-op on simple products, since that template
+	 * returns early for anything that isn't WC_Product_Variable.
+	 *
+	 * Priority 50 on woocommerce_single_product_summary — after the
+	 * shipping/gift pills (45), before the bundle offer (60). Same missing-
+	 * hook situation as lgl_render_summary_tags() above: the template part
+	 * existed but was never actually wired to any hook, so no variable
+	 * product ever showed its swatch tiles despite the real, hidden
+	 * variation `<select>` elements (woocommerce/single-product/add-to-cart/variable.php)
+	 * working fine underneath.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_render_variation_swatches() {
+		get_template_part( 'template-parts/product/variation-swatches' );
+	}
+}
+add_action( 'woocommerce_single_product_summary', 'lgl_render_variation_swatches', 50 );
 
 if ( ! function_exists( 'lgl_render_bundle_offer' ) ) {
 	/**
@@ -544,4 +616,59 @@ if ( ! function_exists( 'lgl_related_products_fallback' ) ) {
 	}
 }
 add_filter( 'woocommerce_related_products', 'lgl_related_products_fallback', 10, 3 );
+
+if ( ! function_exists( 'lgl_add_faq_product_tab' ) ) {
+	/**
+	 * Add an "FAQ" tab (woocommerce_product_tabs filter) for products with
+	 * at least one FAQ configured via the "Product FAQs" meta box
+	 * (inc/meta-boxes.php, _lgl_product_faqs).
+	 *
+	 * Priority 25 — between WooCommerce's own default "Additional
+	 * information" (20) and "Reviews" (30), so it reads as one more piece
+	 * of product information rather than being buried after customer
+	 * reviews.
+	 *
+	 * Not registered at all when the product has no FAQs, same pattern as
+	 * lgl_render_bundle_offer()/summary-tags.php — no empty tab shown on
+	 * products nobody has configured this for yet.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $tabs Existing tabs, keyed by tab id.
+	 * @return array
+	 */
+	function lgl_add_faq_product_tab( $tabs ) {
+		global $product;
+
+		if ( ! $product instanceof WC_Product ) {
+			return $tabs;
+		}
+
+		if ( empty( lgl_get_product_faqs( $product->get_id() ) ) ) {
+			return $tabs;
+		}
+
+		$tabs['lgl_faq'] = array(
+			'title'    => esc_html__( 'FAQ', 'logelite' ),
+			'priority' => 25,
+			'callback' => 'lgl_render_faq_product_tab',
+		);
+
+		return $tabs;
+	}
+}
+add_filter( 'woocommerce_product_tabs', 'lgl_add_faq_product_tab' );
+
+if ( ! function_exists( 'lgl_render_faq_product_tab' ) ) {
+	/**
+	 * Render the "FAQ" tab panel: template-parts/product/faq-tab.php.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	function lgl_render_faq_product_tab() {
+		get_template_part( 'template-parts/product/faq-tab' );
+	}
+}
 

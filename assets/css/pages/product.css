@@ -9,34 +9,42 @@
 }
 
 /* Three-column layout: gallery (sticky) / summary / buy-box (sticky, fixed
-   300px), single column below 992px */
+   300px), single column below 992px.
+
+   grid-template-columns intentionally diverges from the design reference's
+   own 1fr/1.1fr/300px split — user asked for a visibly larger gallery image
+   and thumbnails specifically (three times now, each asking for more), so
+   the gallery track keeps taking more share from the summary column. The
+   summary column is down to 0.75fr here — this is close to the point
+   where swatch tiles/bundle-offer text start wrapping awkwardly; the next
+   ask for "more" probably needs to come out of the buy-box's fixed 300px
+   instead of the summary column. */
 
 .lgl-product-layout {
-	display: grid;
-	grid-template-columns: 1fr 1.1fr 300px;
-	gap: var(--lgl-space-8);
-	align-items: start;
-	margin-top: var(--lgl-space-6);
-	padding: var(--lgl-space-8);
-	border: 1px solid var(--lgl-border-default);
-	border-radius: var(--lgl-radius-lg);
-	background: var(--lgl-surface-default);
+    display: grid;
+    grid-template-columns: auto 1fr 300px;
+    gap: var(--lgl-space-8);
+    align-items: start;
+    margin-top: var(--lgl-space-6);
+    padding: var(--lgl-space-8);
+    border: 1px solid var(--lgl-border-default);
+    border-radius: var(--lgl-radius-lg);
+    background: var(--lgl-surface-default);
 }
 
 .lgl-product-gallery-col {
-	position: sticky;
-	top: var(--lgl-space-6);
-	/*
-	 * Without this, the grid item's "automatic minimum size" (the default,
-	 * since no min-width is otherwise set) resolves to the gallery image's
-	 * natural/intrinsic width whenever that's larger than this column's
-	 * fair 1fr share — which it usually is for a real product photo. The
-	 * grid then grows this track past its fair share to satisfy that
-	 * minimum, crushing the sibling `1.1fr` summary column down to its own
-	 * min-content floor (the single longest word), which is exactly the
-	 * "one word per line, column is a sliver" blowout this fixes.
-	 */
-	min-width: 0;
+    position: sticky;
+    top: var(--lgl-space-6);
+    min-width: 0;
+    max-width: 400px;
+}
+
+#lgl-main .lgl-product-gallery-col .lgl-product-gallery {
+    width: 100%;
+}
+
+#lgl-main .lgl-product-summary-col {
+	width:100%;
 }
 
 /* Gallery badge (woocommerce/single-product/sale-flash.php) — solid black,
@@ -56,25 +64,44 @@
 }
 
 /*
- * Verified against the installed WooCommerce's own JS
- * (assets/js/frontend/single-product.js + flexslider) rather than guessed:
- * flexslider is initialized directly on .woocommerce-product-gallery__wrapper
- * with controlNav: 'thumbnails' (includes/class-wc-frontend-scripts.php),
- * which generates <ol class="flex-control-nav flex-control-thumbs"> as a
- * sibling of .flex-viewport inside that same wrapper — those are the real
- * classes targeted below, not guessed ones. Neither flexslider nor
- * PhotoSwipe is reconfigured or replaced; this only repositions/resizes
- * their existing output.
- *
- * column, not row-reverse: the reference stacks the main image on top and
- * a 4-across thumbnail row below it, not a thumbnail rail beside it. Plain
- * DOM order already puts .flex-viewport before .flex-control-thumbs, so a
- * column direction alone (no reverse) puts the image on top.
+ * Corrected after actually tracing assets/js/frontend/single-product.js +
+ * flexslider's own doInit() line by line (a previous comment here claimed
+ * the thumbnail nav renders "as a sibling of .flex-viewport inside" the
+ * .woocommerce-product-gallery__wrapper — half right, half wrong, and the
+ * wrong half caused a real bug below). What's actually true: WooCommerce
+ * calls `.flexslider()` on the OUTER `.woocommerce-product-gallery` element
+ * itself (`$('.woocommerce-product-gallery').each(function(){ $(this)
+ * .wc_product_gallery(...) })`), and flexslider's own doInit()...
+ *   - creates `.flex-viewport` and appends it as a direct child of THAT
+ *     outer element, then moves the original `.woocommerce-product-gallery__wrapper`
+ *     inside it (so `.flex-viewport > .woocommerce-product-gallery__wrapper
+ *     > .woocommerce-product-gallery__image` × N, the real fade slides)
+ *   - appends the thumbnail `<ol class="flex-control-nav flex-control-thumbs">`
+ *     as ANOTHER direct child of that SAME outer element — a sibling of
+ *     `.flex-viewport`, NOT nested inside `.woocommerce-product-gallery__wrapper`
+ *     at all.
+ * So the "image stacked above thumbnails" layout needs to happen at THIS
+ * outer element (.lgl-product-gallery itself, its two real direct
+ * children), not at .woocommerce-product-gallery__wrapper — which
+ * previously had `display:flex` here as a genuine bug, not just an
+ * unnecessary rule: flexslider's fade animation overlaps its slides using
+ * an old `float:left; margin-right:-100%` trick set as inline styles on
+ * each `.woocommerce-product-gallery__image` — CSS floats have NO EFFECT
+ * on children of a flex container (per spec, float is ignored entirely
+ * for flex items), so that `display:flex` silently neutered the entire
+ * overlap trick. The slides just stacked as ordinary flex items instead of
+ * overlapping, which is exactly "clicking a thumbnail updates flexslider's
+ * state correctly but no image ever visibly changes."
  */
-.lgl-product-gallery .woocommerce-product-gallery__wrapper {
+.lgl-product-gallery {
 	display: flex;
 	flex-direction: column;
 	gap: var(--lgl-space-3);
+	width: 100%;
+}
+
+.lgl-product-gallery .woocommerce-product-gallery__wrapper {
+	width: 100%;
 }
 
 .lgl-product-gallery .flex-viewport {
@@ -94,12 +121,50 @@
 	 * deliberate here — it's the one property flexslider is likely to set
 	 * inline, and this box must win over that.
 	 */
-	aspect-ratio: 1 / 1;
+	/* aspect-ratio: 1 / 1; */
 	height: auto !important;
+	/*
+	 * Same reasoning extended to width: flexslider's doMath() reads
+	 * `slider.viewport.width()` (this element's rendered width) and then
+	 * calls `slides.width(slider.computedW)` — if that read ever happens
+	 * while this element is narrower than its actual 1fr grid share (e.g.
+	 * a layout/paint timing race on first load), every slide gets locked to
+	 * that too-small width via inline style, which is what an undersized
+	 * gallery image — one flexslider has already initialized, not a broken
+	 * one — looks like. Forcing 100% here the same way height is forced
+	 * above closes that race the same way.
+	 */
+	width: 100% !important;
 }
 
-.lgl-product-gallery .flex-viewport .slides,
-.lgl-product-gallery .flex-viewport .slides > li,
+/*
+ * Likely dead code, left in place rather than deleted on an unverified
+ * guess: `.slides` was assumed to be a real CSS class flexslider adds to a
+ * wrapping <ul> here, matching its "standard" behavior when no custom
+ * selector is given. But WooCommerce's own gallery init passes a custom
+ * `selector: '.woocommerce-product-gallery__wrapper > .woocommerce-product-gallery__image'`
+ * option (single-product.js), and tracing flexslider's doInit() with that
+ * option shows `slider.slides`/`slider.container` are just JS variable
+ * names bound directly to `.woocommerce-product-gallery__image` /
+ * `.woocommerce-product-gallery__wrapper` — no element with an actual
+ * `.slides` class appears to exist anywhere in this DOM. If confirmed dead
+ * via devtools, remove; the real per-slide sizing lives on
+ * `.woocommerce-product-gallery__image` directly, below.
+ */
+.lgl-product-gallery .flex-viewport .slides {
+	width: 100% !important;
+	height: 100%;
+}
+
+/*
+ * REVERTED: a previous pass here forced `position: absolute !important` on
+ * this element, on the theory that WooCommerce's fade-slide overlap trick
+ * (float + negative margin) wasn't taking effect. That theory was built on
+ * a wrong reading of the DOM structure and made things worse (the user
+ * reported the *default* image stopped showing at all after it) — reverted
+ * back to the last confirmed-working state below. See ASSUMPTIONS.md for
+ * what's actually confirmed vs. still unknown before touching this again.
+ */
 .lgl-product-gallery .woocommerce-product-gallery__image {
 	height: 100%;
 }
@@ -121,6 +186,7 @@
 	grid-template-columns: repeat(4, 1fr);
 	gap: var(--lgl-space-3);
 	list-style: none;
+	width: 100%;
 }
 
 .lgl-product-gallery .flex-control-thumbs li {
@@ -137,16 +203,34 @@
 	 * rendering as barely-visible slivers instead of a clean 4-up row.
 	 * float: none neutralizes WooCommerce's own competing
 	 * `.flex-control-thumbs li { float: left; width: 25% }` the same way
-	 * the shop-grid fix did.
+	 * the shop-grid fix did. `!important` added after confirming via
+	 * devtools that the thumbnail <img> really does carry literal
+	 * `width="99" height="99"` HTML attributes — belt-and-suspenders with
+	 * the `!important` now also on the img rule below.
 	 */
-	float: none;
-	width: 100%;
+	float: none !important;
+	width: 100% !important;
 	min-width: 0;
 }
 
 .lgl-product-gallery .flex-control-thumbs img {
+	/*
+	 * User's own devtools inspection confirmed the exact mechanism this
+	 * rule's neighbor (`.flex-control-thumbs li`) already documented:
+	 * flexslider's controlNav.setupThumbs() (jquery.flexslider.js) really
+	 * does set literal `width="99" height="99"` HTML attributes on this
+	 * <img> (from `this.width = this.naturalWidth` on load) — not a CSS
+	 * inline style, but confirmed real. CSS `width` normally still wins
+	 * over an HTML width attribute with no `!important` needed, and this
+	 * rule already had a plain `width: 100%` — but that alone wasn't
+	 * enough in practice (this exact thumbnail still rendered tiny after
+	 * that). `!important` added here to remove any doubt, matching the
+	 * same escalation already applied to the main viewport's `.slides`/
+	 * `.flex-viewport` for the identical class of problem.
+	 */
 	display: block;
-	width: 100%;
+	width: 100% !important;
+	height: auto !important;
 	aspect-ratio: 1 / 1;
 	object-fit: cover;
 	border-radius: var(--lgl-radius-md);
@@ -175,10 +259,38 @@
 
 .lgl-product__rating {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--lgl-space-2);
 	color: var(--lgl-text-faint);
 	font-size: var(--lgl-text-sm);
+}
+
+#lgl-main .lgl-product__rating {
+	margin: 0;
+}
+
+.lgl-product__rating .star-rating {
+    color: var(--lgl-color-warning);
+}
+/*
+ * WooCommerce's own woocommerce-review-link renders in this theme's global
+ * brand-teal link color by default (base.css's bare `a` rule) — the
+ * reference reads this whole line, stars plus review count, as one flat
+ * muted-gray run (`★★★★☆ (5 reviews)`), not a distinctly-colored link.
+ * color: inherit keeps the real #reviews jump-link functional, just visually
+ * blended into the rest of the rating line instead of standing out as a
+ * separately-colored element.
+ *
+ * white-space: nowrap keeps "1 customer review" together as one phrase —
+ * without it, a narrow column can break mid-phrase (the count ending up
+ * alone on one line, "customer review" alone on the next) instead of the
+ * whole link simply wrapping below the stars as one unit, which is what
+ * the parent's own `flex-wrap: wrap` is there to allow.
+ */
+.lgl-product__rating .woocommerce-review-link {
+	color: inherit;
+	white-space: nowrap;
 }
 
 /* Free Shipping / Free Gift pill row (template-parts/product/summary-tags.php) */
@@ -261,15 +373,35 @@
 	display: inline-flex;
 	align-items: stretch;
 	height: 2.75rem;
+	background: var(--lgl-surface-default);
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-md);
 	overflow: hidden;
 }
 
+/*
+ * Reference (design-reference/Logelite Theme.dc.html line 394-398) is one
+ * flat, seamless white box — plain `-`/`+` buttons with a transparent
+ * background and no divider between them and the number. This theme had a
+ * shaded background on the buttons and vertical border dividers around the
+ * `.qty` input, neither of which the reference has.
+ */
+
+ .lgl-product-buybox-col .lgl-buy-box .woocommerce-variation-add-to-cart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lgl-product-buybox-col .lgl-buy-box .woocommerce-variation-add-to-cart .lgl-quantity {
+    width: 100%;
+    justify-content: space-around;
+}
+
 .lgl-quantity__button {
 	width: 2.75rem;
 	border: 0;
-	background: var(--lgl-neutral-150);
+	background: transparent;
 	color: var(--lgl-text-muted);
 	font-size: var(--lgl-text-lg);
 	cursor: pointer;
@@ -278,8 +410,7 @@
 .lgl-quantity .qty {
 	width: 3.5rem;
 	border: 0;
-	border-left: 1px solid var(--lgl-border-default);
-	border-right: 1px solid var(--lgl-border-default);
+	background: transparent;
 	text-align: center;
 	-moz-appearance: textfield;
 }
@@ -313,18 +444,41 @@
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-sm);
 	letter-spacing: var(--lgl-tracking-wide);
+	text-transform: uppercase;
 	cursor: pointer;
 	text-align: center;
 }
 
-.lgl-add-to-cart .single_add_to_cart_button {
-	background: var(--lgl-color-accent);
-	color: var(--lgl-text-inverse);
+/*
+ * WooCommerce core's own button styles (assets/css/woocommerce.scss, still
+ * loaded — this theme never dequeues them) give every add-to-cart button
+ * BOTH a `button` and an `alt` class (`single_add_to_cart_button button
+ * alt`, from its own add-to-cart templates — true for simple AND variable
+ * products), and its `button.button.alt` rule hardcodes a purple `#7f54b3`
+ * background — no `!important` on WooCommerce's side, confirmed by reading
+ * the actual rule.
+ *
+ * This has now taken two passes: the first added one ancestor class (a
+ * real specificity math error, corrected in the second pass to a 4th
+ * class that should out-specificity WooCommerce's selector outright), and
+ * a live screenshot after the SECOND pass still showed the purple
+ * background unchanged even though this same CSS file's other new rules
+ * from the same pass (uppercase text, the payment-icon placeholder, the
+ * flattened quantity stepper) all rendered correctly — meaning this stylesheet
+ * genuinely is loading fresh, so the most likely explanation left is a
+ * subtlety in the compiled selector or environment this static read hasn't
+ * caught, not a caching problem. Added `!important` here as the decisive
+ * fix rather than attempting a third specificity theory — the extra
+ * ancestor classes are kept for documentation/robustness, not removed.
+ */
+.lgl-product-buybox-col .lgl-buy-box .lgl-add-to-cart .single_add_to_cart_button {
+	background: var(--lgl-color-accent) !important;
+	color: var(--lgl-text-inverse) !important;
 }
 
-.lgl-add-to-cart .single_add_to_cart_button:hover,
-.lgl-add-to-cart .single_add_to_cart_button:focus-visible {
-	background: var(--lgl-color-brand);
+.lgl-product-buybox-col .lgl-buy-box .lgl-add-to-cart .single_add_to_cart_button:hover,
+.lgl-product-buybox-col .lgl-buy-box .lgl-add-to-cart .single_add_to_cart_button:focus-visible {
+	background: var(--lgl-color-brand) !important;
 }
 
 .lgl-buy-now-button {
@@ -367,6 +521,14 @@
 }
 
 .lgl-swatch-tile {
+	/* flex: 0 auto (not the initial 0 1 auto — see note) + display: inline-flex
+	   explicitly guard against this <button> stretching to fill its own row
+	   on a narrow column, which is what was happening: each tile rendering
+	   one-per-line, full width, instead of wrapping several to a row like
+	   .lgl-swatch-tiles' own flex-wrap already intends. */
+	display: inline-flex;
+	flex: 0 auto;
+	width: auto;
 	padding: var(--lgl-space-2) var(--lgl-space-4);
 	border: 1.5px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-md);
@@ -412,6 +574,32 @@
 	color: var(--lgl-text-secondary);
 	font-size: var(--lgl-text-sm);
 	line-height: var(--lgl-leading-loose);
+}
+
+/*
+ * SKU / Category / Tags meta (woocommerce_template_single_meta(), WC's own
+ * default — no meta.php override exists, and WooCommerce core ships zero
+ * CSS for `.product_meta`/`.sku_wrapper`/`.posted_in`/`.tagged_as` at all,
+ * so this had never been styled at all until now: each was a plain inline
+ * <span> with no line break between them, reading as one run-together
+ * phrase ("SKU: woo-hoodie Category: Hoodies") rather than the reference's
+ * separate SKU:/CATEGORY:/BRAND: rows.
+ */
+.lgl-product-summary-col .product_meta {
+	display: flex;
+	flex-direction: column;
+	gap: var(--lgl-space-2);
+	margin-top: var(--lgl-space-2);
+	color: var(--lgl-text-secondary);
+	font-size: var(--lgl-text-sm);
+}
+
+.lgl-product-summary-col .product_meta > span {
+	display: block;
+}
+
+.lgl-product-summary-col .product_meta a {
+	color: var(--lgl-color-brand-strong);
 }
 
 /* Buy box (3rd column) */
@@ -480,6 +668,17 @@
 	border-radius: var(--lgl-radius-sm);
 }
 
+/* Reference's own literal values (height:24px;flex:1;border-radius:4px;
+   background:#fff;border:1px solid #e7eaec) for the 4 plain boxes shown
+   when no real gateway icon is available. */
+.lgl-buy-box__payment-icons--placeholder span {
+	flex: 1;
+	height: 24px;
+	border-radius: var(--lgl-radius-sm);
+	background: var(--lgl-surface-default);
+	border: 1px solid var(--lgl-border-default);
+}
+
 .lgl-buy-box__quick-order {
 	padding: var(--lgl-space-5);
 	border: 1px solid var(--lgl-border-default);
@@ -546,10 +745,10 @@
 
 .lgl-delivery-estimator__button {
 	width: 100%;
-	padding-inline: var(--lgl-space-4);
+	padding: var(--lgl-space-4);
 	border: 1px solid var(--lgl-border-default);
 	border-radius: var(--lgl-radius-md);
-	background: var(--lgl-surface-default);
+	background: var(--lgl-neutral-300);
 	color: var(--lgl-text-primary);
 	font-family: var(--lgl-font-heading);
 	font-weight: var(--lgl-weight-bold);
@@ -696,6 +895,55 @@
 	line-height: var(--lgl-leading-relaxed);
 }
 
+/*
+ * WooCommerce's own default single-product/up-sells.php ("You may also
+ * like…") — no theme override file exists for it, and it carries no
+ * lgl-* class of its own, so it was rendering fully exposed to
+ * WooCommerce core's default float grid: `li.product { width: 22.05%;
+ * margin: 0 3.8% ... }` (woocommerce-layout.css, still loaded — this theme
+ * never dequeues WC's default styles). That's noticeably larger than the
+ * same lgl_product_card() component renders everywhere else on the site
+ * (e.g. the 240px-wide cards in Related Products directly below), and the
+ * plain, unstyled `<h2>` heading didn't match this page's other section
+ * headings either. Restyled to the identical compact card size + heading
+ * treatment used by Related Products, same technique as the shop grid's
+ * own `li.product` override (pages/shop.css) for neutralizing this exact
+ * core rule.
+ */
+.upsells.products {
+	margin-top: var(--lgl-space-12);
+}
+
+.upsells.products > h2 {
+	margin: 0 0 var(--lgl-space-5);
+	font-family: var(--lgl-font-heading);
+	font-weight: var(--lgl-weight-extrabold);
+	font-size: var(--lgl-text-2xl);
+	color: var(--lgl-text-primary);
+	text-transform: uppercase;
+}
+
+.upsells.products ul.products {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--lgl-space-5);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.upsells.products ul.products::before,
+.upsells.products ul.products::after {
+	content: none;
+}
+
+.upsells.products ul.products > li.product {
+	flex: 0 0 240px;
+	width: auto;
+	min-width: 0;
+	margin: 0;
+}
+
 /* Related products carousel (woocommerce/single-product/related.php, assets/js/carousel.js) */
 
 .lgl-carousel {
@@ -779,7 +1027,8 @@
 		position: static;
 	}
 
-	.lgl-related-grid > li.product {
+	.lgl-related-grid > li.product,
+	.upsells.products ul.products > li.product {
 		flex-basis: 200px;
 	}
 }

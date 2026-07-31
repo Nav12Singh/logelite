@@ -194,6 +194,7 @@
 	flex-direction: row-reverse;
 	gap: var(--lgl-space-2);
 	font-family: var(--lgl-font-heading);
+	justify-content: flex-end;
 	font-weight: var(--lgl-weight-bold);
 	font-size: var(--lgl-text-lg);
 	color: var(--lgl-text-primary);

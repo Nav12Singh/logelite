@@ -49,6 +49,7 @@
 
 .lgl-header__announcement-inner {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--lgl-space-4);
@@ -258,6 +259,23 @@
 @media (max-width: 767px) {
 	.lgl-header__account {
 		display: none;
+	}
+
+	.lgl-header__inner {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.lgl-header__toggle {
+		order: 1;
+	}
+
+	.lgl-nav__list {
+		flex-direction: column;
+		align-items: flex-start;
+		padding: 0;
 	}
 }
 
