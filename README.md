@@ -2,7 +2,7 @@
 
 Custom classic WordPress + WooCommerce storefront theme. Built to the rules in `CLAUDE.md` — no page builders, no FSE, no ACF, no premium plugins.
 
-**Note on the T7 rebuild:** this theme was subsequently rebuilt end-to-end to match `design-reference/Logelite Theme.dc.html` exactly. Several features the T3-era tickets below describe (feature icons, the delivery-estimator REST route, the sticky mobile add-to-cart bar, product FAQ, the reusable carousel, cart cross-sells) had no counterpart in that reference and were removed entirely, rather than kept alongside it. The ticket table further down is left as an accurate historical record of what those tickets actually built — see `ASSUMPTIONS.md`'s "T7" section for the full list of what changed and why.
+Originally built ticket-by-ticket (T1–T6), then fully rebuilt end-to-end (**T7**) to match a supplied HTML/CSS design reference exactly, and iterated further since with a series of design/QA fix passes (header, footer, home, shop, product, checkout, thank-you, account menu). The design reference file itself was supplied out of band during that work and was never committed to this repo.
 
 ## Requirements
 
@@ -12,19 +12,37 @@ Custom classic WordPress + WooCommerce storefront theme. Built to the rules in `
 
 ## Install
 
-1. **Install WordPress and WooCommerce first**, on a host meeting the versions above. Activate WooCommerce before activating this theme — several theme features (product meta boxes, checkout fields) register against WooCommerce hooks/classes on `init`/`after_setup_theme` and expect the plugin to already be loaded.
+1. **Install WordPress and WooCommerce first**, on a host meeting the versions above. Activate WooCommerce before activating this theme — several theme features (product meta boxes, checkout fields, checkout Blocks integration) register against WooCommerce hooks/classes on `init`/`after_setup_theme` and expect the plugin to already be loaded.
 2. **Upload the theme.** In wp-admin: *Appearance → Themes → Add New → Upload Theme*, choose `logelite.zip`, then *Install Now → Activate*. (Or unzip into `wp-content/themes/logelite/` directly if you have file access.)
 3. **Import sample data.** ⚠️ Not included in this delivery — see "Known gaps" below. If a `wp_db.sql` is provided separately, import it with either:
    - WP-CLI: `wp db import wp_db.sql`
    - phpMyAdmin: select the target database → *Import* tab → choose file → *Go*
 
    Either way, import it into a **fresh** WordPress database *before* activating the theme, then flush permalinks afterward (*Settings → Permalinks → Save Changes*, no changes needed) so WooCommerce's rewrite rules regenerate against the imported page IDs.
-4. **Run through WooCommerce → Status → Tools** once after import/activation and confirm no "database update needed" notice is showing. If one appears, run it — a partially-run WooCommerce install (missing custom tables) is a known failure mode; see "Known gaps."
-5. Confirm a default shipping zone/method exists (*WooCommerce → Settings → Shipping*) — the theme's shipping-method reskin (T4.4) has nothing to style if no method is configured.
+4. **Run through WooCommerce → Status → Tools** once after import/activation and confirm no "database update needed" notice is showing. If one appears, run it.
+5. Confirm a default shipping zone/method exists (*WooCommerce → Settings → Shipping*) — the theme's shipping-method reskin has nothing to style if no method is configured.
+6. Checkout uses WooCommerce Blocks (Store API) rather than the classic shortcode — confirm the Checkout and Cart pages contain the `[woocommerce_checkout]`/Cart blocks WooCommerce created on install, not the classic shortcodes.
+
+## Features
+
+- **Header** — mega-menu nav, logo badge + wordmark + tagline lockup, global promo strip (categories/search/trust badges), cart fragment with live subtotal.
+- **Footer** — 5-column grid (brand/address, 3 widget nav columns, newsletter), Customizer-editable brand fields.
+- **Home** — hero + sidebar + category-tiles row, "Deals of the Day" (real on-sale products, countdown, sales progress), "Best Sellers" (popularity-ordered), CTA/newsletter banner row.
+- **Shop** — bordered hero, configurable grid columns/per-page, category filter, price-range slider, attribute filters.
+- **Product** — 3-column layout, variation swatches, Buy It Now, Bundle Offer meta box, feature-icons row, product FAQ tab, delivery/pincode estimator, sticky mobile add-to-cart bar.
+- **Checkout** — two-column layout on WooCommerce Blocks (Store API), gift message + delivery date/slot fields (self-hosted flatpickr), restyled coupon form, shipping-method radio cards.
+- **Thank-you page** — order summary recap.
+- **Account menu** — My Account link added to primary nav.
+- **Contact page** template.
+- Motion tokens with a `prefers-reduced-motion` contract; button/card/FAQ/nav micro-interactions.
 
 ## Assumptions
 
-Every inferred-rather-than-specified decision made across this project — the product-card "Free Shipping / Free Gift / In Stock" tag rule, the "Arrives By" delivery-window business rule, `max-height` chosen over JS footer-collision detection for the sticky checkout aside, and everything else — is logged in **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)**, not duplicated here. That file is the single source of truth; this README intentionally just points to it rather than keeping a second copy that would drift out of sync. It's organized chronologically by ticket (T1 → T6), newest at the bottom, and `grep`-able by ticket number if you're looking for a specific one's reasoning.
+Every inferred-rather-than-specified decision made across this project is logged in **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)**, not duplicated here. That file is the single source of truth; this README intentionally just points to it rather than keeping a second copy that would drift out of sync.
+
+It's organized in two parts:
+- **T1–T6**, chronological, one section per ticket — the original build.
+- **T7**, one large section covering the full design-match rebuild and every fix pass since — internally broken into non-sequential **"Phase N"** entries (currently up to Phase 56) rather than further ticket numbers. Phase numbers are reused/interleaved across unrelated feature areas, so `grep -n "Phase 12"` etc. is more useful than reading top-to-bottom for a specific feature.
 
 ## Development
 
@@ -36,14 +54,15 @@ composer run lint:fix   # phpcbf --standard=phpcs.xml.dist
 
 `phpcs.xml.dist` uses `WordPress-Extra` + `WordPress-Docs`, PHP compatibility checked against 8.1+ (this theme's declared minimum, per `style.css`'s `Requires PHP` header), and enforces the `lgl_`/`LGL_` prefix.
 
-**Caveat, stated plainly:** no `php`/`phpcs`/`composer` binary was available in the environment this theme was built in, for any ticket, including this one. Every file has been hand-formatted to WPCS conventions and manually/`grep`-audited for common violations (missing `ABSPATH` guards, unescaped output, sanitizer mismatches — see `ASSUMPTIONS.md`'s T6 entry for the specific bugs that audit actually found and fixed), but `composer run lint` has never actually been executed against this codebase. Run it before your first release.
+**Caveat, stated plainly:** no `php`/`phpcs`/`composer` binary has been available in the environment this theme was built in, for any ticket. Every file has been hand-formatted to WPCS conventions and manually/`grep`-audited for common violations (missing `ABSPATH` guards, unescaped output, sanitizer mismatches, undefined function calls — see `ASSUMPTIONS.md`'s T6 and "Post-T6" entries for real bugs that audit process actually found and fixed). `composer run lint` has never actually been executed against this codebase. **Run it before your first release.**
 
 ## Known gaps (read before demoing)
 
-- **A live front-end bug is currently unresolved.** On the development site this theme was built against, every front-end page (home, shop) returns a blank response, while wp-admin, the REST API, and the RSS feed all work normally — isolating the problem to WordPress's theme-template-loading path specifically. The site's PHP error log also shows a WooCommerce database error (a missing custom table) logged during a recent plugin activation, suggesting an incomplete WooCommerce install may be a contributing factor. Full diagnostic notes are in `ASSUMPTIONS.md`'s T6 entry. **Do not consider this theme demo-ready until this is resolved and a real page load has been confirmed** — everything else in this README describes intent, not a verified end-to-end result.
-- **No `wp_db.sql` is included.** Producing one needs a working WooCommerce database to export from (`wp db export` or `mysqldump`); neither was available. A site with sample products (all four WooCommerce product types, at least one variable product with a color/memory-style attribute pair to exercise the swatch selector, a Bundle Offer meta box tier on a couple of products, and a `free-shipping`-slugged shipping class on a few others), at least two active coupons, and a configured shipping zone needs to be built and exported separately before this theme can be evaluated with realistic data.
-- **No `/screenshots` directory.** Capturing them needs a working, rendered front end (see the first point) plus a browser — neither was available here.
-- **The theme zip has not been activation-tested end-to-end** (fresh WP + WooCommerce + this theme + sample data, confirmed working) for the same reason: no second WordPress environment was available to test against, and the primary one has the unresolved issue above.
+- **No `wp_db.sql` is included.** Producing one needs a working WooCommerce database to export from (`wp db export` or `mysqldump`), which hasn't been available. A site with sample products (all four WooCommerce product types, at least one variable product with a color/size-style attribute pair to exercise the swatch selector, a Bundle Offer meta box tier on a couple of products, and a `free-shipping`-slugged shipping class on a few others), at least two active coupons, and a configured shipping zone needs to be built and exported separately before this theme can be evaluated with realistic data.
+- **`composer run lint` has never been run** — see "Development" above. Treat WPCS compliance as hand-audited, not tool-verified, until this happens.
+- **Most visual QA has been code-reading + user-submitted screenshots, not a live browser check.** One exception: the header/nav pass (`header-fixes`) was verified live via Playwright at 375/768/1024/1440px. Earlier and unrelated areas have not had the same treatment — a full responsive/keyboard pass per CLAUDE.md's Definition of Done is still outstanding.
+- **The theme zip has not been activation-tested end-to-end** (fresh WP + WooCommerce + this theme + sample data, confirmed working) — no second WordPress environment has been available to test against.
+- A previously-reported "blank front-end page on every request" bug (undefined-function fatal in the breadcrumbs helper) **has been found and fixed** — see ASSUMPTIONS.md's "Post-T6" entry — but per the point above, that fix was confirmed via a real page load at the time, not re-verified since.
 
 ## Ticket effort, T3.0 → T6
 
@@ -69,6 +88,6 @@ Not wall-clock hours — this was built by an AI agent across a single long sess
 | T5.4 | FAQ smooth expand/collapse — found & fixed a reduced-motion bug | M |
 | T5.5 | Sticky cart slide — mostly confirmation of prior work | S |
 | T5.6 | Mobile menu blur backdrop — mostly confirmation of prior work | S |
-| T6 | Quality gate — found & fixed 2 missing-file-level critical bugs, 3 escaping bugs, 1 sitewide-CSS leak; live front-end bug found but unresolved | L |
+| T6 | Quality gate — found & fixed 2 missing-file-level critical bugs, 3 escaping bugs, 1 sitewide-CSS leak | L |
 
-S/M/L = small/medium/large relative to the others in this list, not an absolute estimate.
+S/M/L = small/medium/large relative to the others in this list, not an absolute estimate. T7 (the design-match rebuild and everything since) is not scored the same way — see its Phase entries in `ASSUMPTIONS.md` directly.
