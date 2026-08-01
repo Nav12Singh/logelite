@@ -54,7 +54,7 @@ if ( ! function_exists( 'lgl_customize_register_header' ) ) {
 		$wp_customize->add_setting(
 			'lgl_hotline_number',
 			array(
-				'default'           => '(+91) 731 4924 322',
+				'default'           => '(+91) 962-175-8356',
 				'sanitize_callback' => 'sanitize_text_field',
 				'transport'         => 'refresh',
 			)

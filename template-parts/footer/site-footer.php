@@ -29,11 +29,11 @@ if ( '' === $lgl_company ) {
 }
 
 if ( '' === $lgl_address ) {
-	$lgl_address = esc_html__( '401 Vijay Nagar, Indore, MP 452010', 'logelite' );
+	$lgl_address = esc_html__( 'B-138, Sector-C, Mahanagar Lucknow - 226006', 'logelite' );
 }
 
 if ( '' === $lgl_email ) {
-	$lgl_email = 'support@logelite.com';
+	$lgl_email = 'contact@logelite.com';
 }
 
 $lgl_payment_icons = '';

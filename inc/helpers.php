@@ -111,7 +111,7 @@ if ( ! function_exists( 'lgl_get_hotline_number' ) ) {
 	 * @return string
 	 */
 	function lgl_get_hotline_number() {
-		return get_theme_mod( 'lgl_hotline_number', '(+91) 731 4924 322' );
+		return get_theme_mod( 'lgl_hotline_number', '(+91) 962-175-8356' );
 	}
 }
 
